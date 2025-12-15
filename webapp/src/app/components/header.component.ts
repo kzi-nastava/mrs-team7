@@ -21,18 +21,18 @@ import { CommonModule } from '@angular/common';
         </div>
 
         <!-- User Profile Button -->
-        <div class="flex items-center gap-2.5 bg-white rounded-full px-3 py-1.5 md:px-4 md:py-2 shadow-lg">
-        
-        <!-- Promeni boju !!! -->
-        <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"></div>
-          <span class="text-black text-sm md:text-base font-medium mr-1">{{firstName}} {{lastName}}</span>
-          <img 
-            src="defaultprofile.png"
-            alt="Profile"
-            class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover"
-          />
-        </div>
-      </div>
+        @if (showUserProfile) {
+          <div class="flex items-center gap-2.5 bg-white rounded-full px-3 py-1.5 md:px-4 md:py-2 shadow-lg">
+            <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"></div>
+            <span class="text-black text-sm md:text-base font-medium mr-1">{{firstName}} {{lastName}}</span>
+            <img 
+              src="defaultprofile.png"
+              alt="Profile"
+              class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover"
+            />
+          </div>
+        }
+      </div>      
     </header>
   `,
   styles: []
@@ -43,4 +43,7 @@ export class HeaderComponent {
 
   @Input()
   lastName: string = '';
+
+  @Input()
+  showUserProfile: boolean = true;
 }

@@ -1,13 +1,16 @@
 /* You can add global styles to this file, and also import other style files */
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
   --color-app-bg:  #F7F7F5;
   --color-app-accent: #C0EC4E;
+  --color-app-accent-dark: #A9D53A;
   --color-app-dark: #1F1F1F;
   --color-app-bg-darker: #F3F3F5;
   --color-app-text-secondary: #B3B3B3;
+  --font-sans: 'Poppins', sans-serif;
 }
 
 .input-base {
@@ -20,7 +23,7 @@
   border-color: #D1D5DC;
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  font-weight: 400;
+  font-weight: 600;
   font-family: "Poppins", sans-serif;
   color: #000000;
   outline: none;
