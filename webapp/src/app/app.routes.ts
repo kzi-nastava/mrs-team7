@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
-import { ProfileComponent } from './pages/profile';
-import { UserRegistrationComponent } from './core/auth/userRegistration';
 import { SignInComponent } from './core/auth/signin';
+import { ProfileComponent } from './features/registered/pages/profile';
+import { UserRegistrationComponent } from './core/auth/userRegistration';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'signIn', pathMatch: 'full' },

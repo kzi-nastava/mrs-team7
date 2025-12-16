@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HeaderComponent } from '../components/header.component';
+import { HeaderComponent } from '../../shared/components/header.component';
 
 @Component({
   selector: 'app-profile',
@@ -20,7 +20,7 @@ import { HeaderComponent } from '../components/header.component';
           <main class="flex flex-1 p-8 lg:p-16 xl:pl-24 justify-center items-center">
             <div class="flex flex-col gap-6 w-full">
               <!-- Profile Header Card -->
-              <div class="border-[1.5px] border-gray-200 rounded-3xl shadow-lg p-8 bg-white">
+              <div class="border-[1.5px] border-gray-200 rounded-3xl shadow-lg p-8">
                 <div class="flex items-center gap-6">
                   <!-- Profile Picture -->
                   <div class="relative group w-30 h-30 cursor-pointer">
@@ -133,7 +133,7 @@ import { HeaderComponent } from '../components/header.component';
                   </button>
 
                   <div class="flex gap-4 flex-col sm:flex-row">
-                    <button class="flex-1 h-12 bg-app-accent rounded-full text-sm font-normal font-poppins text-neutral-900 hover:bg-app-accent-dark transition-colors">
+                    <button class="flex-1 h-12 bg-lime-400 rounded-full text-sm font-normal font-poppins text-neutral-900 hover:bg-lime-500 transition-colors">
                       Update Profile
                     </button>
                     <button class="flex-1 h-12 border-[1.5px] border-gray-300 rounded-full text-sm font-normal font-poppins text-gray-700 hover:bg-gray-50 transition-colors">
