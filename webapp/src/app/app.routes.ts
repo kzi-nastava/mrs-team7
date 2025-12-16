@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { ProfileComponent } from './pages/profile';
+import { ProfileComponent } from './features/registered/pages/profile';
 import { UserRegistrationComponent } from './core/auth/registration';
 
 export const routes: Routes = [
