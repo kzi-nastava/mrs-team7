@@ -107,7 +107,6 @@ export class SignInComponent {
   private router = inject(Router);
   
   onSubmit() {
-    this.router.navigate(['/profile']);
-    console.log('Logging in with', this.email, this.password);
+    this.router.navigate(['/user/profile']);
   }
 }
