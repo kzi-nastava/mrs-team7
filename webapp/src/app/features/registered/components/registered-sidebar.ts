@@ -9,11 +9,11 @@ type Item = { label: string; route: string; icon: string };
   standalone: true,
   imports: [CommonModule, RouterLink, NgOptimizedImage],
   template: `
-    <nav class="mt-24 flex flex-col gap-3 [font-family:Poppins]">
+    <nav class="mt-24 flex flex-col gap-3 font-poppins">
     @for (it of items; track it.route) {
         <a
         [routerLink]="it.route"
-        class="flex items-center gap-4 h-12 px-10 rounded-full cursor-pointer select-none transition-all duration-[250ms]"
+        class="flex items-center gap-4 h-12 px-10 rounded-full cursor-pointer select-none transition-all duration-250"
         [ngClass]="isActive(it.route)
         ? 'bg-app-accent text-app-dark hover:brightness-95'
         : 'text-white hover:bg-white/5'">
@@ -29,7 +29,7 @@ type Item = { label: string; route: string; icon: string };
 
     <button
         type="button"
-        class="flex items-center gap-4 h-12 px-10 rounded-full text-white text-left hover:bg-white/5 cursor-pointer select-none transition-all duration-[250ms]">
+        class="flex items-center gap-4 h-12 px-10 rounded-full text-white text-left hover:bg-white/5 cursor-pointer select-none transition-all duration-250">
         <img ngSrc="/icons/signout-white.png" class="w-5 h-5" width="20" height="20" alt=""/>
         <span class="text-base">Sign out</span>
     </button>

@@ -12,7 +12,7 @@ import { RegisteredSidebar } from '../components/registered-sidebar';
         <app-header [firstName]="firstName" [lastName]="lastName"></app-header>
 
         <div class="flex h-[calc(100vh-94px)]">
-            <aside class="w-[424px] bg-app-dark text-white px-10">
+            <aside class="w-106 bg-app-dark text-white px-10">
             <app-registered-sidebar></app-registered-sidebar>
             </aside>
 

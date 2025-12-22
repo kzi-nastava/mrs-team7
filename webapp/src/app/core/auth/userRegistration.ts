@@ -27,7 +27,7 @@ import { Router } from '@angular/router';
           </div>
 
           <form #registerForm="ngForm" (ngSubmit)="registerForm.valid && onSubmit()" class="space-y-6">
-            <!-- Row 1: Name (1/4) + Surname (1/4) + Email (1/2) -->
+            <!-- Row 1 -->
             <div class="grid grid-cols-4 gap-4">
               <!-- Name -->
               <div class="col-span-1 flex flex-col gap-2">
@@ -93,7 +93,7 @@ import { Router } from '@angular/router';
               </div>
             </div>
 
-            <!-- Row 2: Address (1/2) + Phone (1/2) -->
+            <!-- Row 2 -->
             <div class="grid grid-cols-2 gap-4">
               <!-- Address -->
               <div class="flex flex-col gap-2">
@@ -138,7 +138,7 @@ import { Router } from '@angular/router';
               </div>
             </div>
 
-            <!-- Row 3: Password (1/2) + Confirm (1/2) -->
+            <!-- Row 3 -->
             <div class="grid grid-cols-2 gap-4">
               <!-- Password -->
               <div class="flex flex-col gap-2">

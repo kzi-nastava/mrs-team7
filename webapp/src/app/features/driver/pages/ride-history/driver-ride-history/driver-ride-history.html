@@ -1,5 +1,5 @@
 <section class="w-full bg-white rounded-[28px] shadow-xl p-10 relative pointer-events-auto">
-  <h2 class="text-2xl [font-family:Poppins] mb-6">Ride history:</h2>
+  <h2 class="text-2xl font-poppins mb-6">Ride history:</h2>
 
   <!-- Filters card -->
   <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
@@ -7,7 +7,7 @@
       <!-- From -->
       <div class="flex flex-col gap-2">
         <label class="text-xs text-gray-500">From:</label>
-        <div class="flex items-center gap-2 border border-gray-200 rounded-xl px-3 h-11 w-[180px]">
+        <div class="flex items-center gap-2 border border-gray-200 rounded-xl px-3 h-11 w-45">
           <input
             type="date"
             class="w-full outline-none text-sm text-gray-700 bg-transparent"
@@ -19,7 +19,7 @@
       <!-- To -->
       <div class="flex flex-col gap-2">
         <label class="text-xs text-gray-500">To:</label>
-        <div class="flex items-center gap-2 border border-gray-200 rounded-xl px-3 h-11 w-[180px]">
+        <div class="flex items-center gap-2 border border-gray-200 rounded-xl px-3 h-11 w-45">
           <input
             type="date"
             class="w-full outline-none text-sm text-gray-700 bg-transparent"
@@ -31,23 +31,23 @@
       <!-- Buttons -->
       <button
         type="button"
-        class="h-11 px-6 rounded-xl bg-neutral-900 text-white text-sm hover:bg-neutral-800 active:scale-[0.99] cursor-pointer transition-colors duration-[250ms]">
+        class="h-11 px-6 rounded-xl bg-neutral-900 text-white text-sm hover:bg-neutral-800 active:scale-[0.99] cursor-pointer transition-colors duration-250">
         Apply
       </button>
 
       <button
         type="button"
-        class="h-11 px-6 rounded-xl border border-gray-300 text-sm hover:bg-gray-50 active:scale-[0.99] cursor-pointer transition-colors duration-[250ms]"
+        class="h-11 px-6 rounded-xl border border-gray-300 text-sm hover:bg-gray-50 active:scale-[0.99] cursor-pointer transition-colors duration-250"
         (click)="reset()">
         Reset
       </button>
 
       <!-- Quick filters -->
       <div class="ml-auto flex gap-3">
-        <button type="button" class="h-9 px-4 rounded-lg bg-gray-100 text-xs hover:bg-gray-200 active:scale-[0.99] cursor-pointer transition-colors duration-[250ms]">
+        <button type="button" class="h-9 px-4 rounded-lg bg-gray-100 text-xs hover:bg-gray-200 active:scale-[0.99] cursor-pointer transition-colors duration-250">
           Last 7 days
         </button>
-        <button type="button" class="h-9 px-4 rounded-lg bg-gray-100 text-xs hover:bg-gray-200 active:scale-[0.99] cursor-pointer transition-colors duration-[250ms]">
+        <button type="button" class="h-9 px-4 rounded-lg bg-gray-100 text-xs hover:bg-gray-200 active:scale-[0.99] cursor-pointer transition-colors duration-250">
           Last 30 days
         </button>
       </div>
@@ -99,11 +99,11 @@
         <!-- panic -->
         <div>
           @if (r.panic) {
-            <span class="inline-flex w-[90px] justify-center items-center px-3 h-7 rounded-full bg-orange-100 text-orange-700 text-xs">
+            <span class="inline-flex w-22.5 justify-center items-center px-3 h-7 rounded-full bg-orange-100 text-orange-700 text-xs">
               Panic
             </span>
           } @else {
-            <span class="inline-flex w-[90px] justify-center items-center px-3 h-7 rounded-full bg-gray-100 text-gray-600 text-xs">
+            <span class="inline-flex w-22.5 justify-center items-center px-3 h-7 rounded-full bg-gray-100 text-gray-600 text-xs">
               No panic
             </span>
           }

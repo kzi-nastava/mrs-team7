@@ -111,7 +111,6 @@ import { Router } from '@angular/router';
         <!-- Modal -->
         <div class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-xl p-6">
           @if (forgotStep === 'email') {
-            <!-- Step 1: email -->
             <h2 class="text-lg font-semibold mb-2 text-gray-900">
               Reset password
             </h2>
@@ -163,7 +162,6 @@ import { Router } from '@angular/router';
           }
 
           @if (forgotStep === 'password') {
-            <!-- Step 2: new password -->
             <h2 class="text-lg font-semibold mb-2 text-gray-900">
               Set new password
             </h2>
