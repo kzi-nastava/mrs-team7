@@ -5,5 +5,14 @@
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
+    <style name="AppNavigationViewStyle" parent="Widget.MaterialComponents.NavigationView">
+        <item name="shapeAppearanceOverlay">@style/NoRoundedCorners</item>
+    </style>
+
+    <style name="NoRoundedCorners">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">0dp</item>
+    </style>
+
     <style name="Theme.Mobileapp" parent="Base.Theme.Mobileapp" />
 </resources>
