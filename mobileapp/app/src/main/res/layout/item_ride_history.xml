@@ -67,7 +67,7 @@
                 android:layout_width="12dp"
                 android:layout_height="12dp"
                 android:contentDescription="@null"
-                android:src="@drawable/ic_pickup_arrow" />
+                android:src="@drawable/ic_pickup_circle" />
 
             <TextView
                 android:id="@+id/tv_origin"
@@ -92,7 +92,7 @@
                 android:layout_width="12dp"
                 android:layout_height="12dp"
                 android:contentDescription="@null"
-                android:src="@drawable/ic_dropoff_arrow" />
+                android:src="@drawable/ic_dropoff_circle" />
 
             <TextView
                 android:id="@+id/tv_destination"

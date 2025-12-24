@@ -1,6 +1,12 @@
 package com.example.mobileapp.model;
 
-public class Ride {
+import android.os.Parcel;
+import android.os.Parcelable; // packs objects in Bundle so Android can send it between Activity/Fragment/DialogFragment
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+public class Ride implements Parcelable {
     private final String date;
     private final String time;
     private final String from;
@@ -8,10 +14,10 @@ public class Ride {
     private final RideStatus status;
     private final boolean panic;
     private final String price;
-    private final String cancelledBy;
+    @Nullable private final String cancelledBy;
 
     public Ride(String date, String time, String from, String to,
-                RideStatus status, boolean panic, String price, String cancelledBy) {
+                RideStatus status, boolean panic, String price, @Nullable String cancelledBy) {
         this.date = date;
         this.time = time;
         this.from = from;
@@ -22,6 +28,47 @@ public class Ride {
         this.cancelledBy = cancelledBy;
     }
 
+    protected Ride(Parcel in) {
+        date = in.readString();
+        time = in.readString();
+        from = in.readString();
+        to = in.readString();
+        String st = in.readString();
+        status = st != null ? RideStatus.valueOf(st) : RideStatus.SCHEDULED;
+        panic = in.readByte() != 0;
+        price = in.readString();
+        cancelledBy = in.readString();
+    }
+
+    public static final Creator<Ride> CREATOR = new Creator<>() {
+        @Override
+        public Ride createFromParcel(Parcel in) {
+            return new Ride(in);
+        }
+
+        @Override
+        public Ride[] newArray(int size) {
+            return new Ride[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeString(date);
+        dest.writeString(time);
+        dest.writeString(from);
+        dest.writeString(to);
+        dest.writeString(status.name());
+        dest.writeByte((byte) (panic ? 1 : 0));
+        dest.writeString(price);
+        dest.writeString(cancelledBy);
+    }
+
     public String getDate() { return date; }
     public String getTime() { return time; }
     public String getFrom() { return from; }
@@ -29,9 +76,6 @@ public class Ride {
     public RideStatus getStatus() { return status; }
     public boolean isPanic() { return panic; }
     public String getPrice() { return price; }
-    public String getCancelledBy() { return cancelledBy; }
+    @Nullable public String getCancelledBy() { return cancelledBy; }
 
-    public boolean isCancelled() {
-        return status == RideStatus.CANCELLED;
-    }
 }

@@ -106,40 +106,39 @@ public class RideHistoryFragment extends Fragment {
         // Demo data (later from database)
         List<Ride> rides = new ArrayList<>();
         rides.add(new Ride(
-                "20.11.", "14:20 - 14:45",
+                "20.11.2025.", "14:20 - 14:45",
                 "Bulevar oslobođenja 55", "Naučno tehnološki park",
                 RideStatus.CANCELLED, false, "€15.00", "User"
         ));
         rides.add(new Ride(
-                "20.10.", "09:10 - 09:28",
+                "20.10.2025.", "09:10 - 09:28",
                 "Bulevar oslobođenja 76", "Naučno tehnološki park",
                 RideStatus.COMPLETED, true, "€11.00", null
         ));
         rides.add(new Ride(
-                "05.12.", "22:15 - 22:32",
+                "05.12.2025.", "22:15 - 22:32",
                 "Bulevar oslobođenja 76", "Naučno tehnološki park",
                 RideStatus.COMPLETED, false, "€12.50", null
         ));
         rides.add(new Ride(
-                "20.11.", "14:20 - 14:45",
+                "20.11.2025.", "14:20 - 14:45",
                 "Bulevar oslobođenja 55", "Naučno tehnološki park",
                 RideStatus.CANCELLED, false, "€15.00", "User"
         ));
         rides.add(new Ride(
-                "20.10.", "09:10 - 09:28",
+                "20.10.2025.", "09:10 - 09:28",
                 "Bulevar oslobođenja 76", "Naučno tehnološki park",
                 RideStatus.COMPLETED, true, "€11.00", null
         ));
         rides.add(new Ride(
-                "20.11.", "14:20 - 14:45",
+                "20.11.2025.", "14:20 - 14:45",
                 "Bulevar oslobođenja 55", "Naučno tehnološki park",
                 RideStatus.CANCELLED, false, "€15.00", "User"
         ));
 
         // Adapter
-        RideHistoryAdapter adapter = new RideHistoryAdapter(rides, ride ->
-                Toast.makeText(getContext(), "Details: " + ride.getFrom(), Toast.LENGTH_SHORT).show()
-        );
+        RideHistoryAdapter adapter = new RideHistoryAdapter(rides, ride -> RideDetailsDialogFragment.newInstance(ride)
+                .show(getChildFragmentManager(), "ride_details"));
         rv.setAdapter(adapter);
 
         // Filters card click
