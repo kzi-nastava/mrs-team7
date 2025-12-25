@@ -1,4 +1,53 @@
 <resources>
+    <string name="app_name">mobileapp</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Driver Ride History -->
+    <string name="ride_cancelled_by">Cancelled by: %1$s</string>
+    <string name="filters">Filters</string>
+    <string name="ride_history">Ride history:</string>
+
+    <string name="cd_open_menu">Open menu</string>
+    <string name="cd_open_profile">Open profile</string>
+    <string name="cd_app_logo">App logo</string>
+
+    <string name="details">Details</string>
+    <string name="ride_status_completed">Completed</string>
+    <string name="ride_status_cancelled">Cancelled</string>
+    <string name="ride_status_no_panic">No panic</string>
+    <string name="ride_status_panic">Panic</string>
+    <string name="ride_status_scheduled">Scheduled</string>
+
+    <string name="from">From:</string>
+    <string name="to">To:</string>
+    <string name="apply">Apply</string>
+    <string name="reset">Reset</string>
+    <string name="last_7_days">Last 7 days</string>
+    <string name="last_30_days">Last 30 days</string>
+
+    <!-- Driver Ride History Details-->
+    <string name="date_hint">dd/mm/yyyy</string>
+    <string name="ride_details">Ride Details</string>
+    <string name="scheduled">Scheduled</string>
+    <string name="route">Route</string>
+    <string name="end">End:</string>
+    <string name="start">Start:</string>
+    <string name="timeline">Timeline</string>
+    <string name="payment">Payment</string>
+    <string name="total_cost">Total cost:</string>
+    <string name="destination">Destination</string>
+    <string name="cancelled_by">Cancelled by:</string>
+    <string name="safety">Safety</string>
+    <string name="cancellation">Cancellation</string>
+    <string name="close">Close</string>
+    <string name="no">No</string>
+    <string name="panic_triggered">Panic triggered:</string>
+    <string name="pickup">Pickup</string>
+    <string name="time">Timestamp:</string>
+    <string name="reason">Reason:</string>
+    <string name="passengers">Passengers</string>
+    <string name="duration">Duration:</string>
     <string name="app_name">UberPLUS</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>

@@ -1,4 +1,4 @@
-package com.example.mobileapp;
+package com.example.mobileapp.ui;
 
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -18,6 +18,8 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
+
+import com.example.mobileapp.R;
 
 public class ProfileActivity extends AppCompatActivity {
 
