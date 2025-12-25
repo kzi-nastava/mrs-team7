@@ -10,9 +10,11 @@
     tools:context=".ui.ProfileActivity">
 
     <LinearLayout
+        android:id="@+id/profile_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/app_bg"
+        android:orientation="horizontal"
         tools:context=".ProfileActivity"
         tools:openDrawer="start">
 
@@ -397,5 +399,5 @@
             android:paddingEnd="12dp"
             android:layout_gravity="start"/>
 
-</androidx.drawerlayout.widget.DrawerLayout>
-
+    </LinearLayout>
+</ScrollView>
