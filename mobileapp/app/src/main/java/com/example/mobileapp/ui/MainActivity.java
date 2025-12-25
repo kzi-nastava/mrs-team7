@@ -1,36 +1,105 @@
 package com.example.mobileapp.ui;
 
 import android.os.Bundle;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
 
-import androidx.activity.EdgeToEdge;
-import androidx.activity.SystemBarStyle;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.example.mobileapp.R;
+import com.google.android.material.navigation.NavigationView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
+
+    // Root DrawerLayout (contains main content + navigation drawer)
+    private DrawerLayout drawerLayout;
+
+    // NavigationView that shows the menu items inside the drawer
+    private NavigationView navigationView;
+
+    // Buttons from the custom header inside the Toolbar
+    private ImageButton btnMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(
-                this,
-                SystemBarStyle.dark(0xFF232323),
-                SystemBarStyle.dark(0xFF232323)
-        );
+
+        getWindow().setStatusBarColor(0xFF232323);
+        getWindow().setNavigationBarColor(0xFF232323);
+
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+
+        // Root view is the DrawerLayout with id "main"
+        drawerLayout = findViewById(R.id.main);
+        navigationView = findViewById(R.id.nav_view);
+
+        // Toolbar that holds the custom header (toolbar_header)
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        // Get hamburger and profile buttons from toolbar_header
+        btnMenu = toolbar.findViewById(R.id.btn_menu);
+
+        // Open the navigation drawer when the hamburger button is clicked
+        btnMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
         });
+
+        // Listen for navigation item clicks from the drawer menu
+        navigationView.setNavigationItemSelectedListener(this);
+
+        // Initial fragment when opening MainActivity
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new RideHistoryFragment())
                     .commit();
+
+            // Mark ride history as selected in the drawer
+            navigationView.setCheckedItem(R.id.nav_ride_history);
         }
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        // Handle clicks on drawer menu items
+        int id = item.getItemId();
+
+        if (id == R.id.nav_dashboard) {
+            // TODO: open DriverDashboardFragment when you create it
+
+        } else if (id == R.id.nav_ride_history) {
+            // Open RideHistoryFragment
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new RideHistoryFragment())
+                    .commit();
+
+        } else if (id == R.id.nav_booked_rides) {
+            // TODO: open BookedRidesFragment
+
+        } else if (id == R.id.nav_reports) {
+            // TODO: open ReportsFragment
+
+        } else if (id == R.id.nav_support) {
+            // TODO: open SupportFragment
+
+        } else if (id == R.id.nav_profile) {
+            // TODO: open ProfileFragment
+
+        } else if (id == R.id.nav_sign_out) {
+            // TODO: perform sign out and go back to AuthActivity
+        }
+
+        // Always close the drawer after handling a click
+        drawerLayout.closeDrawer(GravityCompat.START);
+        return true;
     }
 }

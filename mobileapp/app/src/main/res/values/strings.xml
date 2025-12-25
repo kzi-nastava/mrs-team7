@@ -51,4 +51,12 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="profile">Profile</string>
+    <string name="support">Support</string>
+    <string name="reports">Reports</string>
+    <string name="rideHistory">Ride History</string>
+    <string name="booked_rides">Booked Rides</string>
+    <string name="book_a_ride">Book a ride</string>
 </resources>
