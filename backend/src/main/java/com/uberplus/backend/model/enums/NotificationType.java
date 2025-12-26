@@ -1,0 +1,18 @@
+package com.uberplus.backend.model.enums;
+
+public enum NotificationType {
+    RIDE_ASSIGNED,
+    RIDE_ACCEPTED,
+    RIDE_REJECTED,
+    RIDE_CANCELLED,
+    RIDE_STARTED,
+    RIDE_COMPLETED,
+    PASSENGER_LINKED,
+    RIDE_REMINDER,
+    PANIC_ALERT,
+    USER_BLOCKED,
+    DRIVER_UPDATE_REQUESTED,
+    DRIVER_UPDATE_APPROVED,
+    DRIVER_UPDATE_REJECTED,
+    SUPPORT_MESSAGE
+}
