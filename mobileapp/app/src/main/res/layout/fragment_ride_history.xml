@@ -6,23 +6,16 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- HEADER -->
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@color/dark_grey"
-        android:elevation="2dp">
-
-        <include layout="@layout/toolbar_header" />
-    </androidx.appcompat.widget.Toolbar>
-
     <!-- CONTENT -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="0dp"
+        tools:ignore="UselessParent">
 
         <androidx.cardview.widget.CardView
             android:id="@+id/card_filters"
@@ -189,7 +182,7 @@
                         android:stateListAnimator="@null"
                         android:text="@string/apply"
                         android:textAllCaps="false"
-                        android:textColor="@color/completed_ride"
+                        android:textColor="@color/dark_grey"
                         tools:ignore="TextContrastCheck,TouchTargetSizeCheck" />
 
                     <View
@@ -207,7 +200,7 @@
                         android:stateListAnimator="@null"
                         android:text="@string/reset"
                         android:textAllCaps="false"
-                        android:textColor="@color/cancel_ride"
+                        android:textColor="@color/dark_grey"
                         tools:ignore="TextContrastCheck,TouchTargetSizeCheck" />
                 </LinearLayout>
 
@@ -224,7 +217,7 @@
                         android:layout_height="30dp"
                         android:layout_weight="1"
                         tools:ignore="TouchTargetSizeCheck"
-                        android:background="@drawable/filters_neutral"
+                        android:background="@drawable/bg_neutral"
                         android:text="@string/last_7_days"
                         android:textAllCaps="false"
                         android:backgroundTint="@null"
@@ -241,7 +234,7 @@
                         android:layout_width="0dp"
                         android:layout_height="30dp"
                         android:layout_weight="1"
-                        android:background="@drawable/filters_neutral"
+                        android:background="@drawable/bg_neutral"
                         android:backgroundTint="@null"
                         android:elevation="0dp"
                         android:stateListAnimator="@null"
