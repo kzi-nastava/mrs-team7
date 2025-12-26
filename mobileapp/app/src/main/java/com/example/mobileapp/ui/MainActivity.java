@@ -3,13 +3,11 @@ package com.example.mobileapp.ui;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -31,11 +29,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Window window = getWindow();
-        window.setStatusBarColor(
-                ContextCompat.getColor(this, R.color.dark_grey)
-        );
 
         setContentView(R.layout.activity_main);
 
@@ -111,7 +104,10 @@ public class MainActivity extends AppCompatActivity
             // TODO: open ProfileFragment
 
         } else if (id == R.id.nav_sign_out) {
-            // TODO: perform sign out and go back to AuthActivity
+            // Open LoginFragment
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new LoginFragment())
+                    .commit();
         }
 
         // Always close the drawer after handling a click

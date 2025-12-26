@@ -3,17 +3,14 @@
     <style name="Base.Theme.Mobileapp" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <item name="android:statusBarColor">@color/dark_grey</item>
-        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:navigationBarColor">@color/dark_grey</item>
+        <item name="colorPrimaryDark">@color/dark_grey</item>
     </style>
 
     <style name="AppNavigationViewStyle" parent="Widget.MaterialComponents.NavigationView">
         <item name="itemBackground">@drawable/nav_item_background</item>
         <item name="itemTextColor">@color/nav_item_text_color</item>
         <item name="itemIconTint">@color/nav_item_icon_tint</item>
-
-        <item name="itemTextColor">@color/white</item>
-
-        <item name="itemIconTint">@color/white</item>
 
         <item name="itemHorizontalPadding">16dp</item>
         <item name="itemIconPadding">10dp</item>
