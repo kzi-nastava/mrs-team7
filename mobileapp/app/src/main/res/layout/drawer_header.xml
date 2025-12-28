@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/app_dark">
+
+    <!-- Top drawer header bar -->
+    <!-- Contains only the close/back button aligned vertically -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Close drawer button (arrow icon) -->
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/close_drawer_btn"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="10dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/cd_close_drawer"
+            android:src="@drawable/vec_arrow_left"
+            tools:ignore="ImageContrastCheck,TouchTargetSizeCheck" />
+    </LinearLayout>
+
+    <!-- Divider line under the header -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/app_text_secondary" />
+
+</LinearLayout>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="app_bg">#F7F7F5</color>
+    <color name="app_accent">#C0EC4E</color>
+    <color name="app_dark">#1F1F1F</color>
+    <color name="app_bg_darker">#F3F3F5</color>
+    <color name="app_text_secondary">#B3B3B3</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="dark_grey">#232323</color>
+    <color name="dark_grey_secondary">#1E1E1E</color>
+
+    <!-- Ride Status -->
+    <color name="completed_ride_bckg">#D4F5E3</color>
+    <color name="completed_ride">#03A421</color>
+    <color name="panic_ride_bckg">#FFEDD4</color>
+    <color name="panic_ride">#F54900</color>
+    <color name="neutral_bckg">#F3F4F6</color>
+    <color name="neutral">#4A5565</color>
+    <color name="cancel_ride_bckg">#FFE2E2</color>
+    <color name="cancel_ride">#E7000B</color>
+</resources>
