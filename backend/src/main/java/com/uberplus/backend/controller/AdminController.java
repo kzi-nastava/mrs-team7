@@ -5,6 +5,7 @@ import com.uberplus.backend.dto.common.MessageDTO;
 import com.uberplus.backend.dto.driver.DriverCreationDTO;
 import com.uberplus.backend.dto.driver.DriverProfileDTO;
 import com.uberplus.backend.dto.notification.PanicNotificationDTO;
+import com.uberplus.backend.dto.ride.RideDTO;
 import com.uberplus.backend.repository.DriverRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,4 +45,17 @@ public class AdminController {
         List<PanicNotificationDTO> panics = List.of(new PanicNotificationDTO(), new PanicNotificationDTO());
         return ResponseEntity.ok(panics);
     }
+
+    // GET /api/admin/rides/active
+    @GetMapping("/rides/active")
+    public ResponseEntity<List<RideDTO>> getActiveRidesForAdmin() {
+        return ResponseEntity.ok(List.of(new RideDTO()));
+    }
+
+    // GET /api/admin/rides/{rideId}
+    @GetMapping("/rides/{rideId}")
+    public ResponseEntity<RideDTO> getRideState(@PathVariable Integer rideId) {
+        return ResponseEntity.ok(new RideDTO());
+    }
+
 }
