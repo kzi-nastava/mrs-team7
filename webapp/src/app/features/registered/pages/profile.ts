@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-profile',
+  selector: 'registered-profile',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
@@ -251,7 +251,7 @@ import { FormsModule } from '@angular/forms';
     </div>
   `,
 })
-export class ProfileComponent {
+export class RegisteredProfileComponent {
   firstName: string = 'Andrew';
   lastName: string = 'Wilson';
   email: string = 'andrewwilson@email.com';
