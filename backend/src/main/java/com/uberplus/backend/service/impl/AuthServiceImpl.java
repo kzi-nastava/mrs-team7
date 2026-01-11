@@ -1,12 +1,15 @@
 package com.uberplus.backend.service.impl;
 
+import com.uberplus.backend.dto.auth.AuthResponse;
 import com.uberplus.backend.dto.auth.RegisterRequestDTO;
 import com.uberplus.backend.dto.user.UserProfileDTO;
 import com.uberplus.backend.model.Passenger;
+import com.uberplus.backend.model.User;
 import com.uberplus.backend.model.enums.UserRole;
 import com.uberplus.backend.repository.UserRepository;
 import com.uberplus.backend.service.AuthService;
 import com.uberplus.backend.service.EmailService;
+import com.uberplus.backend.service.JwtService;
 import com.uberplus.backend.utils.UserMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final JwtService jwtService;
 
     @Override
     @Transactional
@@ -66,5 +70,26 @@ public class AuthServiceImpl implements AuthService {
         emailService.sendActivationEmail(saved);
 
         return UserMapper.toUserProfileDTO(saved);
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse activate(String token) {
+        User passenger = userRepository.findByActivationToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid activation token"));
+
+        if (passenger.isActivated()) {
+            throw new RuntimeException("Account already activated");
+        }
+        if (passenger.getActivationTokenExpiresAt().isBefore(LocalDateTime.now())){
+            throw new RuntimeException("Token expired");
+        }
+
+        passenger.setActivated(true);
+        passenger.setActivationToken(null);
+        passenger.setActivationTokenExpiresAt(null);
+        userRepository.save(passenger);
+
+        return new AuthResponse(jwtService.generateToken(passenger),passenger.getEmail(),passenger.getFirstName());
     }
 }
