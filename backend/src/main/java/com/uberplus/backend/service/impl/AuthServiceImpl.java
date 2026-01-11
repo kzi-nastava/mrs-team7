@@ -1,6 +1,8 @@
 package com.uberplus.backend.service.impl;
 
 import com.uberplus.backend.dto.auth.AuthResponse;
+import com.uberplus.backend.dto.auth.LoginRequestDTO;
+import com.uberplus.backend.dto.auth.PasswordResetDTO;
 import com.uberplus.backend.dto.auth.RegisterRequestDTO;
 import com.uberplus.backend.dto.user.UserProfileDTO;
 import com.uberplus.backend.model.Passenger;
@@ -91,5 +93,48 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(passenger);
 
         return new AuthResponse(jwtService.generateToken(passenger),passenger.getEmail(),passenger.getFirstName());
+    }
+
+    @Override
+    public AuthResponse login(LoginRequestDTO dto) {
+        User user = userRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new RuntimeException("No account with this email exists"));
+        if (!user.isActivated()) {
+            throw new RuntimeException("Account not activated. Check your email.");
+        }
+
+        if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Wrong password");
+        }
+        String jwt = jwtService.generateToken(user);
+        return new AuthResponse(jwt, user.getEmail(), user.getFirstName());
+    }
+
+    @Override
+    public void requestPasswordReset(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not found"));
+
+        String resetToken = jwtService.generateToken(user);
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetTokenExpiresAt(LocalDateTime.now().plusMinutes(30));
+        userRepository.save(user);
+
+        emailService.sendPasswordResetEmail(user, resetToken);
+    }
+
+    @Override
+    public void confirmPasswordReset(PasswordResetDTO dto) {
+        User user = userRepository.findByPasswordResetToken(dto.getToken())
+                .orElseThrow(() -> new RuntimeException("Invalid reset token"));
+
+        if (user.getPasswordResetTokenExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Reset token expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiresAt(null);
+        userRepository.save(user);
     }
 }
