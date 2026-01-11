@@ -113,18 +113,26 @@ import { log } from 'console';
 
                 <!-- Action Buttons -->
                 <div class="flex flex-col gap-3">
+
+                  <!-- Error message area -->
+                  <div *ngIf="errorMessage" class="text-center text-sm text-red-700">
+                    {{ errorMessage }}
+                  </div>
+
                   <button (click)="onOpenPswdChange()" class="cursor-pointer h-12 border-[1.5px] border-gray-300 rounded-full text-sm font-normal font-poppins text-gray-700 hover:bg-gray-50 transition-colors">
                     Change Password
                   </button>
 
                   <div class="flex gap-4 flex-col sm:flex-row">
-                    <button class="flex-1 h-12 bg-lime-400 rounded-full text-sm font-normal font-poppins text-neutral-900 hover:bg-lime-500 transition-colors">
+                    <button (click)="onSave()" class="cursor-pointer flex-1 h-12 bg-lime-400 rounded-full text-sm font-normal font-poppins text-neutral-900 hover:bg-lime-500 transition-colors">
                       Update Profile
                     </button>
                     <button (click)="onCancel()" class="cursor-pointer flex-1 h-12 border-[1.5px] border-gray-300 rounded-full text-sm font-normal font-poppins text-gray-700 hover:bg-gray-50 transition-colors">
                       Cancel
                     </button>
+                    
                   </div>
+
                 </div>
               </div>
         </div>
@@ -135,33 +143,77 @@ import { log } from 'console';
 export class ProfileInfoCard {
   @Input() user!: User;
   @Output() save = new EventEmitter<User>();
-  @Output() cancel = new EventEmitter<void>();
-  @Output() editAvatar = new EventEmitter<void>();
   @Output() openPswdChange = new EventEmitter<void>();
   
   editableUser!:User;
 
+  errorMessage: string | null = null;
+
   ngOnInit(): void {
-    this.editableUser = { ...this.user };
+    this.editableUser = { ...this.user } as User;
   }
 
-  onOpenPswdChange(): void {
+  onOpenPswdChange(): void {    
     this.openPswdChange.emit();
   }
 
-  onSave(): void {
-    this.save.emit(this.editableUser);
-  }
-
-  onCancel(): void {
-    console.log(this.user);
-    console.log(this.editableUser);
-    
-    
+  onCancel(): void { 
     this.editableUser = { ...this.user }
-
-    console.log(this.editableUser);
-    
   }
 
+  onSave(): void {
+    let validation = this.validateEditableUser(this.editableUser);
+    this.errorMessage = validation.message;
+    
+    if (validation.valid) {
+      this.save.emit({ ...this.editableUser });
+    }
+  }
+
+  private validateEditableUser(u: User): { valid: boolean; message: string | null } {
+
+    const first = (u.firstName || '').trim();
+    const last = (u.lastName || '').trim();
+    const email = (u.email || '').trim();
+    const address = (u.address || '').trim();
+    const phone = (u.phoneNumber || '').trim();
+
+    if (!first) {
+      return { valid: false, message: 'Please enter a first name.' };
+    }
+    if (!last) {
+      return { valid: false, message: 'Please enter a last name.' };
+    }
+    if (!email) {
+      return { valid: false, message: 'Please enter an email address.' };
+    }
+    if (!this.isEmailValid(email)) {
+      return { valid: false, message: 'Please enter a valid email address.' };
+    }
+    if (!address) {
+      return { valid: false, message: 'Please enter an address.' };
+    }
+    if (!phone) {
+      return { valid: false, message: 'Please enter a phone number.' };
+    }
+    if (!this.isPhoneValid(phone)) {
+      return { valid: false, message: 'Phone number must contain only digits, +, spaces or dashes.' };
+    }
+
+    return { valid: true, message: null };
+  }
+
+  private isEmailValid(email: string): boolean {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+    return re.test(email);
+  }
+
+  private isPhoneValid(phone: string): boolean {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length < 7) {
+      return false;
+    }
+    const re = /^[\d+\-\s().]+$/;
+    return re.test(phone);
+  }
 }
