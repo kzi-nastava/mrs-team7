@@ -34,7 +34,7 @@ public class RegisterRequestDTO {
     private String address;
 
     @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^[+]?[1-9][\\d]{0,15}$", message = "Invalid phone number")
+    @Pattern(regexp = "^[+]?[0-9]\\d{0,15}$", message = "Invalid phone number")
     private String phoneNumber;
 
     @AssertTrue(message = "Passwords do not match")

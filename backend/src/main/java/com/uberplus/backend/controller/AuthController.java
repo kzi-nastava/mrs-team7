@@ -18,8 +18,8 @@ public class AuthController {
 
     // POST /api/auth/login
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO request) {
-        return ResponseEntity.ok(new LoginResponseDTO());
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequestDTO request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 
     // POST /api/auth/register
@@ -33,7 +33,7 @@ public class AuthController {
 
     // GET /api/auth/activate
     @GetMapping("/activate")
-    public ResponseEntity<AuthResponse> activateAccount(@RequestParam String token    ) {
+    public ResponseEntity<AuthResponse> activateAccount(@RequestParam String token) {
         AuthResponse response = authService.activate(token);
         System.out.println(response.getToken());
         return ResponseEntity.ok(response);
@@ -41,14 +41,16 @@ public class AuthController {
 
     // POST /api/auth/forgot-password
     @PostMapping("/forgot-password")
-    public ResponseEntity<MessageDTO> forgotPassword(@RequestBody PasswordResetRequestDTO request) {
-        return ResponseEntity.ok(new MessageDTO());
+    public ResponseEntity<MessageDTO> forgotPassword(@RequestBody @Valid PasswordResetRequestDTO request) {
+        authService.requestPasswordReset(request.getEmail());
+        return ResponseEntity.ok(new MessageDTO("Reset link sent to your email",true));
     }
 
     // POST /api/auth/reset-password
     @PostMapping("/reset-password")
-    public ResponseEntity<MessageDTO> resetPassword(@RequestBody PasswordResetDTO request) {
-        return ResponseEntity.ok(new MessageDTO());
+    public ResponseEntity<MessageDTO> resetPassword(@RequestBody @Valid PasswordResetDTO request) {
+        authService.confirmPasswordReset(request);
+        return ResponseEntity.ok(new MessageDTO("Password reset successful", true));
     }
 
 
