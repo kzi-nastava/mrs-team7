@@ -50,10 +50,10 @@
   color: #000000;
   outline: none;
 }
-.input-estimate:focus {
+.input-estimate.ng-valid:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(163 230 53);
-  border-color: transparent;
+  box-shadow: 0 0 0 1px rgb(163 230 53);
+  border-color: #C0EC4E;
 }
 
 @keyframes scale-out {
