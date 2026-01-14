@@ -171,7 +171,6 @@ export class DriverProfileComponent {
 
   timeWorkedMinutes: number = 150;
 
-  // maximum minutes = 8 hours
   readonly MAX_WORK_MINUTES = 8 * 60;
 
   get progressPercent(): number {

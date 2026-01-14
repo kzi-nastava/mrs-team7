@@ -8,5 +8,5 @@ export class ConfigService {
 
     public loginUrl = this.baseUrl + '/auth/login';
     public registerUrl = this.baseUrl + '/auth/register';
-    public profile_url = this.baseUrl + '/profile'
+    public profile_url = this.baseUrl + '/users/profile';
 }

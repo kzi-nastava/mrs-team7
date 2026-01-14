@@ -53,28 +53,8 @@ export class AuthService {
     );
   }
 
-  private extractErrorMessage(err: any): string {
-    if (err instanceof HttpErrorResponse) {
-      const body = err.error;
-      if (body) {
-        if (typeof body === 'string') {
-          return body;
-        }
-        if (body.message) {
-          return body.message;
-        }
-        if (body.error) {
-          return body.error;
-        }
-      }
-      return `Server returned status ${err.status}`;
-    }
-    return 'Unknown error.';
-  }
 
-  public register(registerRequest: RegisterRequestDto) {
-    console.log("auth serv");
-    
+  public register(registerRequest: RegisterRequestDto) {    
     return this.http.post(this.config.registerUrl, registerRequest)
       .pipe(map(() => {
         console.log('Sent sign up request.');
@@ -88,6 +68,8 @@ export class AuthService {
   }
 
   public tokenIsPresent() : boolean {
+    console.log(`Auth token present: ${this.accessToken != undefined && this.accessToken != null}`);
+    
     return this.accessToken != undefined && this.accessToken != null;
   }
 

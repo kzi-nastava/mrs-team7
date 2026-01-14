@@ -284,8 +284,7 @@ export class SignInComponent {
       },
       error: err => {
         this.errorMessage = err["message"];
-        console.log(this.errorMessage);
-        
+        console.log(this.errorMessage);        
       }
     });
   }
