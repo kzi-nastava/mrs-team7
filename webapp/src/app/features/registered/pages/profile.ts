@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfileInfoCard } from "../../shared/components/profile-info-card";
 import { ChangePasswordModal } from "../../shared/components/profile-change-pswd-modal";
-import { User } from '../../shared/models/user';
+import { User } from '../../../core/models/user';
+import { Subscription } from 'rxjs';
+import { UserService } from '../../../core/services/user.service';
 
 @Component({
   selector: 'registered-profile',
@@ -39,15 +41,35 @@ import { User } from '../../shared/models/user';
 })
 export class RegisteredProfileComponent {
   user: User = {
-    id: '1',
-    firstName: 'Andrew',
-    lastName: 'Wilson',
-    email: 'andrewwilson@email.com',
-    address: 'Novi Sad',
-    phoneNumber: '+381 65 123 1233'
+    id: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    address: '',
+    phoneNumber: '',
+    role: 'PASSENGER'
+  };
+
+  private sub?: Subscription;
+  isChangePasswordOpen: boolean = false;
+
+  constructor(private userService: UserService) {}
+
+  ngOnInit(): void {
+    this.sub = this.userService.currentUser$.subscribe(current => {
+      if (current) {
+        this.user = { ...current };
+      }
+    });
+
+    // Fetch user if not already loaded
+    this.userService.fetchMe().subscribe();
   }
 
-  isChangePasswordOpen: boolean = false;
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
+
 
   closePswdChange(): void {
     this.isChangePasswordOpen = false;

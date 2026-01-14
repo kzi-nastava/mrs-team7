@@ -34,13 +34,14 @@ public class JwtServiceImpl implements JwtService {
                 .claim("firstName", user.getFirstName())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
-                .signWith(Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)), Jwts.SIG.HS512)
+                .signWith(getSigningKey(), Jwts.SIG.HS512)
                 .compact();
     }
 
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
+
     public Integer extractUserId(String token) {
         return extractClaim(token, claims -> Integer.valueOf(claims.get("userId", String.class)));
     }
@@ -59,6 +60,7 @@ public class JwtServiceImpl implements JwtService {
                 .build()
                 .parseSignedClaims(token);
     }
+
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
