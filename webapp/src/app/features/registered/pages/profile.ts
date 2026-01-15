@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfileInfoCard } from "../../shared/components/profile-info-card";
@@ -53,16 +53,17 @@ export class RegisteredProfileComponent {
   private sub?: Subscription;
   isChangePasswordOpen: boolean = false;
 
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.sub = this.userService.currentUser$.subscribe(current => {
       if (current) {
         this.user = { ...current };
+        console.log(this.user);
+        this.cdr.detectChanges();
       }
     });
 
-    // Fetch user if not already loaded
     this.userService.fetchMe().subscribe();
   }
 
@@ -84,3 +85,5 @@ export class RegisteredProfileComponent {
   }
   
 }
+
+

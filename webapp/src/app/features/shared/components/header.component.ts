@@ -1,6 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectorRef, Component, Input } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import {Router, RouterLink} from '@angular/router';
+import { Subscription } from 'rxjs';
+import { UserService } from '../../../core/services/user.service';
 
 @Component({
   selector: 'app-header',
@@ -54,11 +56,26 @@ import {Router, RouterLink} from '@angular/router';
   styles: []
 })
 export class HeaderComponent {
-  @Input() firstName: string = '';
-  @Input() lastName: string = '';
+  firstName: string = 'Empty';
+  lastName: string = '';
   @Input() showUserProfile: boolean = true;
 
-  constructor(private router: Router) {}
+  private sub?: Subscription;
+  isChangePasswordOpen: boolean = false;
+
+  ngOnInit(): void {
+    this.sub = this.userService.currentUser$.subscribe(current => {
+      if (current) {
+        this.firstName = current.firstName;
+        this.lastName = current.lastName;
+        this.cdr.detectChanges();
+      }
+    });
+    this.userService.fetchMe().subscribe();
+  }
+
+  constructor(private router: Router, private userService: UserService, private cdr: ChangeDetectorRef) {}
+
   onLogoClick(): void {
     this.router.navigateByUrl('/').catch(console.error);
   }

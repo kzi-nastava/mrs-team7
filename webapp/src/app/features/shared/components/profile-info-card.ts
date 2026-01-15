@@ -141,15 +141,29 @@ import { log } from 'console';
   `,
 })
 export class ProfileInfoCard {
-  @Input() user!: User;
   @Output() save = new EventEmitter<User>();
   @Output() openPswdChange = new EventEmitter<void>();
   
-  editableUser!:User;
+  editableUser!: User;
+
+  private _user!: User;
+
+  @Input()
+  set user(value: User) {
+    this._user = value;
+    this.editableUser = { ...value };
+    this.errorMessage = null;
+
+    console.log(value)
+  }
+
+  get user(): User {
+    return this._user;
+  }
 
   errorMessage: string | null = null;
 
-  ngOnInit(): void {
+  ngOnChanges(): void {    
     this.editableUser = { ...this.user } as User;
   }
 
