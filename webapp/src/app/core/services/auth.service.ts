@@ -80,5 +80,16 @@ export class AuthService {
   }
   public activateAccount(token: string): Observable<any> {
     return this.http.get(`http://localhost:8080/api/auth/activate?token=${token}`);
+  }
+  forgotPassword(email: string): Observable<any> {
+  return this.http.post(`http://localhost:8080/api/auth/forgot-password`, { email });
+}
+
+resetPassword(token: string, newPassword: string, confirmPassword: string): Observable<any> {
+  return this.http.post(`http://localhost:8080/api/auth/reset-password`, { 
+    token, 
+    newPassword,
+    confirmPassword
+  });
 }
 }
