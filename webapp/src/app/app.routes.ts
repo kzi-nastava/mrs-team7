@@ -10,11 +10,13 @@ import { MapComponent } from './features/shared/map/map';
 import {UnregisteredHomeComponent} from './features/unregistered/pages/home/home';
 import {DriverDashboard} from './features/driver/pages/dashboard/driver-dashboard/driver-dashboard';
 import { RegisteredDashboard } from './features/registered/pages/dashboard/registered-dashboard/registered-dashboard';
+import { AccountActivationComponent } from './core/auth/account-activation';
 
 export const routes: Routes = [
   { path: '', component: UnregisteredHomeComponent },
   { path: 'registerUser', component: UserRegistrationComponent },
   { path: 'signIn', component: SignInComponent },
+  { path: 'activate', component: AccountActivationComponent},
   { path: 'map', component: MapComponent },
   { path: 'user', component: RegisteredLayout, children: [
     { path: 'profile', component: RegisteredProfileComponent },
