@@ -78,5 +78,7 @@ export class AuthService {
 
     return this.accessToken
   }
-
+  public activateAccount(token: string): Observable<any> {
+    return this.http.get(`http://localhost:8080/api/auth/activate?token=${token}`);
+}
 }
