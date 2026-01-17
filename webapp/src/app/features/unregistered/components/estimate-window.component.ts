@@ -38,7 +38,14 @@ import { delay } from 'rxjs';
 </div>
 }
 @if (showResults){
-<app-estimate-results (close)="onClose()"></app-estimate-results>
+<app-estimate-results
+  [pickup]="pickupLocation"
+  [dropoff]="dropoffLocation"
+  [estimateRange]="estimateRange"
+  [distance]="distance"
+  (vehicleTypeChanged)="onVehicleTypeChange($event)"
+  (backToMap)="onClose()"
+  (bookRide)="onBookRide()"></app-estimate-results>
 }
 `,
 styles: [`
@@ -61,9 +68,15 @@ styles: [`
 export class EstimatePanelComponent {
   showResults = false;
   isClosing = false;
+  pickupLocation = '';
+  dropoffLocation = '';
+  estimateRange = '€10-€13';
+  distance = '3.1 km';
   @ViewChild('f') estimateForm!: NgForm;
   onSubmit(form: NgForm) {
  if (form.valid) {
+      this.pickupLocation = form.value.pickup;
+      this.dropoffLocation = form.value.dropoff;
       this.isClosing = true;
       this.showResults = true;
     }
@@ -72,5 +85,16 @@ export class EstimatePanelComponent {
   onClose() {
     this.showResults = false;
     this.isClosing = false;
+    this.estimateForm?.resetForm();
   }
+    onBookRide() {
+    console.log('Booking ride from', this.pickupLocation, 'to', this.dropoffLocation);
+    // TODO: Implement ride booking logic
+  }
+
+  onVehicleTypeChange(vehicleType: string) {
+  console.log('Vehicle type changed to:', vehicleType);
+  // TODO: Recalculate price based on vehicle type
+}
+
 }
