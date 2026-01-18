@@ -42,6 +42,22 @@ import { log } from 'console';
 
                 <!-- Form Fields -->
                 <div class="flex flex-col gap-2.5">
+
+                  <!-- Email Field -->
+                  <div class="flex flex-col gap-2">
+                    <label class="text-sm font-normal font-poppins text-gray-700 flex items-center gap-2">
+                      <img class="w-6 h-6" src="mail.svg" alt="Mail"/>
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      [(ngModel)]="editableUser.email"
+                      class="input-base brightness-95"
+                      placeholder="E-Mail"
+                      disabled
+                    />
+                  </div>
+
                   <!-- First Name & Last Name Row -->
                   <div class="flex gap-2.5 flex-col sm:flex-row">
                     <div class="flex-1 flex flex-col gap-2">
@@ -66,20 +82,6 @@ import { log } from 'console';
                         placeholder="Last name"
                       />
                     </div>
-                  </div>
-
-                  <!-- Email Field -->
-                  <div class="flex flex-col gap-2">
-                    <label class="text-sm font-normal font-poppins text-gray-700 flex items-center gap-2">
-                      <img class="w-6 h-6" src="mail.svg" alt="Mail"/>
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      [(ngModel)]="editableUser.email"
-                      class="input-base"
-                      placeholder="E-Mail"
-                    />
                   </div>
 
                   <!-- Address Field -->
@@ -141,15 +143,27 @@ import { log } from 'console';
   `,
 })
 export class ProfileInfoCard {
-  @Input() user!: User;
   @Output() save = new EventEmitter<User>();
   @Output() openPswdChange = new EventEmitter<void>();
   
-  editableUser!:User;
+  editableUser!: User;
+
+  private _user!: User;
+
+  @Input()
+  set user(value: User) {
+    this._user = value;
+    this.editableUser = { ...value };
+    this.errorMessage = null;
+  }
+
+  get user(): User {
+    return this._user;
+  }
 
   errorMessage: string | null = null;
 
-  ngOnInit(): void {
+  ngOnChanges(): void {    
     this.editableUser = { ...this.user } as User;
   }
 

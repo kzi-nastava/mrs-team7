@@ -223,11 +223,11 @@ export class SignInComponent implements OnInit{
   sendingEmail = false;
 
   private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
 
-  constructor(public authService : AuthService) {
+  constructor(public authService : AuthService, private cdr: ChangeDetectorRef) {
   }
+  
   ngOnInit() {
     const tokenFromUrl = this.route.snapshot.queryParams['token'];
     
@@ -255,7 +255,7 @@ export class SignInComponent implements OnInit{
       },
       error: err => {
         this.errorMessage = err["message"];
-        console.log(this.errorMessage);        
+        this.cdr.markForCheck();
       }
     });
   }

@@ -1,15 +1,20 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfileInfoCard } from '../../../shared/components/profile-info-card';
-import { User } from '../../../../core/models/user';
-import { Vehicle } from '../../../../core/models/vehicle';
+import { Vehicle } from '../../../shared/models/vehicle';
 import { ChangePasswordModal } from "../../../shared/components/profile-change-pswd-modal";
+import { Subscription } from 'rxjs';
+import { UserService } from '../../../../core/services/user.service';
+import { Driver } from '../../../shared/models/driver';
+import { DriverService } from '../../services/driver.service';
+import { SuccessAlert } from "../../../shared/components/success-alert";
+import { User } from '../../../../core/models/user';
 
 @Component({
   selector: 'driver-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProfileInfoCard, ChangePasswordModal],
+  imports: [CommonModule, FormsModule, ProfileInfoCard, ChangePasswordModal, SuccessAlert],
   template: `
     <div class="min-h-screen bg-white">
       <div class="flex flex-col min-h-screen">
@@ -68,18 +73,18 @@ import { ChangePasswordModal } from "../../../shared/components/profile-change-p
                       <label class="text-sm font-normal font-poppins flex items-center text-gray-700">
                         Vehicle Model</label>
 
-                      <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
-                        {{ vehicleModel }}
-                      </p>
+                        <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
+                          {{ user.vehicle.model }}
+                        </p>
                     </div>
 
                     <div class="flex-1 flex flex-col">
                       <label class="text-sm font-normal font-poppins flex items-center text-gray-700">
                         Vehicle Type</label>
 
-                      <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
-                        {{ vehicle.type }}
-                      </p>
+                        <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
+                          {{ user.vehicle.type }}
+                        </p>
                     </div>
 
                   </div>
@@ -90,18 +95,18 @@ import { ChangePasswordModal } from "../../../shared/components/profile-change-p
                       <label class="text-sm font-normal font-poppins flex items-center text-gray-700">
                         License Plate</label>
 
-                      <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
-                        {{ vehicle.licensePlate }}
-                      </p>
+                        <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
+                          {{ user.vehicle.licensePlate }}
+                        </p>
                     </div>
 
                     <div class="flex-1 flex flex-col">
                       <label class="text-sm font-normal font-poppins flex items-center text-gray-700">
                         Seats</label>
 
-                      <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
-                        {{ vehicle.seatCount }}
-                      </p>
+                        <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
+                          {{ user.vehicle.seatCount }}
+                        </p>
                     </div>
 
                   </div>
@@ -112,18 +117,18 @@ import { ChangePasswordModal } from "../../../shared/components/profile-change-p
                       <label class="text-sm font-normal font-poppins flex items-center text-gray-700">
                         Infant Support</label>
 
-                      <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
-                        {{ vehicle.babyFriendly ? 'True' : 'False' }}
-                      </p>
+                        <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
+                          {{ user.vehicle.babyFriendly ? 'True' : 'False' }}
+                        </p>
                     </div>
 
                     <div class="flex-1 flex flex-col">
                       <label class="text-sm font-normal font-poppins flex items-center text-gray-700">
                         Pet Support</label>
 
-                      <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
-                        {{ vehicle.petsFriendly ? 'True' : 'False' }}
-                      </p>
+                        <p class="text-[20px] font-normal font-poppins text-black leading-8.25">
+                          {{ user.vehicle.petsFriendly ? 'True' : 'False' }}
+                        </p>
                     </div>
 
                   </div>
@@ -133,7 +138,13 @@ import { ChangePasswordModal } from "../../../shared/components/profile-change-p
 
               <change-password-modal
                 [isChangePasswordOpen]="isChangePasswordOpen"
-                (close)="closePswdChange()"> </change-password-modal>
+                (close)="closePswdChange($event)"> </change-password-modal>
+
+              <success-alert
+                [isOpen]="isSuccessOpen"
+                [message]="successMessage"
+                [title]="successTitle"
+                (close)="closeSuccessModal()"> </success-alert>
             </div>
 
           </main>
@@ -145,48 +156,82 @@ import { ChangePasswordModal } from "../../../shared/components/profile-change-p
   `,
 })
 export class DriverProfileComponent {
-  vehicleModel: string = "Model"
-
-  user: User = {
-    id: '1',
-    firstName: 'Andrew',
-    lastName: 'Wilson',
-    email: 'andrewwilson@email.com',
-    address: 'Novi Sad',
-    phoneNumber: '+381 65 123 1233',
-    role: "ADMIN"
-  }
-
   vehicle: Vehicle = {
     id: 0,
-    model: 'Model',
-    type: 'Type',
-    licensePlate: 'DSDSDS-111',
-    seatCount: 10,
-    babyFriendly: true,
+    model: '',
+    type: '',
+    licensePlate: '',
+    seatCount: 0,
+    babyFriendly: false,
     petsFriendly: false
   }
 
-  isChangePasswordOpen: boolean = false;
+  user: Driver = {
+    role: 'DRIVER',
+    vehicle: this.vehicle,
+    available: false,
+    active: false,
+    workedMinutesLast24h: 0,
+    rides: [],
+    ratings: [],
+    averageRating: 0,
+    id: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    address: '',
+    phoneNumber: ''
+  }
 
-  timeWorkedMinutes: number = 150;
+  private sub?: Subscription;
+  isChangePasswordOpen: boolean = false;
+  isSuccessOpen: boolean = false;
+  successTitle: string = "Success";
+  successMessage: string = "Profile successfully updated!";
+
+  constructor(private userService: UserService,
+              private cdr: ChangeDetectorRef,
+              private driverService: DriverService) {}
 
   readonly MAX_WORK_MINUTES = 8 * 60;
 
+  ngOnInit(): void {
+    this.sub = this.userService.currentUser$.subscribe(current => {
+      if (current) {
+        this.user = { ...current as Driver };
+        this.cdr.detectChanges();
+      }
+    });
+
+    this.userService.fetchMe().subscribe();
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
+
   get progressPercent(): number {
-    const pct = (this.timeWorkedMinutes / this.MAX_WORK_MINUTES) * 100;
+    const pct = (this.user.workedMinutesLast24h / this.MAX_WORK_MINUTES) * 100;
     return Math.min(100, Math.max(0, Math.round(pct)));
   }
 
   get timeWorkedHours(): number {
-    return Math.floor(Math.min(this.timeWorkedMinutes, this.MAX_WORK_MINUTES) / 60);
+    return Math.floor(Math.min(this.user.workedMinutesLast24h, this.MAX_WORK_MINUTES) / 60);
   }
   get timeWorkedMinutesRemainder(): number {
-    return Math.floor(Math.min(this.timeWorkedMinutes, this.MAX_WORK_MINUTES) % 60);
+    return Math.floor(Math.min(this.user.workedMinutesLast24h, this.MAX_WORK_MINUTES) % 60);
+  }
+  
+  closePswdChange(updated: boolean): void {
+    if (updated) {
+      this.successMessage = "Password successfully updated."
+      this.isSuccessOpen = true;
+    }
+    this.isChangePasswordOpen = false;
   }
 
-  closePswdChange(): void {
-    this.isChangePasswordOpen = false;
+  closeSuccessModal(): void {
+    this.isSuccessOpen = false;
   }
 
   openPswdChange(): void {
@@ -194,6 +239,17 @@ export class DriverProfileComponent {
   }
 
   saveProfile(updated: User): void {
-    console.log(updated);
+      this.driverService.updateDriver(updated).subscribe(
+      {
+        next: (user) => {
+          this.successMessage = "Profile update request sent. Changes will be visible once the request is approved."
+          this.isSuccessOpen = true;
+          this.cdr.detectChanges()
+        },
+        error: err => {
+          console.log(err["message"])
+        }
+      }
+    )
   }
 }

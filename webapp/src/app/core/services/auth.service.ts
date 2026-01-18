@@ -68,10 +68,14 @@ export class AuthService {
 
 
   public register(registerRequest: RegisterRequestDto) {    
-    return this.http.post(this.config.registerUrl, registerRequest)
-      .pipe(map(() => {
+    return this.http.post(this.config.registerUrl, registerRequest).pipe(
+      map(() => {
         console.log('Sent sign up request.');
-      }));
+      }),
+      catchError(err => {
+        return throwError(() => err["error"])
+      })
+    );
   }
 
   public logout() : void {

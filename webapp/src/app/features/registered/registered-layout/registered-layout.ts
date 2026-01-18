@@ -9,7 +9,7 @@ import { RegisteredSidebar } from '../components/registered-sidebar';
   standalone: true,
   imports: [RouterOutlet, HeaderComponent, RegisteredSidebar],
   template: `<div class="min-h-screen bg-app-dark">
-        <app-header [firstName]="firstName" [lastName]="lastName"></app-header>
+        <app-header></app-header>
 
         <div class="flex h-[calc(100vh-94px)]">
             <aside class="w-106 bg-app-dark text-white px-10">
