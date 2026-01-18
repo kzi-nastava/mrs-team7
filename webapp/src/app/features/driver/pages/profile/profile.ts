@@ -1,15 +1,15 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProfileInfoCard } from '../../shared/components/profile-info-card';
-import { User } from '../../../core/models/user';
-import { Vehicle } from '../../shared/models/vehicle';
-import { ChangePasswordModal } from "../../shared/components/profile-change-pswd-modal";
+import { ProfileInfoCard } from '../../../shared/components/profile-info-card';
+import { Vehicle } from '../../../shared/models/vehicle';
+import { ChangePasswordModal } from "../../../shared/components/profile-change-pswd-modal";
 import { Subscription } from 'rxjs';
-import { UserService } from '../../../core/services/user.service';
-import { Driver } from '../../shared/models/driver';
-import { DriverService } from '../services/driver.service';
-import { SuccessAlert } from "../../shared/components/success-alert";
+import { UserService } from '../../../../core/services/user.service';
+import { Driver } from '../../../shared/models/driver';
+import { DriverService } from '../../services/driver.service';
+import { SuccessAlert } from "../../../shared/components/success-alert";
+import { User } from '../../../../core/models/user';
 
 @Component({
   selector: 'driver-profile',
@@ -23,7 +23,7 @@ import { SuccessAlert } from "../../shared/components/success-alert";
           <main class="flex flex-1 p-8">
             <div class="flex flex-col gap-6 w-full">
 
-            <!-- Work Time Progress Card -->
+              <!-- Work Time Progress Card -->
               <div class="border-[1.5px] border-gray-200 rounded-3xl shadow-lg p-8 flex flex-col gap-6">
                 <h3 class="text-[22px] font-normal font-poppins text-black leading-8.25"> Driver Activity</h3>
 
@@ -48,7 +48,7 @@ import { SuccessAlert } from "../../shared/components/success-alert";
                     ></div>
                   </div>
 
-                    <div class="flex justify-between text-xs text-gray-500 mt-2">
+                  <div class="flex justify-between text-xs text-gray-500 mt-2">
                     <span>0h</span>
                     <span>8h</span>
                   </div>

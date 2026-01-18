@@ -1,4 +1,4 @@
-import { Component, inject} from '@angular/core';
+import { ChangeDetectorRef, Component, inject} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HeaderComponent } from '../../features/shared/components/header.component';
@@ -159,7 +159,7 @@ import { first } from 'rxjs';
                 @if (passwordCtrl.invalid && (passwordCtrl.dirty || passwordCtrl.touched)) {
                   <p class="text-red-400 text-xs">
                     @if (passwordCtrl.errors?.['required']) { <span>Password is required.</span> }
-                    @if (passwordCtrl.errors?.['minlength']) { <span>Password must be at least 6 characters.</span> }
+                    @if (passwordCtrl.errors?.['minlength']) { <span>Password must be at least 8 characters.</span> }
                   </p>
                 }
               </div>
@@ -188,14 +188,64 @@ import { first } from 'rxjs';
             <div class="pt-4">
               <button
                 type="submit"
-                [disabled]="registerForm.invalid || password !== confirmPassword"
+                [disabled]="registerForm.invalid || password !== confirmPassword || isSubmitting"
                 class="w-full bg-app-accent text-black text-sm font-normal font-poppins py-3 rounded-full hover:bg-app-accent-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Register
+                @if (isSubmitting) {
+                  <span>Registering...</span>
+                } @else {
+                  <span>Register</span>
+                }
               </button>
             </div>
           </form>
         </div>
+        @if (registrationSuccess) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center">
+          <!-- Backdrop -->
+          <div class="absolute inset-0 bg-black/50"></div>
+
+          <!-- Modal -->
+          <div class="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-xl p-6">
+            <div class="text-center space-y-4">
+              <div class="flex justify-center">
+                <svg class="w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <h2 class="text-lg font-semibold text-gray-900">Registration Successful!</h2>
+              <p class="text-sm text-gray-600">
+                Please check your email at <span class="font-medium">{{ email }}</span> to activate your account.
+              </p>
+              <button
+                (click)="closeSuccessPopup()"
+                class="mt-4 px-6 py-2 rounded-full text-sm bg-app-accent text-app-dark hover:bg-app-accent-dark transition"
+              >
+                Go to Sign In
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Error Message -->
+      @if (registrationError) {
+        <div class="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg max-w-md">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm text-red-800">{{ registrationError }}</p>
+            </div>
+            <button (click)="registrationError = null" class="text-red-500 hover:text-red-700">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      }
       </main>
     </div>
   `
@@ -209,12 +259,18 @@ export class UserRegistrationComponent {
   password = '';
   confirmPassword = '';
 
+  registrationSuccess = false;
+  registrationError: string | null = null;
+  isSubmitting = false;
+
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(public authService : AuthService) {
   }
 
   onSubmit() {
+    this.isSubmitting = true;
     console.log("Submitted");
     
 
@@ -230,12 +286,21 @@ export class UserRegistrationComponent {
     
     this.authService.register(req).subscribe({
   next: () => {
+    this.isSubmitting = false;
+    this.registrationSuccess = true;
+    this.cdr.detectChanges();
     console.log('Signup request sent successfully!');
   },
   error: (err) => {
+    this.isSubmitting = false;
+    this.registrationError = err.error?.message || 'Registration failed. Please try again.';
+    this.cdr.detectChanges();
     console.error('Signup failed', err);
   }}
   )
-    // this.router.navigate(['/login']);
+  }
+  closeSuccessPopup() {
+    this.registrationSuccess = false;
+    this.router.navigate(['/signin']);
   }
 }

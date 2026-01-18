@@ -56,7 +56,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendPasswordResetEmail(User user, String token) {
-        String link = "http://localhost:4200/reset-password?token=" + token;
+        String link = "http://localhost:4200/signIn?token=" + token;
         Email from = new Email(fromEmail, "UberPLUS");
         Email to = new Email(user.getEmail());
         Content content = new Content("text/html", " ");
