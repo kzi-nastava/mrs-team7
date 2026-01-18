@@ -1,5 +1,6 @@
 package com.uberplus.backend.dto.user;
 
+import com.uberplus.backend.model.User;
 import com.uberplus.backend.model.enums.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,4 +20,17 @@ public class UserProfileDTO {
     private String blockReason;
     private boolean activated;
 
+    public UserProfileDTO(User user) {
+        id = user.getId();
+        email = user.getEmail();
+        firstName = user.getFirstName();
+        lastName = user.getLastName();
+        phoneNumber = user.getPhoneNumber();
+        address = user.getAddress();
+        profilePicture = user.getProfilePicture();
+        role = user.getRole();
+        blocked = user.isBlocked();
+        blockReason = user.getBlockReason();
+        activated = user.isActivated();
+    }
 }
