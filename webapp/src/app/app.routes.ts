@@ -9,8 +9,9 @@ import { DriverProfileComponent } from './features/driver/pages/profile/profile'
 import { MapComponent } from './features/shared/map/map';
 import {UnregisteredHomeComponent} from './features/unregistered/pages/home/home';
 import {DriverDashboard} from './features/driver/pages/dashboard/driver-dashboard/driver-dashboard';
-import { RegisteredDashboard } from './features/registered/pages/dashboard/registered-dashboard/registered-dashboard';
+import { RegisteredDashboard } from './features/registered/pages/registered-dashboard/registered-dashboard';
 import { AccountActivationComponent } from './core/auth/account-activation';
+import { PassengerRideHistory } from './features/registered/pages/ride-history/passenger-ride-history/passenger-ride-history';
 
 export const routes: Routes = [
   { path: '', component: UnregisteredHomeComponent },
@@ -21,6 +22,7 @@ export const routes: Routes = [
   { path: 'user', component: RegisteredLayout, children: [
     { path: 'profile', component: RegisteredProfileComponent },
     { path: 'dashboard', component: RegisteredDashboard },
+    { path: 'ride-history', component: PassengerRideHistory},
     { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   ] },
   { path: 'registerUser', component: UserRegistrationComponent },
