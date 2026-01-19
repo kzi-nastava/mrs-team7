@@ -1,8 +1,10 @@
 package com.uberplus.backend.controller;
 
 import com.uberplus.backend.dto.common.MessageDTO;
+import com.uberplus.backend.dto.pricing.PriceEstimateResponseDTO;
 import com.uberplus.backend.dto.ride.*;
 import com.uberplus.backend.repository.RideRepository;
+import com.uberplus.backend.service.PricingService;
 import com.uberplus.backend.service.RideService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +25,18 @@ public class RideController {
 
     private final RideService rideService;
     private final RideHistoryService rideHistoryService;
+    private final PricingService pricingService;
 
     // POST /api/rides/estimate
     @PostMapping("/estimate")
-    public ResponseEntity<RideEstimateDTO> estimateRide(@Valid @RequestBody CreateRideRequestDTO request) {
-        return ResponseEntity.ok(new RideEstimateDTO());
+    public ResponseEntity<PriceEstimateResponseDTO> estimateRide(@Valid @RequestBody RideEstimateDTO request) {
+        double price = pricingService.calculatePrice(request);
+
+        return ResponseEntity.ok(new PriceEstimateResponseDTO(
+                price,
+                "%.1f km".formatted(request.getEstimatedDistance() / 1000.0),
+                String.format("€%.2f",price)
+        ));
     }
     // POST /api/rides
     @PostMapping
