@@ -7,6 +7,9 @@ import { UserService } from '../../../../core/services/user.service';
 import { User } from '../../../../core/models/user';
 import { FormsModule } from '@angular/forms';
 import { VehicleType } from '../../../shared/models/vehicle';
+import { RideOrderService } from '../../services/ride-order.service';
+import { LocationDTO, nominatimToLocation } from '../../../shared/models/location';
+import { request } from 'http';
 
 @Component({
   selector: 'ride-booking-sidebar',
@@ -16,14 +19,15 @@ import { VehicleType } from '../../../shared/models/vehicle';
 export class RideBookingSidebar {
   bookingState = inject(RideBookingStateService);
   location = inject(Location);
-  userService = inject(UserService)
+  userService = inject(UserService);
+  rideOrderService = inject(RideOrderService);
 
   vehicleTypes: string[] = [];
-  preferences = {
-    pets: false,
-    infants: false,
-    vehicleType: 'any' as string
-  };
+
+  pets: boolean = false;
+  infants: boolean = false;
+  vehicleType: string = 'any';
+
 
   step = signal<number>(1);
   user = signal<User>({
@@ -82,6 +86,32 @@ export class RideBookingSidebar {
   }
 
   bookRide() {
-    
+    const requestVehicleType: VehicleType | undefined =
+      Object.values(VehicleType).includes(this.vehicleType as VehicleType)
+      ? (this.vehicleType as VehicleType)
+      : undefined;
+
+    if(this.bookingState.pickup() == null) return;
+    if(this.bookingState.dropoff() == null) return;
+
+    let requestStops : LocationDTO[] = []
+
+    this.bookingState.stops().forEach((res) => {
+        if (res!==null) {
+          requestStops.push(nominatimToLocation(res))
+        };
+      }
+    )
+
+    this.rideOrderService.requestRide(
+      nominatimToLocation(this.bookingState.pickup()!),
+      nominatimToLocation(this.bookingState.dropoff()!),
+      requestVehicleType,
+      requestStops,
+      this.infants, this.pets,
+      [],
+      new Date(),
+      undefined   
+    ).subscribe();
   }
 }

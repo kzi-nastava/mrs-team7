@@ -167,13 +167,13 @@
           <button
             type="button"
             class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:opacity-80 transition-opacity"
-            (click)="preferences.pets = !preferences.pets"
+            (click)="pets = !pets"
           >
             <div class="flex items-center gap-3">
               <span class="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center border border-gray-300"
-                    [ngClass]="{'bg-app-accent': preferences.pets, 'bg-white': !preferences.pets}">
+                    [ngClass]="{'bg-app-accent': pets, 'bg-white': !pets}">
                 <!-- Check mark -->
-                 @if(preferences.pets){
+                 @if(pets){
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M20 6L9 17L4 12" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
@@ -188,14 +188,14 @@
           <button
             type="button"
             class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:opacity-80 transition-opacity"
-            (click)="preferences.infants = !preferences.infants"
-            aria-pressed="{{preferences.infants}}"
+            (click)="infants = !infants"
+            aria-pressed="{{infants}}"
           >
             <div class="flex items-center gap-3">
               <span class="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center border border-gray-300"
-                    [ngClass]="{'bg-app-accent': preferences.infants, 'bg-white': !preferences.infants}">
+                    [ngClass]="{'bg-app-accent': infants, 'bg-white': !infants}">
                 <!-- Check mark -->
-                 @if (preferences.infants) {
+                 @if (infants) {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M20 6L9 17L4 12" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
@@ -213,7 +213,7 @@
             <div class="relative">
               <select
                 class="w-full input-base"
-                [(ngModel)]="preferences.vehicleType"
+                [(ngModel)]="vehicleType"
               >
                 <option [value]="'any'">Any</option>
                 @for (v of vehicleTypes; track $index) {
