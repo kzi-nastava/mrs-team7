@@ -1,10 +1,11 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { EstimateResultsComponent } from './estimate-results.component';
 import { Router } from '@angular/router';
 import { LocationSearchInput } from '../../shared/components/location-search-input/location-search-input';
 import { NominatimResult } from '../../shared/services/nominatim.service';
+import { RideBookingStateService } from '../../../core/services/ride-booking-state.service';
 
 @Component({
   selector: 'app-estimate-panel',
@@ -42,6 +43,7 @@ import { NominatimResult } from '../../shared/services/nominatim.service';
   [dropoff]="dropoffLocation"
   [estimateRange]="estimateRange"
   [distance]="distance"
+  [arrivalTime]="arrivalTime"
   (vehicleTypeChanged)="onVehicleTypeChange($event)"
   (backToMap)="onClose()"
   (bookRide)="onBookRide()"></app-estimate-results>
@@ -71,20 +73,33 @@ export class EstimatePanelComponent {
   dropoffLocation = '';
   estimateRange = '€10-€13';
   distance = '3.1 km';
+  arrivalTime = '6-7 min';
 
   pickupResult?: NominatimResult;
   dropoffResult?: NominatimResult;
   
   @ViewChild('f') estimateForm!: NgForm;
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    public bookingState: RideBookingStateService
+  ) {effect(() => {
+      const routeInfo = this.bookingState.routeInfo();
+      if (routeInfo) {
+        this.distance = `${(routeInfo.totalDistance / 1000).toFixed(1)} km`;
+        this.arrivalTime = `${Math.ceil(routeInfo.totalDuration / 60)} min`;
+      }
+    });}
+
   onPickupSelected(res: NominatimResult) {
     this.pickupResult = res;
     this.pickupLocation = res.formattedText;
+    this.bookingState.setPickup(res);
   }
 
   onDropoffSelected(res: NominatimResult) {
     this.dropoffResult = res;
     this.dropoffLocation = res.formattedText;
+    this.bookingState.setDropoff(res); 
   }
   onSubmit(form: NgForm) {
   if (!this.pickupResult || !this.dropoffResult) {

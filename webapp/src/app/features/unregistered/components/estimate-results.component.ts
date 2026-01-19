@@ -65,8 +65,7 @@ import { CommonModule } from '@angular/common';
           <div data-layer="Estimate price" class="EstimatePrice text-center justify-start text-black text-base font-normal font-['Poppins'] leading-5">Estimate price</div>
           <div data-layer="€10 - €13" class="1013 self-stretch text-center justify-start text-neutral-900 text-4xl font-semibold font-['Poppins'] leading-12">{{estimateRange}}</div>
           <div data-layer="Frame 19" class="Frame19 inline-flex justify-center items-start gap-4">
-            <div data-layer="7 min pickup" class="MinPickup text-center justify-start text-black text-base font-normal font-['Poppins'] leading-5">7 min pickup</div>
-            <div data-layer="ETA 12:54" class="Eta1254 text-center justify-start text-black text-base font-normal font-['Poppins'] leading-5">ETA 12:54</div>
+            <div data-layer="ETA 12:54" class="Eta1254 text-center justify-start text-black text-base font-normal font-['Poppins'] leading-5">{{arrivalTime}}</div>
             <div data-layer="3.1 km" class="1Km text-center justify-start text-black text-base font-normal font-['Poppins'] leading-5">{{distance}}</div>
           </div>
         </div>
@@ -101,6 +100,7 @@ export class EstimateResultsComponent {
   @Input() dropoff = 'drugde';
   @Input() estimateRange = '€10-€13';
   @Input() distance = '10-13 km';
+  @Input() arrivalTime = '10-15 min';
 
   selectedVehicleType: 'standard' | 'deluxe' | 'extraLarge' = 'standard';
   
