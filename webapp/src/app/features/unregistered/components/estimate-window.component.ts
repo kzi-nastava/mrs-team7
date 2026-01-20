@@ -1,4 +1,4 @@
-import { Component, effect, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { EstimateResultsComponent } from './estimate-results.component';
@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { LocationSearchInput } from '../../shared/components/location-search-input/location-search-input';
 import { NominatimResult } from '../../shared/services/nominatim.service';
 import { RideBookingStateService } from '../../../core/services/ride-booking-state.service';
+import { RideEstimateDTO, RideEstimateResponseDTO, RideService } from '../../../core/services/ride.service';
 
 @Component({
   selector: 'app-estimate-panel',
@@ -74,6 +75,7 @@ export class EstimatePanelComponent {
   estimateRange = '€10-€13';
   distance = '3.1 km';
   arrivalTime = '6-7 min';
+  selectedVehicle: 'STANDARD' | 'LUXURY' | 'VAN' = 'STANDARD';
 
   pickupResult?: NominatimResult;
   dropoffResult?: NominatimResult;
@@ -81,10 +83,13 @@ export class EstimatePanelComponent {
   @ViewChild('f') estimateForm!: NgForm;
   constructor(
     private router: Router,
-    public bookingState: RideBookingStateService
+    public bookingState: RideBookingStateService,
+    public rideService: RideService,
+    private cdr: ChangeDetectorRef, 
   ) {effect(() => {
       const routeInfo = this.bookingState.routeInfo();
       if (routeInfo) {
+        this.calculatePriceEstimate(routeInfo);
         this.distance = `${(routeInfo.totalDistance / 1000).toFixed(1)} km`;
         this.arrivalTime = this.calculateArrivalTime(routeInfo.totalDuration);
       }
@@ -124,8 +129,12 @@ export class EstimatePanelComponent {
   }
 
   onVehicleTypeChange(vehicleType: string) {
-  console.log('Vehicle type changed to:', vehicleType);
-  // TODO: Recalculate price based on vehicle type
+  this.selectedVehicle = vehicleType.toUpperCase() as 'STANDARD' | 'LUXURY' | 'VAN';
+  if (this.bookingState.routeInfo()) {
+    this.calculatePriceEstimate(this.bookingState.routeInfo()!);
+  }
+  this.cdr.detectChanges();
+
 }
   calculateArrivalTime(durationSeconds: number): string {
     if (durationSeconds < 60) {
@@ -139,5 +148,22 @@ export class EstimatePanelComponent {
     const durationMinutes = Math.ceil(durationSeconds / 60);
     return `${durationMinutes} min`;
   }
+  calculatePriceEstimate(routeInfo: { totalDistance: number; totalDuration: number }) {
+    const request: RideEstimateDTO = {
+          estimatedDistance: routeInfo.totalDistance,
+          vehicleType: this.selectedVehicle
+        };
+        this.rideService.calculatePriceEstimate(request).subscribe({
+          next: (response: RideEstimateResponseDTO) => {
+            let price = response.finalPrice;
+            this.estimateRange = '€' + (price-1).toFixed(2) + ' - €' + (price+1).toFixed(2);
+            this.cdr.markForCheck();
+          },
+          error: (error) => {
+            console.error('Error fetching price:', error);
+          }
+        });
+  }
+  
 
 }

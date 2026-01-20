@@ -9,6 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PriceEstimateResponseDTO {
     private double finalPrice;
-    private String distanceDisplay;
     private String priceDisplay;
 }

@@ -3,7 +3,6 @@ package com.uberplus.backend.controller;
 import com.uberplus.backend.dto.common.MessageDTO;
 import com.uberplus.backend.dto.pricing.PriceEstimateResponseDTO;
 import com.uberplus.backend.dto.ride.*;
-import com.uberplus.backend.repository.RideRepository;
 import com.uberplus.backend.service.PricingService;
 import com.uberplus.backend.service.RideService;
 import jakarta.validation.Valid;
@@ -34,10 +33,10 @@ public class RideController {
 
         return ResponseEntity.ok(new PriceEstimateResponseDTO(
                 price,
-                "%.1f km".formatted(request.getEstimatedDistance() / 1000.0),
                 String.format("€%.2f",price)
         ));
     }
+    
     // POST /api/rides
     @PostMapping
     public ResponseEntity<RideDTO> createRide(Authentication auth, @Valid @RequestBody CreateRideRequestDTO request) {
