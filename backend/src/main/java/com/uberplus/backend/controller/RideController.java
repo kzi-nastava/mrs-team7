@@ -1,5 +1,6 @@
 package com.uberplus.backend.controller;
 
+import com.sendgrid.Response;
 import com.uberplus.backend.dto.common.MessageDTO;
 import com.uberplus.backend.dto.ride.*;
 import com.uberplus.backend.repository.RideRepository;
@@ -34,7 +35,12 @@ public class RideController {
     public ResponseEntity<RideDTO> createRide(Authentication auth, @Valid @RequestBody CreateRideRequestDTO request) {
         return ResponseEntity.ok(rideService.reqestRide(auth.getName(), request));
     }
-
+    // Za sad samo driver. Ne znam da li treba za druge.
+    // GET /api/rides
+    @GetMapping
+    public ResponseEntity<List<RideDTO>> getRides(Authentication auth) {
+        return ResponseEntity.ok(rideService.getRides(auth.getName()));
+    }
     // GET /api/rides/{rideId}
     @GetMapping("/{rideId}")
     public ResponseEntity<RideDTO> getRide(@PathVariable Integer rideId) {
@@ -65,7 +71,7 @@ public class RideController {
     // PUT /api/rides/{rideId}/start
     @PutMapping("/{rideId}/start")
     public ResponseEntity<RideDTO> startRide(@PathVariable Integer rideId) {
-        return ResponseEntity.ok(new RideDTO());
+        return ResponseEntity.ok(rideService.startRide(rideId));
     }
 
     // PUT /api/rides/{rideId}/end
