@@ -1,8 +1,10 @@
-import { Component, computed, inject, Signal } from '@angular/core';
+import { Component, computed, inject, signal, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MapComponent} from '../../../../shared/map/map';
 import { RidesService } from '../../../services/rides.service';
 import { RideDTO, RideStatus } from '../../../../shared/models/ride';
+import { UserService } from '../../../../../core/services/user.service';
+import { Driver } from '../../../../shared/models/driver';
 
 type Passenger = { name: string; email: string };
 
@@ -25,15 +27,22 @@ type BookedRide = {
 })
 export class DriverDashboard {
 
-  private readonly workMinutes = 265;      // 4h 25min
-  private readonly workLimitMinutes = 480; // 8h
+  private workMinutes = signal<number>(24);
+  private readonly workLimitMinutes = 8 * 60;
 
   ridesService = inject(RidesService);
+  userService = inject(UserService);
   readonly rides = this.ridesService.rides;
   readonly currentRide = this.ridesService.currentRide;
 
   ngOnInit() {
     this.ridesService.fetchRides().subscribe();
+    this.userService.currentUser$.subscribe(current => {
+          if (current) {
+            this.workMinutes.set((current as Driver).workedMinutesLast24h);
+          }
+        });
+    this.userService.fetchMe().subscribe();
   }
 
   readonly bookedRides: Signal<BookedRide[]> = computed(() =>
@@ -139,7 +148,7 @@ export class DriverDashboard {
   }
 
   get workMinutesText(): string {
-    return this.formatMinutes(this.workMinutes);
+    return this.formatMinutes(this.workMinutes());
   }
 
   get workLimitText(): string {
@@ -147,7 +156,7 @@ export class DriverDashboard {
   }
 
   get workPercent(): number {
-    const p = (this.workMinutes / this.workLimitMinutes) * 100;
+    const p = (this.workMinutes() / this.workLimitMinutes) * 100;
     return Math.max(0, Math.min(100, Math.round(p)));
   }
 
