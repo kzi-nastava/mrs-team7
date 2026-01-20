@@ -16,9 +16,11 @@ export class ConfigService {
   public forgotPassUrl = this.baseUrl + '/auth/forgot-password'
   public resetPassUrl = this.baseUrl + '/auth/reset-password'
   
-  public ridesUrl = this.baseUrl + '/rides'; 
+  public ridesUrl = this.baseUrl + '/rides';
+  public priceEstimateUrl = this.ridesUrl + '/estimate';
   
   startRideUrl(rideId: number): string {
       return this.ridesUrl + '/' + rideId.toString() + '/start';
   }
+
 }
