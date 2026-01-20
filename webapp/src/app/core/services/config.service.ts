@@ -17,5 +17,6 @@ export class ConfigService {
     public resetPassUrl = this.baseUrl + '/auth/reset-password'
     
     public ridesUrl = this.baseUrl + '/rides'; 
+    public priceEstimateUrl = this.ridesUrl + '/estimate';
 
 }

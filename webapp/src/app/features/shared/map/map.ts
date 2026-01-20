@@ -20,8 +20,9 @@ import { NominatimResult } from '../services/nominatim.service';
   selector: 'app-map',
   standalone: true,
   templateUrl: './map.html',
-  imports: [EstimatePanelComponent],
+  imports: [],
 })
+
 export class MapComponent implements AfterViewInit, OnChanges {
   @Input() vehicles: VehicleMarker[] = [];
 
@@ -109,11 +110,11 @@ export class MapComponent implements AfterViewInit, OnChanges {
     return [Number(r.lat), Number(r.lon)];
   }
 
-  private renderBooking(
+  private async renderBooking(
     pickup: NominatimResult | null,
     stops: (NominatimResult | null)[],
     dropoff: NominatimResult | null
-  ): void {
+  ): Promise<void> {
     if (!this.L || !this.map || !this.bookingLayer) return;
 
     this.bookingLayer.clearLayers();
@@ -147,16 +148,18 @@ export class MapComponent implements AfterViewInit, OnChanges {
 
 
     if (points.length >= 2) {
-      this.buildFullRoute(points).then(route => {
-        this.L!.polyline(route).addTo(this.bookingLayer!);
-      });
+      const { totalDistance, totalDuration, routeCoords } = await this.buildFullRoute(points);
+      if (routeCoords.length > 0) {
+        this.L!.polyline(routeCoords).addTo(this.bookingLayer!);
+      }
+      this.bookingState.setRouteInfo({ totalDistance: totalDistance, totalDuration: totalDuration });
     }
   }
 
   private async fetchRoute(
     from: [number, number],
     to: [number, number]
-  ): Promise<[number, number][]> {
+  ): Promise<{ distance: number; duration: number; coordinates?: [number, number][] }> {
 
     const url =
       `https://router.project-osrm.org/route/v1/driving/` +
@@ -166,24 +169,38 @@ export class MapComponent implements AfterViewInit, OnChanges {
     const res = await fetch(url);
     const data = await res.json();
 
-    return data.routes[0].geometry.coordinates
-      .map((c: [number, number]) => [c[1], c[0]]);
+    const route = data.routes[0];
+     return {
+        distance: route.distance,
+        duration: route.duration,
+        coordinates: route.geometry?.coordinates.map((c: [number, number]) => [c[1], c[0]])};
   }
 
-  private async buildFullRoute(points: [number, number][]) {
-    if (points.length < 2) return [];
+  private async buildFullRoute(points: [number, number][]): Promise<{
+  totalDistance: number;
+  totalDuration: number;
+  routeCoords: [number, number][];
+}> { {
+    if (points.length < 2) return { totalDistance: 0, totalDuration: 0, routeCoords: [] };
 
     let fullRoute: [number, number][] = [];
+    let totalDistance = 0;
+    let totalDuration = 0;
 
     for (let i = 0; i < points.length - 1; i++) {
       const segment = await this.fetchRoute(points[i], points[i + 1]);
+      totalDistance += segment.distance;
+      totalDuration += segment.duration;
 
       // avoid duplicate connection point
-      if (i > 0) segment.shift();
+      if (i > 0 && segment.coordinates) segment.coordinates.shift();
 
-      fullRoute = fullRoute.concat(segment);
+      if (segment.coordinates) {
+        fullRoute = fullRoute.concat(segment.coordinates);
+      }
     }
 
-    return fullRoute;
-  }
+    return { totalDistance, totalDuration, routeCoords: fullRoute };
+  }  
+}
 }
