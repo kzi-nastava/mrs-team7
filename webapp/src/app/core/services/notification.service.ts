@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { effect, Injectable } from '@angular/core';
-import { CurrentRideStateService } from './current-ride-state.service';
+import { CurrentRideStateService } from '../../features/registered/services/current-ride-state.service';
 import { ConfigService } from './config.service';
 
 @Injectable({

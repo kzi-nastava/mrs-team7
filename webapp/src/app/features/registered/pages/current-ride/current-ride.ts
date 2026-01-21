@@ -2,7 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {MapComponent} from '../../../shared/map/map';
-import { CurrentRideStateService } from '../../../../core/services/current-ride-state.service';
+import { CurrentRideStateService } from '../../services/current-ride-state.service';
 
 type RideStatus = 'Assigned' | 'Started' | 'Finished' | 'Cancelled';
 type PassengerItem = { id: number; name: string; role: 'You' | 'Passenger' };
