@@ -1,0 +1,28 @@
+import { HttpClient } from '@angular/common/http';
+import { effect, Injectable } from '@angular/core';
+import { CurrentRideStateService } from './current-ride-state.service';
+import { ConfigService } from './config.service';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class NotificationService {
+constructor(
+    private rideState: CurrentRideStateService,
+    private http: HttpClient,
+    private configService: ConfigService
+  ) {
+    effect(() => {
+      const panicActive = this.rideState.panicSignal().pressed;
+      if (panicActive) {
+        this.notifyAdminAboutPanic(this.rideState.panicSignal().rideId, this.rideState.panicSignal().userId);
+      }
+    });
+  }
+  notifyAdminAboutPanic(rideId: number, userId: number) : void {
+    this.http.post(this.configService.ridesUrl + `/${rideId}/panic`, userId).subscribe({  });
+  }
+}
+
+
+
