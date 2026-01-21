@@ -7,6 +7,7 @@ import com.sendgrid.helpers.mail.Mail;
 import com.sendgrid.helpers.mail.objects.Content;
 import com.sendgrid.helpers.mail.objects.Email;
 import com.sendgrid.helpers.mail.objects.Personalization;
+import com.uberplus.backend.model.Driver;
 import com.uberplus.backend.model.Passenger;
 import com.uberplus.backend.model.User;
 import com.uberplus.backend.service.EmailService;
@@ -22,6 +23,8 @@ public class EmailServiceImpl implements EmailService {
     private final String fromEmail;
     @Value("${app.frontend.activation-url:http://localhost:4200/activate?token=}")
     private String activationUrl;
+    @Value("${app.frontend.driver-activation-url}")
+    private String driverActivationURl;
 
     public EmailServiceImpl(@Value("${sendgrid.api.key}") String apiKey, @Value("${sendgrid.from.email}") String fromEmail) {
         this.sg = new SendGrid(apiKey);
@@ -30,7 +33,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendActivationEmail(Passenger user){
         String token = user.getActivationToken();
-        String activationLink = activationUrl + token;
+        String activationLink = driverActivationURl + token;
         Email from = new Email(fromEmail, "UberPLUS");
         Email to = new Email(user.getEmail());
         Content content = new Content("text/html", " ");
@@ -42,6 +45,32 @@ public class EmailServiceImpl implements EmailService {
         Mail mail = new Mail(from, "UberPlus - Activate your account", to, content);
         mail.addPersonalization(personalization);
         mail.setTemplateId("d-cfc193aca9e34d6998b0fff380c38d92");
+        Request request = new Request();
+        try {
+            request.setMethod(Method.POST);
+            request.setEndpoint("mail/send");
+            request.setBody(mail.build());
+
+            sg.api(request);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to send activation email", e);
+        }
+    }
+
+    @Override
+    public void sendDriverActivationEmail(Driver driver) {
+        String token = driver.getActivationToken();
+        String activationLink = activationUrl + token;
+        Personalization personalization = new Personalization();
+        personalization.addDynamicTemplateData("firstName", driver.getFirstName());
+        personalization.addDynamicTemplateData("activationLink", activationLink);
+        personalization.addTo(new Email(driver.getEmail()));
+
+        Mail mail = new Mail();
+        mail.setFrom(new Email(fromEmail, "UberPLUS"));
+        mail.setTemplateId("d-cfc193aca9e34d6998b0fff380c38d92");
+        mail.addPersonalization(personalization);
+
         Request request = new Request();
         try {
             request.setMethod(Method.POST);

@@ -1,7 +1,7 @@
 package com.uberplus.backend.controller;
 
 import com.uberplus.backend.dto.driver.DriverCreationDTO;
-import com.uberplus.backend.dto.driver.DriverProfileDTO;
+import com.uberplus.backend.dto.driver.DriverDTO;
 import com.uberplus.backend.dto.driver.DriverStatusUpdateDTO;
 import com.uberplus.backend.dto.user.UserUpdateDTO;
 import com.uberplus.backend.service.DriverService;
@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/drivers")
@@ -20,13 +23,24 @@ public class DriverController {
 
     // POST /api/drivers
     @PostMapping
-    public ResponseEntity<DriverProfileDTO> createDriver(@Valid @RequestBody DriverCreationDTO request) {
-        return ResponseEntity.ok(new DriverProfileDTO());
+    public ResponseEntity<Void> createDriver(@Valid @RequestBody DriverCreationDTO request) {
+        Integer id = driverService.createDriver(request);
+        URI location = ServletUriComponentsBuilder
+                .fromPath("/api/drivers/" + id.toString())
+                .build()
+                .toUri();
+        return ResponseEntity.created(location).build();
+    }
+
+    // GET /api/drivers/{id}
+    @GetMapping("/{id}")
+    public ResponseEntity<DriverDTO> getDriver(@PathVariable Integer driverId) {;
+        return ResponseEntity.ok(driverService.getDriver(driverId));
     }
 
     // GET /api/drivers/profile
     @GetMapping("/profile")
-    public ResponseEntity<DriverProfileDTO> getProfile(Authentication authentication) {
+    public ResponseEntity<DriverDTO> getProfile(Authentication authentication) {
         return ResponseEntity.ok(driverService.getProfile(authentication.getName()));
     }
 
@@ -52,7 +66,7 @@ public class DriverController {
 
     // PUT /api/drivers/{driverId}/status
     @PutMapping("/{driverId}/status")
-    public ResponseEntity<DriverProfileDTO> updateStatus(@PathVariable Integer driverId, @Valid @RequestBody DriverStatusUpdateDTO request) {
-        return ResponseEntity.ok(new DriverProfileDTO());
+    public ResponseEntity<DriverDTO> updateStatus(@PathVariable Integer driverId, @Valid @RequestBody DriverStatusUpdateDTO request) {
+        return ResponseEntity.ok(new DriverDTO());
     }
 }

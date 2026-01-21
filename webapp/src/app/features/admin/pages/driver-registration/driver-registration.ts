@@ -1,10 +1,9 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
-import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { RegisterRequestDto } from '../../../../core/auth/register-request.dto';
-import { VehicleType } from '../../../shared/models/vehicle';
+import { VehicleType, vehicleTypeKeyFromValue } from '../../../shared/models/vehicle';
 import { CommonModule } from '@angular/common';
+import { DriverCreationDTO, DriverService, VehicleCreationDTO } from '../../../shared/services/driver.service';
 
 @Component({
   selector: 'app-driver-registration',
@@ -36,7 +35,7 @@ export class DriverRegistration {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  constructor(public authService : AuthService) {
+  constructor(public driverService : DriverService) {
   }
 
   ngOnInit() {
@@ -47,18 +46,25 @@ export class DriverRegistration {
     this.isSubmitting = true;
     console.log("Submitted");
     
+    let vehicle: VehicleCreationDTO = {
+      model: this.vehicleModel,
+      type: vehicleTypeKeyFromValue(this.vehicleType),
+      licensePlate: this.licensePlate,
+      seatCount: this.passengers,
+      babyFriendly: this.infants,
+      petsFriendly: this.pets
+    }
 
-    let req: RegisterRequestDto = {
+    let req: DriverCreationDTO = {
       email: this.email,
-      password: this.password,
-      confirmPassword: this.confirmPassword,
       firstName: this.firstName,
       lastName: this.lastName,
       address: this.address,
-      phoneNumber: this.phone
+      phoneNumber: this.phone,
+      vehicle: vehicle
     }
     
-    this.authService.register(req).subscribe({
+    this.driverService.createDriver(req).subscribe({
           next: () => {
             this.isSubmitting = false;
             this.registrationSuccess = true;
@@ -75,6 +81,6 @@ export class DriverRegistration {
       }
   closeSuccessPopup() {
     this.registrationSuccess = false;
-    this.router.navigate(['/signin']);
+    this.router.navigate(['/admin/dashboard']);
   }
 }
