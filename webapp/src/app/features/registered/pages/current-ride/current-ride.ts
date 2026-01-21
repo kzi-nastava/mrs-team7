@@ -1,9 +1,12 @@
-import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
+import { Component, EventEmitter, inject, Output, signal, OnInit, ChangeDetectorRef} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import {MapComponent} from '../../../shared/map/map';
 import {VehicleMarker} from '../../../shared/map/vehicle-marker';
 import {VehiclesApiService} from '../../../shared/api/vehicles-api.service';
+import { FormsModule } from '@angular/forms';
+import {MapComponent} from '../../../shared/map/map';
+import { CurrentRideStateService } from '../../services/current-ride-state.service';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { UserService } from '../../../../core/services/user.service';
 
 type RideStatus = 'Assigned' | 'Started' | 'Finished' | 'Cancelled';
 type PassengerItem = { id: number; name: string; role: 'You' | 'Passenger' };
@@ -28,6 +31,19 @@ export class CurrentRideComponent implements OnInit {
     });
   }
   // page state (mock for now)
+  private notificationService = inject(NotificationService);
+  private userService = inject(UserService);
+  constructor(private rideState: CurrentRideStateService) {}
+  panicSent = signal(false);
+
+  onPanic(): void {
+    if (this.panicSent()) return; 
+
+    const userId = this.userService.getCurrentUserId();
+    this.rideState.panicSignal.set({pressed: true, rideId: 1, userId: userId ? userId : 0});
+    this.panicSent.set(true);
+  }
+
   currentRideStatus: RideStatus = 'Started';
 
   fromAddress = 'Bulevar oslobođenja 46';
