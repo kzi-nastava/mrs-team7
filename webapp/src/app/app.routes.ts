@@ -15,6 +15,8 @@ import { RideBooking } from './features/registered/pages/ride-booking/ride-booki
 import { RideBookingSidebar } from './features/registered/components/ride-booking-sidebar/ride-booking-sidebar';
 import { RegisteredSidebar } from './features/registered/components/registered-sidebar';
 import {CurrentRideComponent} from './features/registered/pages/current-ride/current-ride';
+import { DriverRegistration } from './features/admin/pages/driver-registration/driver-registration';
+import { AdminLayout } from './features/admin/layout/admin-layout/admin-layout';
 
 export const routes: Routes = [
   { path: '', component: UnregisteredHomeComponent },
@@ -38,6 +40,12 @@ export const routes: Routes = [
       { path: 'ride-history', component: DriverRideHistory },
       { path: 'dashboard', component: DriverDashboard },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+    ] },
 
-    ] }
+  { path: 'admin', component: AdminLayout, children: [
+    { path: 'profile', component: RegisteredProfileComponent },
+    { path: 'register-driver', component: DriverRegistration },
+    { path: 'dashboard', component: RegisteredDashboard },
+    { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+  ] }
 ];
