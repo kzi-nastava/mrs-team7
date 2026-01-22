@@ -119,11 +119,11 @@ export class CurrentRideComponent implements OnInit {
   }
 
   onPanic(): void {
-    if (this.panicSent()) return;
+     if (this.rideState.panicSignal().pressed) return;
 
-    const userId = this.userService.getCurrentUserId();
-    this.rideState.panicSignal.set({ pressed: true, rideId: this.ride?.id ?? 0, userId: userId ? userId : 0 });
-    this.panicSent.set(true);
+    const userId = this.userService.getCurrentUserId() ?? 0;
+    const rideId = 1; // Mock ride ID
+    this.rideState.setPanic(rideId, userId);
   }
 
   statusPillClasses: Record<UiRideStatus, string> = {
