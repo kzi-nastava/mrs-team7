@@ -1,0 +1,76 @@
+<div class="w-12/13 mx-auto p-6 bg-white rounded-xl shadow-2xl mt-10">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Panic Alerts</h1>
+      <p class="text-gray-500 mt-1">{{ unresolvedPanics().length }} active</p>
+    </div>
+    <div class="text-2xl font-bold text-red-600">
+      {{ unresolvedPanics().length }}
+    </div>
+  </div>
+@if (unresolvedPanics().length === 0){
+  <!-- Empty state -->
+  <div 
+       class="text-center py-20 border-2 border-dashed border-gray-200 rounded-xl">
+    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <span class="text-2xl">✅</span>
+    </div>
+    <h3 class="text-xl font-semibold text-gray-900 mb-2">No active panics</h3>
+    <p class="text-gray-500">All rides are safe</p>
+  </div>
+}
+@if (unresolvedPanics().length > 0) {
+  <!-- Panics list -->
+  <div class="space-y-4">
+    @for (panic of unresolvedPanics(); track panic.rideId) {
+    <div
+         class="group bg-linear-to-r from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 
+                border border-red-200 rounded-xl p-6 transition-all duration-200 hover:shadow-md">
+      
+      <!-- Header row -->
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
+            <span class="text-2xl text-white">🚨</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-xl text-gray-900">Ride #{{panic.rideId}}</h3>
+            <p class="text-sm text-gray-500">User Email: {{panic.activatedBy}}</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+            ACTIVE
+          </span>
+          <button (click)="resolvePanic(panic.rideId)"
+                  class="px-4 py-2 bg-white border-2 border-red-500 text-red-600 font-semibold 
+                         rounded-lg hover:bg-red-50 hover:border-red-600 transition-all duration-200">
+            Resolve
+          </button>
+        </div>
+      </div>
+
+      <!-- Details -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div>
+          <span class="text-gray-500">Time:</span>
+          <span class="font-medium ml-2">{{panic.timestamp | date:'short'}}</span>
+        </div>
+        @if (panic.userType) {
+        <div>
+          <span class="text-gray-500">Type:</span>
+          <span class="font-medium ml-2">
+            @if (panic.userType === 'DRIVER') {
+            <span class="text-blue-600">Driver</span>}
+            @if (panic.userType === 'PASSENGER') {
+            <span class="text-green-600">Passenger</span>}
+          </span>
+        </div>
+    }
+      </div>
+    </div>
+}
+  </div>
+}
+</div>
