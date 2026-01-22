@@ -12,9 +12,4 @@ export class VehiclesApiService {
   getMapVehicles(): Observable<VehicleMarker[]> {
     return this.http.get<VehicleMarker[]>(`${this.baseUrl}/map`);
   }
-
-  getDriverVehicleForMap(driverEmail: string): Observable<VehicleMarker> {
-    return this.http.get<VehicleMarker>(`${this.baseUrl}/driver/${encodeURIComponent(driverEmail)}/map`);
-  }
-
 }
