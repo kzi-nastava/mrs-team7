@@ -9,11 +9,13 @@ import { FormsModule } from '@angular/forms';
 import { VehicleType } from '../../../shared/models/vehicle';
 import { RideOrderService } from '../../services/ride-order.service';
 import { LocationDTO, nominatimToLocation } from '../../../shared/models/location';
-import { request } from 'http';
+import { SuccessAlert } from "../../../shared/components/success-alert";
+import { ErrorAlert } from "../../../shared/components/error-alert";
+import { RouterLink } from "@angular/router";
 
 @Component({
   selector: 'ride-booking-sidebar',
-  imports: [LocationSearchInput, NgOptimizedImage, CommonModule, FormsModule],
+  imports: [LocationSearchInput, NgOptimizedImage, CommonModule, FormsModule, SuccessAlert, ErrorAlert, RouterLink],
   templateUrl: './ride-booking-sidebar.html',
 })
 export class RideBookingSidebar {
@@ -28,6 +30,18 @@ export class RideBookingSidebar {
   infants: boolean = false;
   vehicleType: string = 'any';
 
+  minDate!: string;
+  maxDate!: string;
+  scheduledDate = signal<string>('');
+
+  passengerEmails = signal<string[]>([]);
+
+  isSuccessOpen: boolean = false;
+  successMessage: string = "Ride successfully booked!";
+
+  isErrorOpen: boolean = false;
+  errorTitle: string = "Error";
+  errorMessage: string = "Error occured during ride booking.";
 
   step = signal<number>(1);
   user = signal<User>({
@@ -37,7 +51,7 @@ export class RideBookingSidebar {
     email: '',
     address: '',
     phoneNumber: '',
-    role: 'ADMIN'
+    role: 'PASSENGER'
   });
 
   ngOnInit() {
@@ -47,6 +61,11 @@ export class RideBookingSidebar {
       }
     )
     this.vehicleTypes = Object.values(VehicleType);
+
+    const now = new Date();
+    this.scheduledDate.set(this.toDatetimeLocalValue(now));
+    this.minDate = this.toDatetimeLocalValue(now);
+    this.maxDate = this.toDatetimeLocalValue(new Date(now.getTime() + 5 * 60 * 60000));
   }
 
   onPickupSelected(res: NominatimResult) {
@@ -61,10 +80,10 @@ export class RideBookingSidebar {
     this.bookingState.addStop();
   }
 
-  addPassenger() {}
-
   onStopSelected(index: number, res: NominatimResult) {
     this.bookingState.setStop(index, res);
+    console.log(this.bookingState.stops());
+    
   }
 
   removeStop(index: number) {
@@ -85,6 +104,7 @@ export class RideBookingSidebar {
     this.step.set(this.step() - 1);
   }
 
+  // Dodaj errore
   bookRide() {
     const requestVehicleType: VehicleType | undefined =
       Object.values(VehicleType).includes(this.vehicleType as VehicleType)
@@ -97,11 +117,22 @@ export class RideBookingSidebar {
     let requestStops : LocationDTO[] = []
 
     this.bookingState.stops().forEach((res) => {
-        if (res!==null) {
+        if (res===null) {
+          this.errorMessage="Ride stops cannot be empty.";
+          this.isErrorOpen = true;
+          return;
+        }
+        else {
           requestStops.push(nominatimToLocation(res))
         };
       }
     )
+
+    if (this.passengerEmails().includes('')) {
+      this.errorMessage="Passenger emails cannot be empty.";
+      this.isErrorOpen = true;
+      return;
+    }
 
     this.rideOrderService.requestRide(
       nominatimToLocation(this.bookingState.pickup()!),
@@ -109,9 +140,49 @@ export class RideBookingSidebar {
       requestVehicleType,
       requestStops,
       this.infants, this.pets,
-      [],
-      new Date(),
+      this.passengerEmails(),
+      new Date(this.scheduledDate()),
+      this.bookingState.routeInfo()?.totalDistance!,
       undefined   
-    ).subscribe();
+    ).subscribe({
+      next: (ride => {
+        this.successMessage = `Ride successfully assigned to driver: ${ride.driverEmail}!
+        Car is expected to arrive at ${ride.scheduledTime}. Total price is: ${ride.totalPrice}.`;
+        this.isSuccessOpen = true;
+      }),
+      error: (err => {
+        this.errorMessage = err.error?.message || 'Booking failed. Please try again.';
+        this.isErrorOpen = true;
+      })
+    });
+  }
+
+  private toDatetimeLocalValue(d: Date): string {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  isDateValid(date:string) : boolean {
+    return date <= this.maxDate && date >= this.minDate;
+  }
+
+  addPassenger() {
+    this.passengerEmails().push('');
+  }
+
+  removePassenger(index: number) {
+    this.passengerEmails().splice(index, 1);
+  }
+
+  addEmail(e: FocusEvent, index: number) {
+    const input: HTMLInputElement = e.target as HTMLInputElement;
+    const value: string = input.value;
+
+    this.passengerEmails()[index] = value
+    console.log(this.passengerEmails())
+  }
+
+  closeErrorAlert(): void {
+    this.isErrorOpen = false;
   }
 }

@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MapComponent} from '../../../../shared/map/map';
-import { RidesService } from '../../../services/rides.service';
+import { DriverRidesService } from '../../../services/driver-rides.service';
 import { RideDTO, RideStatus } from '../../../../shared/models/ride';
 import { UserService } from '../../../../../core/services/user.service';
 import { Driver } from '../../../../shared/models/driver';
@@ -32,7 +32,7 @@ export class DriverDashboard {
   private workMinutes = signal<number>(24);
   private readonly workLimitMinutes = 8 * 60;
 
-  ridesService = inject(RidesService);
+  ridesService = inject(DriverRidesService);
   userService = inject(UserService);
   rideState = inject(CurrentRideStateService);
   notificationService = inject(NotificationService);
