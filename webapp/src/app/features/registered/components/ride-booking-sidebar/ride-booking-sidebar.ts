@@ -11,11 +11,11 @@ import { RideOrderService } from '../../services/ride-order.service';
 import { LocationDTO, nominatimToLocation } from '../../../shared/models/location';
 import { SuccessAlert } from "../../../shared/components/success-alert";
 import { ErrorAlert } from "../../../shared/components/error-alert";
-import { RouterLink } from "@angular/router";
+import { Router, RouterLink, UrlTree } from "@angular/router";
 
 @Component({
   selector: 'ride-booking-sidebar',
-  imports: [LocationSearchInput, NgOptimizedImage, CommonModule, FormsModule, SuccessAlert, ErrorAlert, RouterLink],
+  imports: [LocationSearchInput, NgOptimizedImage, CommonModule, FormsModule, ErrorAlert, RouterLink],
   templateUrl: './ride-booking-sidebar.html',
 })
 export class RideBookingSidebar {
@@ -23,6 +23,9 @@ export class RideBookingSidebar {
   location = inject(Location);
   userService = inject(UserService);
   rideOrderService = inject(RideOrderService);
+  router = inject(Router);
+
+  dashboardUrl: UrlTree = this.router.parseUrl('/user/dashboard');
 
   vehicleTypes: string[] = [];
 
@@ -36,7 +39,7 @@ export class RideBookingSidebar {
 
   passengerEmails = signal<string[]>([]);
 
-  isSuccessOpen: boolean = false;
+  isSuccessOpen = signal<boolean>(false);
   successMessage: string = "Ride successfully booked!";
 
   isErrorOpen: boolean = false;
@@ -104,34 +107,40 @@ export class RideBookingSidebar {
     this.step.set(this.step() - 1);
   }
 
-  // Dodaj errore
   bookRide() {
     const requestVehicleType: VehicleType | undefined =
       Object.values(VehicleType).includes(this.vehicleType as VehicleType)
       ? (this.vehicleType as VehicleType)
       : undefined;
 
-    if(this.bookingState.pickup() == null) return;
+    if(this.bookingState.pickup() == null || this.bookingState.dropoff()==null){
+      this.errorMessage="Ride stops cannot be empty.";
+      this.isErrorOpen = true;
+      return;
+    }
     if(this.bookingState.dropoff() == null) return;
 
     let requestStops : LocationDTO[] = []
 
-    this.bookingState.stops().forEach((res) => {
-        if (res===null) {
-          this.errorMessage="Ride stops cannot be empty.";
-          this.isErrorOpen = true;
-          return;
-        }
-        else {
-          requestStops.push(nominatimToLocation(res))
-        };
+    for (const res of this.bookingState.stops()) {
+      if (res === null) {
+        this.errorMessage = 'Ride stops cannot be empty.';
+        this.isErrorOpen = true;
+        return;
       }
-    )
+      else {
+        requestStops.push(nominatimToLocation(res))
+      };
+    }
 
     if (this.passengerEmails().includes('')) {
       this.errorMessage="Passenger emails cannot be empty.";
       this.isErrorOpen = true;
       return;
+    }
+
+    if(this.vehicleType=='Any') {
+
     }
 
     this.rideOrderService.requestRide(
@@ -141,14 +150,18 @@ export class RideBookingSidebar {
       requestStops,
       this.infants, this.pets,
       this.passengerEmails(),
-      new Date(this.scheduledDate()),
+      this.scheduledDate(),
       this.bookingState.routeInfo()?.totalDistance!,
+      (this.bookingState.routeInfo()?.totalDuration!/60),
       undefined   
     ).subscribe({
       next: (ride => {
         this.successMessage = `Ride successfully assigned to driver: ${ride.driverEmail}!
-        Car is expected to arrive at ${ride.scheduledTime}. Total price is: ${ride.totalPrice}.`;
-        this.isSuccessOpen = true;
+        Car is expected to arrive at ${new Date(ride.scheduledTime).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      })}. Total price is: ${ride.totalPrice}.`;
+        this.isSuccessOpen.set(true);
       }),
       error: (err => {
         this.errorMessage = err.error?.message || 'Booking failed. Please try again.';
@@ -184,5 +197,10 @@ export class RideBookingSidebar {
 
   closeErrorAlert(): void {
     this.isErrorOpen = false;
+  }
+
+  test(){
+    console.log("test");
+    
   }
 }

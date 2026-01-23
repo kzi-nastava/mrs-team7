@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <div
-    class="fixed top-27.5 right-4 z-50">
+    class="fixed top-27.5 right-4 z-800">
       <div class="border-l-4 bg-red-50 border-red-200 text-red-500 p-4 rounded-lg transform transition-all duration-300 ease-out origin-top-right max-w-sm font-poppins"
         [ngClass]="{
           'opacity-100 translate-y-0 pointer-events-auto': isOpen,
