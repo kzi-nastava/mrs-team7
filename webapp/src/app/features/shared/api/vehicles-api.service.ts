@@ -16,4 +16,11 @@ export class VehiclesApiService {
   getDriverVehicleForMap(driverEmail: string): Observable<VehicleMarker> {
     return this.http.get<VehicleMarker>(`${this.baseUrl}/driver/${encodeURIComponent(driverEmail)}/map`);
   }
+
+  updateVehiclePosition(
+    vehicleId: number,
+    body: { latitude: number; longitude: number }
+  ) {
+    return this.http.put<void>(`${this.baseUrl}/${vehicleId}/position`, body);
+  }
 }

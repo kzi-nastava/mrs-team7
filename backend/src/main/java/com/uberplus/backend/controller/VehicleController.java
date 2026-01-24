@@ -1,6 +1,7 @@
 package com.uberplus.backend.controller;
 
 import com.uberplus.backend.dto.vehicle.VehicleMapDTO;
+import com.uberplus.backend.dto.vehicle.VehiclePositionUpdateDTO;
 import com.uberplus.backend.service.VehicleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,5 +26,15 @@ public class VehicleController {
     @GetMapping("/driver/{email}/map")
     public ResponseEntity<VehicleMapDTO> getDriverVehicleForMap(@PathVariable String email) {
         return ResponseEntity.ok(vehicleService.getDriverVehicleForMap(email));
+    }
+
+    // PUT /api/vehicles/{id}/position
+    @PutMapping("/{id}/position")
+    public ResponseEntity<Void> updateVehiclePosition(
+            @PathVariable Integer id,
+            @RequestBody VehiclePositionUpdateDTO dto
+    ) {
+        vehicleService.updateVehiclePosition(id, dto);
+        return ResponseEntity.ok().build();
     }
 }
