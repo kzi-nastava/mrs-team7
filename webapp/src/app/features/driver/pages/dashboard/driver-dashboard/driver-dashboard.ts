@@ -6,7 +6,6 @@ import { RideDTO, RideStatus } from '../../../../shared/models/ride';
 import { UserService } from '../../../../../core/services/user.service';
 import { Driver } from '../../../../shared/models/driver';
 import { CurrentRideStateService } from '../../../../registered/services/current-ride-state.service';
-import { NotificationService } from '../../../../../core/services/notification.service';
 
 type Passenger = { name: string; email: string };
 
@@ -35,7 +34,6 @@ export class DriverDashboard {
   ridesService = inject(DriverRidesService);
   userService = inject(UserService);
   rideState = inject(CurrentRideStateService);
-  notificationService = inject(NotificationService);
   readonly rides = this.ridesService.rides;
   readonly currentRide = this.ridesService.currentRide;
 
@@ -70,10 +68,10 @@ export class DriverDashboard {
       status: ride.status
     })))
 
-  readonly currentPassengers: Signal<Passenger[]> = computed(() =>
-    this.currentRide()?.passengerEmails.map(email => ({
-      name: '',
-      email
+  readonly currentPassengers = computed<Passenger[]>(() =>
+    this.currentRide()?.passengers?.map(p => ({
+      name: `${p.firstName} ${p.lastName}`.trim(),
+      email: p.email
     })) ?? []
   );
 
@@ -88,47 +86,6 @@ export class DriverDashboard {
   readonly currentRideEnd: Signal<string> = computed(() =>
     this.currentRide()?.endLocation.address ?? ''
   )
-
-  // currentPassengers: Passenger[] = [
-  //   { name: 'Mirko Mirkovic', phone: '+381 63 111 2222' },
-  //   { name: 'Jovan Markovic', phone: '+381 63 111 2222' },
-  //   { name: 'Milan Kacarevic', phone: '+381 62 333 4444' },
-  //   { name: 'Luka Petrovic', phone: '+381 60 555 6666' },
-  //   { name: 'Ana Jovanovic', phone: '+381 69 777 8888' },
-  // ];
-
-  // bookedRides: BookedRide[] = [
-  //   {
-  //     id: 1,
-  //     date: '18.08.',
-  //     time: '22:30',
-  //     from: 'Bulevar M. Pupina 10',
-  //     to: 'Trg slobode 1',
-  //     passengers: 2,
-  //     requirements: ['Sedan', 'Baby'],
-  //     status: 'Scheduled',
-  //   },
-  //   {
-  //     id: 2,
-  //     date: '18.08.',
-  //     time: '22:40',
-  //     from: 'Laze Telečkog 5',
-  //     to: 'Bul. cara Lazara 56',
-  //     passengers: 1,
-  //     requirements: ['SUV'],
-  //     status: 'Scheduled',
-  //   },
-  //   {
-  //     id: 3,
-  //     date: '18.08.',
-  //     time: '23:10',
-  //     from: 'Bulevar oslobođenja 1',
-  //     to: 'Dunavski park',
-  //     passengers: 3,
-  //     requirements: ['Van', 'Pets', 'Baby'],
-  //     status: 'Scheduled',
-  //   },
-  // ];
 
   statusPillClasses: Record<RideStatus, string> = {
     PENDING: 'bg-gray-100 text-slate-700',
@@ -196,5 +153,4 @@ export class DriverDashboard {
 
     return requirements;
   }
-
 }

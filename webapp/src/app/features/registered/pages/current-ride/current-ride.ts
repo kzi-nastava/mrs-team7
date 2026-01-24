@@ -1,17 +1,18 @@
-import {Component, inject, OnInit, ChangeDetectorRef, OnDestroy} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { VehicleMarker } from '../../../shared/map/vehicle-marker';
-import { VehiclesApiService } from '../../../shared/api/vehicles-api.service';
-import { MapComponent } from '../../../shared/map/map';
-import { CurrentRideStateService } from '../../services/current-ride-state.service';
-import { UserService } from '../../../../core/services/user.service';
-import { RideDTO, RideService } from '../../../../core/services/ride.service';
-import { RoutingService, LatLng } from '../../../shared/services/routing.service';
-import { resamplePolyline } from '../../../shared/map/route-utils';
+import {ChangeDetectorRef, Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {VehicleMarker} from '../../../shared/map/vehicle-marker';
+import {VehiclesApiService} from '../../../shared/api/vehicles-api.service';
+import {MapComponent} from '../../../shared/map/map';
+import {CurrentRideStateService} from '../../services/current-ride-state.service';
+import {UserService} from '../../../../core/services/user.service';
+import {RideDTO, RideService} from '../../../../core/services/ride.service';
+import {LatLng, RoutingService} from '../../../shared/services/routing.service';
+import {resamplePolyline} from '../../../shared/map/route-utils';
+import {LocationDTO} from '../../../shared/models/location';
 
 type UiRideStatus = 'Assigned' | 'Started' | 'Finished' | 'Cancelled'
-type PassengerItem = { id: number; name: string; role: 'You' | 'Passenger' };
+type PassengerItem = { id: number; name: string; email: string; role: 'You' | 'Passenger' };
 
 @Component({
   selector: 'app-current-ride',
@@ -29,9 +30,13 @@ export class CurrentRideComponent implements OnInit, OnDestroy {
   private routing = inject(RoutingService);
   public rideState = inject(CurrentRideStateService);
 
-  private ride: RideDTO | null = null;
+  ride: RideDTO | null = null;
   routeStart: { lat: number; lon: number } | null = null;
   routeEnd: { lat: number; lon: number } | null = null;
+  waypoints: string[] = [];
+  waypointLocations: LocationDTO[] = [];
+  routePath: LatLng[] = [];
+  routePoints: { lat: number; lon: number; label?: string }[] = [];
 
   private simStartTimeout?: number;
   private simMoveInterval?: number;
@@ -56,14 +61,24 @@ export class CurrentRideComponent implements OnInit, OnDestroy {
         this.toAddress = r.endLocation.address;
         this.routeStart = { lat: r.startLocation.latitude, lon: r.startLocation.longitude };
         this.routeEnd   = { lat: r.endLocation.latitude,   lon: r.endLocation.longitude };
+        this.routePoints = [
+          {lat: r.startLocation.latitude, lon: r.startLocation.longitude, label: 'Pickup'},
+          ...(r.waypoints ?? []).map((w, i) => ({lat: w.latitude, lon: w.longitude, label: `Stop ${i + 1}`})),
+          {lat: r.endLocation.latitude, lon: r.endLocation.longitude, label: 'Destination'},
+        ];
+        this.waypointLocations = (r.waypoints ?? []);
+        this.waypoints = this.waypointLocations
+          .map(w => w.address)
+          .filter(Boolean);
         this.vehicleText =
           r.vehicleModel && r.vehicleLicensePlate
             ? `${r.vehicleModel} • ${r.vehicleLicensePlate}`
             : 'Vehicle';
-        this.passengers = (r.passengerEmails ?? []).map((email, idx) => ({
+        this.passengers = (r.passengers ?? []).map((p, idx: number) => ({
           id: idx + 1,
-          name: email,
-          role: 'Passenger'
+          name: `${p.firstName} ${p.lastName}`.trim(),
+          email: p.email,
+          role: 'Passenger' as const
         }));
         this.vehiclesApi.getDriverVehicleForMap(r.driverEmail).subscribe({
           next: (v) => {
@@ -97,89 +112,98 @@ export class CurrentRideComponent implements OnInit, OnDestroy {
     this.simAbort = undefined;
   }
 
-  private runSimulation(r: RideDTO) {
-    this.stopSimulation();
-
-    this.simStartTimeout = window.setTimeout(async () => {
-      if (!this.vehicles.length) return;
-
-      // auto ide na start location
-      this.vehicles = [{
-        ...this.vehicles[0],
-        lat: r.startLocation.latitude,
-        lng: r.startLocation.longitude
-      }];
-      this.cdr.detectChanges();
-
-      // fetch rute
-      const from: LatLng = [r.startLocation.latitude, r.startLocation.longitude];
-      const to: LatLng = [r.endLocation.latitude, r.endLocation.longitude];
-
-      this.simAbort?.abort();
-      this.simAbort = new AbortController();
-
-      let seg;
-      try {
-        seg = await this.routing.fetchRoute(from, to, this.simAbort.signal);
-      } catch (e: any) {
-        if (e?.name === 'AbortError') return;
-        console.error('Failed to fetch route', e);
-        return;
-      }
-
-      // resample na sto metara
-      const sampled = resamplePolyline(seg.coordinates, 100);
-
-      // ako nema dovoljno tacaka skoci na kraj
-      if (sampled.length < 2) {
-        this.vehicles = [{
-          ...this.vehicles[0],
-          lat: r.endLocation.latitude,
-          lng: r.endLocation.longitude
-        }];
-        this.cdr.detectChanges();
-        window.alert('Ride finished!');
-        this.currentRideStatus = 'Finished';
-        this.cdr.detectChanges();
-        return;
-      }
-
-      // kretanje po tackama (1s jedna tacka)
-      let i = 0;
-
-      this.simMoveInterval = window.setInterval(() => {
-        if (!this.vehicles.length) return;
-
-        if (i >= sampled.length) {
-          this.stopSimulation();
-          window.alert('Ride finished!');
-          this.currentRideStatus = 'Finished';
-          this.cdr.detectChanges();
-          return;
-        }
-
-        const [lat, lng] = sampled[i++];
-
-        this.vehicles = [{
-          ...this.vehicles[0],
-          lat,
-          lng
-        }];
-        this.cdr.detectChanges();
-
-        // ovo dolje cuva u bazu
-        const vehicleId = this.vehicles[0].id;
-
-        this.vehiclesApi.updateVehiclePosition(vehicleId, {
-          latitude: lat,
-          longitude: lng
-        }).subscribe();
-
-      }, 1000);
-
-    }, 10_000);
+  private sleep(ms: number): Promise<void> {
+    return new Promise(res => setTimeout(res, ms));
   }
 
+  private runSimulation(r: RideDTO) {
+    this.stopSimulation();
+    const stops: LatLng[] = [
+      [r.startLocation.latitude, r.startLocation.longitude],
+      ...(r.waypoints ?? []).map(w => [w.latitude, w.longitude] as LatLng),
+      [r.endLocation.latitude, r.endLocation.longitude],
+    ];
+    if (!this.vehicles.length) return;
+
+    this.vehicles = [{
+      ...this.vehicles[0],
+      lat: stops[0][0],
+      lng: stops[0][1],
+    }];
+    this.cdr.detectChanges();
+
+    const vehicleId = this.vehicles[0].id;
+    this.vehiclesApi.updateVehiclePosition(vehicleId, {
+      latitude: stops[0][0],
+      longitude: stops[0][1],
+    }).subscribe({ error: (e) => console.error('Position update failed', e) });
+
+    this.simAbort?.abort();
+    this.simAbort = new AbortController();
+    const signal = this.simAbort.signal;
+
+    this.simStartTimeout = window.setTimeout(async () => {
+      try {
+        for (let segIdx = 0; segIdx < stops.length - 1; segIdx++) {
+          const from = stops[segIdx];
+          const to = stops[segIdx + 1];
+          const seg = await this.routing.fetchRoute(from, to, signal);
+          const sampled = resamplePolyline(seg.coordinates, 100);
+          const path: [number, number][] =
+            sampled.length >= 2 ? sampled : ([from, to] as [number, number][]);
+
+          for (let i = 0; i < path.length; i++) {
+            if (!this.vehicles.length) return;
+
+            const [lat, lng] = path[i];
+
+            this.vehicles = [{
+              ...this.vehicles[0],
+              lat,
+              lng,
+            }];
+            this.cdr.detectChanges();
+
+            const vid = this.vehicles[0].id;
+            this.vehiclesApi.updateVehiclePosition(vid, {
+              latitude: lat,
+              longitude: lng,
+            }).subscribe({ error: (e) => console.error('Position update failed', e) });
+
+            await this.sleep(1000);
+
+            if (signal.aborted) return;
+          }
+
+          const isLastStop = segIdx === stops.length - 2;
+          if (!isLastStop) {
+            await this.sleep(3000);
+            if (signal.aborted) return;
+          }
+        }
+
+        const last = stops[stops.length - 1];
+        this.vehicles = [{
+          ...this.vehicles[0],
+          lat: last[0],
+          lng: last[1],
+        }];
+        this.cdr.detectChanges();
+
+        this.vehiclesApi.updateVehiclePosition(vehicleId, {
+          latitude: last[0],
+          longitude: last[1],
+        }).subscribe({ error: (e) => console.error('Final position update failed', e) });
+
+        this.currentRideStatus = 'Finished';
+        this.cdr.detectChanges();
+        window.alert('Ride finished!');
+      } catch (e: any) {
+        if (e?.name === 'AbortError') return;
+        console.error('Simulation failed', e);
+      }
+    }, 30_000);
+  }
   onPanic(): void {
     if (this.rideState.panicSignal().pressed) return;
     const userId = this.userService.getCurrentUserId() ?? 0;
@@ -212,4 +236,6 @@ export class CurrentRideComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.stopSimulation();
   }
+
+  protected readonly CurrentRideStateService = CurrentRideStateService;
 }
