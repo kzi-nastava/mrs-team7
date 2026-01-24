@@ -1,14 +1,14 @@
 import { HttpClient } from "@angular/common/http";
 import { computed, Injectable, signal, Signal, WritableSignal } from "@angular/core";
 import { ConfigService } from "../../../core/services/config.service";
-import { Ride, RideDTO } from "../../shared/models/ride";
+import { RideDTO } from "../../shared/models/ride";
 import { Observable, tap } from "rxjs";
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class RidesService {
+export class DriverRidesService {
     public rides: WritableSignal<RideDTO[]> = signal<RideDTO[]>([]);
     public readonly currentRide: Signal<RideDTO | null> = computed(() => {
 

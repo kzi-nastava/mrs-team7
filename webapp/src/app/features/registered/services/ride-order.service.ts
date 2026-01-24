@@ -1,21 +1,24 @@
 import { inject, Injectable } from "@angular/core";
 import { LocationDTO } from "../../shared/models/location";
-import { Ride } from "../../shared/models/ride";
+import { RideDTO } from "../../shared/models/ride";
 import { Observable } from "rxjs";
 import { HttpClient } from "@angular/common/http";
 import { ConfigService } from "../../../core/services/config.service";
-import { VehicleType } from "../../shared/models/vehicle";
+import { VehicleType, vehicleTypeKeyFromValue } from "../../shared/models/vehicle";
 
 export interface RideCreationDTO {
     startLocation: LocationDTO,
     endLocation: LocationDTO,
-    vehicleType?: VehicleType,
+    vehicleType?: keyof typeof VehicleType,
     waypoints: LocationDTO[],
     babyFriendly: boolean,
     petFriendly: boolean,
     linkedPassengerEmails: string[],
-    scheduledTime: Date,
-    favoriteRouteId?: number
+    scheduledTime: string,
+    estimatedDurationMinutes: number,
+    favoriteRouteId?: number,
+
+    distance: number //novo
 }
 
 @Injectable({
@@ -26,20 +29,28 @@ export class RideOrderService {
     config = inject(ConfigService);
 
     requestRide(startLocation: LocationDTO, endLocation: LocationDTO, vehicleType: VehicleType | undefined, waypoints: LocationDTO[], babyFriendly: boolean,
-        petFriendly: boolean, linkedPassengerEmails: string[], scheduledTime: Date, favoriteRouteId: number | undefined) : Observable<Ride> {
+        petFriendly: boolean, linkedPassengerEmails: string[], scheduledTime: string, distance: number, estimatedDurationMinutes: number, favoriteRouteId: number | undefined) : Observable<RideDTO> {
         
+        let vehicleTypeDTO: (keyof typeof VehicleType) | undefined;
+
+        if(vehicleType) {
+            vehicleTypeDTO = vehicleTypeKeyFromValue(vehicleType);
+        }
+
         let body : RideCreationDTO = {
             startLocation,
             endLocation,
             waypoints,
-            vehicleType,
+            vehicleType: vehicleTypeDTO,
             babyFriendly,
             petFriendly,
             linkedPassengerEmails,
             scheduledTime,
+            distance,
+            estimatedDurationMinutes,
             favoriteRouteId
         }
 
-        return this.http.post<Ride>(this.config.ridesUrl, body);
+        return this.http.post<RideDTO>(this.config.ridesUrl, body);
     }
 }

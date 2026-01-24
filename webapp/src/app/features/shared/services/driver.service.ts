@@ -16,7 +16,7 @@ export interface DriverCreationDTO {
 
 export interface VehicleCreationDTO {
     model: string,
-    type: 'STANDARD' | 'LUXURY' | 'VAN',
+    type: keyof typeof VehicleType,
     licensePlate: string,
     seatCount: number,
     babyFriendly: boolean,
