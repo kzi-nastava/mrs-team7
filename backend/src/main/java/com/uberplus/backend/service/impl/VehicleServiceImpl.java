@@ -7,6 +7,9 @@ import com.uberplus.backend.repository.VehicleRepository;
 import com.uberplus.backend.service.VehicleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.uberplus.backend.dto.vehicle.VehiclePositionUpdateDTO;
+import com.uberplus.backend.model.Location;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -47,5 +50,24 @@ public class VehicleServiceImpl implements VehicleService {
                 v.getCurrentLocation().getLongitude(),
                 v.getStatus()
         );
+    }
+
+    @Override
+    @Transactional
+    public void updateVehiclePosition(Integer vehicleId, VehiclePositionUpdateDTO dto) {
+        Vehicle v = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RuntimeException("Vehicle not found."));
+
+        if (v.getCurrentLocation() == null) {
+            Location loc = new Location();
+            loc.setLatitude(dto.getLatitude());
+            loc.setLongitude(dto.getLongitude());
+            v.setCurrentLocation(loc);
+        } else {
+            v.getCurrentLocation().setLatitude(dto.getLatitude());
+            v.getCurrentLocation().setLongitude(dto.getLongitude());
+        }
+
+        vehicleRepository.save(v);
     }
 }

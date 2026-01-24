@@ -16,6 +16,10 @@ import type { Map as LeafletMap, LayerGroup as LeafletLayerGroup } from 'leaflet
 import { VehicleMarker } from './vehicle-marker';
 import { RideBookingStateService } from '../../../core/services/ride-booking-state.service';
 import { NominatimResult } from '../services/nominatim.service';
+import { RoutingService, LatLng } from '../services/routing.service';
+
+type RouteLabels = { start?: string; mid?: string; end?: string };
+type DrawState = { token: number; abort?: AbortController };
 
 @Component({
   selector: 'app-map',
@@ -23,27 +27,28 @@ import { NominatimResult } from '../services/nominatim.service';
   templateUrl: './map.html',
   imports: [],
 })
+
 export class MapComponent implements AfterViewInit, OnChanges {
   @Input() vehicles: VehicleMarker[] = [];
+  @Input() routeStart?: { lat: number; lon: number } | null;
+  @Input() routeEnd?: { lat: number; lon: number } | null;
 
   private L?: typeof Leaflet;
   private map?: LeafletMap;
-
   private vehiclesLayer?: LeafletLayerGroup;
   private bookingLayer?: LeafletLayerGroup;
-
-  private bookingToken = 0;
-  private bookingAbort?: AbortController;
-
+  private routeLayer?: LeafletLayerGroup;
   private mapReady = false;
-
   private routeOwnerUrl: string | null = null;
   private lastNavUrl: string;
+  private bookingDrawState: DrawState = { token: 0 };
+  private currentRideDrawState: DrawState = { token: 0 };
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: object,
     private router: Router,
-    public bookingState: RideBookingStateService
+    public bookingState: RideBookingStateService,
+    private routing: RoutingService
   ) {
     this.lastNavUrl = this.router.url;
 
@@ -54,7 +59,7 @@ export class MapComponent implements AfterViewInit, OnChanges {
           this.lastNavUrl = e.url;
           this.routeOwnerUrl = null;
           this.bookingState.reset();
-          this.clearBookingLayerOnly();
+          this.clearLayer(this.bookingLayer, this.bookingDrawState);
         }
       });
 
@@ -65,12 +70,11 @@ export class MapComponent implements AfterViewInit, OnChanges {
 
       if (!this.mapReady) return;
 
-      const hasAnyPoint =
-        !!pickup || !!dropoff || (stops?.some(s => !!s) ?? false);
+      const hasAnyPoint = !!pickup || !!dropoff || (stops?.some(s => !!s) ?? false);
 
       if (!hasAnyPoint) {
         this.routeOwnerUrl = null;
-        this.clearBookingLayerOnly();
+        this.clearLayer(this.bookingLayer, this.bookingDrawState);
         this.bookingState.setRouteInfo({ totalDistance: 0, totalDuration: 0 });
         return;
       }
@@ -96,30 +100,86 @@ export class MapComponent implements AfterViewInit, OnChanges {
 
     this.vehiclesLayer = this.L.layerGroup().addTo(this.map);
     this.bookingLayer = this.L.layerGroup().addTo(this.map);
+    this.routeLayer = this.L.layerGroup().addTo(this.map);
 
     setTimeout(() => this.map?.invalidateSize(), 0);
 
     this.mapReady = true;
 
     this.renderVehicles();
+
     await this.renderBooking(
       this.bookingState.pickup(),
       this.bookingState.stops(),
       this.bookingState.dropoff()
     );
+
+    void this.renderRouteInputs();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['vehicles'] && this.map && this.vehiclesLayer) {
       this.renderVehicles();
     }
+
+    if ((changes['routeStart'] || changes['routeEnd']) && this.map && this.routeLayer) {
+      void this.renderRouteInputs();
+    }
   }
 
-  private clearBookingLayerOnly(): void {
-    this.bookingToken++;
-    this.bookingAbort?.abort();
-    this.bookingAbort = undefined;
-    this.bookingLayer?.clearLayers();
+  private clearLayer(layer: LeafletLayerGroup | undefined, state: DrawState): void {
+    state.token++;
+    state.abort?.abort();
+    state.abort = undefined;
+    layer?.clearLayers();
+  }
+
+  private toLatLngFromNominatim(r: NominatimResult): LatLng {
+    return [Number(r.lat), Number(r.lon)];
+  }
+
+  private async drawRouteOnLayer(
+    points: LatLng[],
+    layer: LeafletLayerGroup,
+    state: DrawState,
+    labels: RouteLabels,
+    fit = true
+  ): Promise<{ totalDistance: number; totalDuration: number; routeCoords: LatLng[] }> {
+    if (!this.L || !this.map) return { totalDistance: 0, totalDuration: 0, routeCoords: [] };
+
+    const myToken = ++state.token;
+    state.abort?.abort();
+    state.abort = new AbortController();
+    const signal = state.abort.signal;
+
+    layer.clearLayers();
+
+    for (let i = 0; i < points.length; i++) {
+      const label =
+        i === 0 ? (labels.start ?? 'From')
+          : i === points.length - 1 ? (labels.end ?? 'To')
+            : (labels.mid ?? 'Stop');
+
+      const radius = (i === 0 || i === points.length - 1) ? 7 : 6;
+      this.L.circleMarker(points[i], { radius })
+        .addTo(layer)
+        .bindTooltip(label, { direction: 'top' });
+    }
+
+    if (points.length < 2) {
+      return { totalDistance: 0, totalDuration: 0, routeCoords: [] };
+    }
+
+    const { totalDistance, totalDuration, routeCoords } = await this.routing.buildFullRoute(points, signal);
+
+    if (myToken !== state.token) return { totalDistance: 0, totalDuration: 0, routeCoords: [] };
+
+    if (routeCoords.length > 0) {
+      this.L.polyline(routeCoords).addTo(layer);
+      if (fit) this.map.fitBounds(this.L.latLngBounds(routeCoords), { padding: [20, 20] });
+    }
+
+    return { totalDistance, totalDuration, routeCoords };
   }
 
   private renderVehicles(): void {
@@ -150,10 +210,6 @@ export class MapComponent implements AfterViewInit, OnChanges {
     }
   }
 
-  private toLatLng(r: NominatimResult): [number, number] {
-    return [Number(r.lat), Number(r.lon)];
-  }
-
   private async renderBooking(
     pickup: NominatimResult | null,
     stops: (NominatimResult | null)[],
@@ -165,104 +221,60 @@ export class MapComponent implements AfterViewInit, OnChanges {
     const urlAtStart = this.router.url;
 
     if (!ownerAtStart || ownerAtStart !== urlAtStart) {
-      this.clearBookingLayerOnly();
+      this.clearLayer(this.bookingLayer, this.bookingDrawState);
       return;
     }
 
-    const myToken = ++this.bookingToken;
+    const points: LatLng[] = [];
 
-    this.bookingAbort?.abort();
-    this.bookingAbort = new AbortController();
-    const signal = this.bookingAbort.signal;
-
-    this.bookingLayer.clearLayers();
-
-    const points: [number, number][] = [];
-
-    if (pickup) {
-      const p = this.toLatLng(pickup);
-      points.push(p);
-      this.L.circleMarker(p, { radius: 7 }).addTo(this.bookingLayer).bindTooltip('Pickup', { direction: 'top' });
-    }
-
-    for (const s of stops) {
-      if (!s) continue;
-      const pt = this.toLatLng(s);
-      points.push(pt);
-      this.L.circleMarker(pt, { radius: 6 }).addTo(this.bookingLayer).bindTooltip('Stop', { direction: 'top' });
-    }
-
-    if (dropoff) {
-      const d = this.toLatLng(dropoff);
-      points.push(d);
-      this.L.circleMarker(d, { radius: 7 }).addTo(this.bookingLayer).bindTooltip('Destination', { direction: 'top' });
-    }
-
-    if (points.length < 2) {
-      this.bookingState.setRouteInfo({ totalDistance: 0, totalDuration: 0 });
-      return;
-    }
+    if (pickup) points.push(this.toLatLngFromNominatim(pickup));
+    for (const s of stops) if (s) points.push(this.toLatLngFromNominatim(s));
+    if (dropoff) points.push(this.toLatLngFromNominatim(dropoff));
 
     try {
-      const { totalDistance, totalDuration, routeCoords } = await this.buildFullRoute(points, signal);
+      const { totalDistance, totalDuration } = await this.drawRouteOnLayer(
+        points,
+        this.bookingLayer,
+        this.bookingDrawState,
+        { start: 'Pickup', mid: 'Stop', end: 'Destination' },
+        false
+      );
 
-      if (myToken !== this.bookingToken) return;
       if (this.routeOwnerUrl !== ownerAtStart) return;
       if (this.router.url !== urlAtStart) return;
-
-      if (routeCoords.length > 0) {
-        this.L.polyline(routeCoords).addTo(this.bookingLayer);
-      }
 
       this.bookingState.setRouteInfo({ totalDistance, totalDuration });
     } catch (e: any) {
       if (e?.name === 'AbortError') return;
+    }
+  }
+
+  private async renderRouteInputs(): Promise<void> {
+    if (!this.L || !this.map || !this.routeLayer) return;
+
+    const start = this.routeStart;
+    const end = this.routeEnd;
+
+    if (!start || !end) {
+      this.clearLayer(this.routeLayer, this.currentRideDrawState);
       return;
     }
-  }
 
-  private async fetchRoute(
-    from: [number, number],
-    to: [number, number],
-    signal: AbortSignal
-  ): Promise<{ distance: number; duration: number; coordinates: [number, number][] }> {
-    const url =
-      `https://router.project-osrm.org/route/v1/driving/` +
-      `${from[1]},${from[0]};${to[1]},${to[0]}` +
-      `?overview=full&geometries=geojson`;
+    const points: LatLng[] = [
+      [start.lat, start.lon],
+      [end.lat, end.lon],
+    ];
 
-    const res = await fetch(url, { signal });
-    const data = await res.json();
-
-    const route = data?.routes?.[0];
-    if (!route?.geometry?.coordinates) return { distance: 0, duration: 0, coordinates: [] };
-
-    return {
-      distance: route.distance ?? 0,
-      duration: route.duration ?? 0,
-      coordinates: route.geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]),
-    };
-  }
-
-  private async buildFullRoute(points: [number, number][], signal: AbortSignal): Promise<{
-    totalDistance: number;
-    totalDuration: number;
-    routeCoords: [number, number][];
-  }> {
-    let fullRoute: [number, number][] = [];
-    let totalDistance = 0;
-    let totalDuration = 0;
-
-    for (let i = 0; i < points.length - 1; i++) {
-      const segment = await this.fetchRoute(points[i], points[i + 1], signal);
-      totalDistance += segment.distance;
-      totalDuration += segment.duration;
-
-      const coords = segment.coordinates;
-      if (i > 0 && coords.length > 0) coords.shift();
-      if (coords.length > 0) fullRoute = fullRoute.concat(coords);
+    try {
+      await this.drawRouteOnLayer(
+        points,
+        this.routeLayer,
+        this.currentRideDrawState,
+        { start: 'From', end: 'To' },
+        true
+      );
+    } catch (e: any) {
+      if (e?.name === 'AbortError') return;
     }
-
-    return { totalDistance, totalDuration, routeCoords: fullRoute };
   }
 }
