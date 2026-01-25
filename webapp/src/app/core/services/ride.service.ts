@@ -2,7 +2,9 @@ import { HttpClient } from "@angular/common/http";
 import { ConfigService } from "./config.service";
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs/internal/Observable";
+import { LocationDTO } from "../../features/shared/models/location";
 import {PassengerDTO} from '../../features/shared/models/passenger';
+
 
 export interface RideEstimateDTO {
   estimatedDistance: number;
@@ -12,12 +14,6 @@ export interface RideEstimateDTO {
 export interface RideEstimateResponseDTO {
   finalPrice: number;
   priceDisplay: string;
-}
-
-export interface LocationDTO {
-  latitude: number;
-  longitude: number;
-  address: string;
 }
 
 export type RideStatus = 'PENDING' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
