@@ -2,6 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { ConfigService } from "./config.service";
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs/internal/Observable";
+import {PassengerDTO} from '../../features/shared/models/passenger';
 
 export interface RideEstimateDTO {
   estimatedDistance: number;
@@ -26,9 +27,10 @@ export interface RideDTO {
   status: RideStatus;
   startLocation: LocationDTO;
   endLocation: LocationDTO;
+  waypoints: LocationDTO[];
   passengerEmails: string[];
+  passengers?: PassengerDTO[];
   driverEmail: string;
-
   vehicleId?: number;
   vehicleModel?: string;
   vehicleLicensePlate?: string;
