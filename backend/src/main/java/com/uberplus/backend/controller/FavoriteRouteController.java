@@ -1,13 +1,18 @@
 package com.uberplus.backend.controller;
 
+import com.uberplus.backend.dto.driver.DriverDTO;
 import com.uberplus.backend.dto.route.FavoriteRouteCreateDTO;
 import com.uberplus.backend.dto.route.FavoriteRouteDTO;
 import com.uberplus.backend.repository.FavoriteRouteRepository;
+import com.uberplus.backend.service.FavoriteRouteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -15,17 +20,39 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FavoriteRouteController {
 
-    private final FavoriteRouteRepository favoriteRouteRepository;
+    private final FavoriteRouteService routeService;
 
     // POST /api/favorite-routes
     @PostMapping
-    public ResponseEntity<FavoriteRouteDTO> createFavorite(@Valid @RequestBody FavoriteRouteCreateDTO request) {
-        return ResponseEntity.ok(new FavoriteRouteDTO());
+    public ResponseEntity<FavoriteRouteDTO> createFavorite(@Valid @RequestBody FavoriteRouteCreateDTO request,
+                                                           Authentication auth) {
+        String email = auth.getName();
+        FavoriteRouteDTO dto = routeService.createFavRoute(request, email);
+        URI location = ServletUriComponentsBuilder
+                .fromPath("/api/favorite-routes/" + dto.getId().toString())
+                .build()
+                .toUri();
+        return ResponseEntity.created(location).body(dto);
+    }
+
+    // GET /api/favorite-routes/{id}
+    @GetMapping("/{id}")
+    public ResponseEntity<FavoriteRouteDTO> getFavorite(@PathVariable Integer routeId) {;
+        return ResponseEntity.ok(routeService.getRoute(routeId));
     }
 
     // GET /api/favorite-routes
     @GetMapping
-    public ResponseEntity<List<FavoriteRouteDTO>> getFavorites() {
-        return ResponseEntity.ok(List.of(new FavoriteRouteDTO(), new FavoriteRouteDTO()));
+    public ResponseEntity<List<FavoriteRouteDTO>> getFavorites(Authentication auth) {
+        String email = auth.getName();
+        return ResponseEntity.ok(routeService.getFavRoutes(email));
+    }
+
+    // DELETE /api/favorite-routes/{id}  <-- NEW
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteFavorite(@PathVariable Integer id, Authentication auth) {
+        String email = auth.getName();
+        routeService.deleteFavRoute(id, email);
+        return ResponseEntity.noContent().build();
     }
 }
