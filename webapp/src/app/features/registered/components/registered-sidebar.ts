@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
 import { Router, RouterLink, UrlTree } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 type Item = { label: string; route: string | UrlTree; icon: string };
 
@@ -29,7 +30,8 @@ type Item = { label: string; route: string | UrlTree; icon: string };
 
     <button
         type="button"
-        class="flex items-center gap-4 h-12 px-10 rounded-full text-white text-left hover:bg-white/5 cursor-pointer select-none transition-all duration-250">
+        class="flex items-center gap-4 h-12 px-10 rounded-full text-white text-left hover:bg-white/5 cursor-pointer select-none transition-all duration-250"
+        (click)="signOut()">
         <img ngSrc="/icons/signout-white.png" class="w-5 h-5" width="20" height="20" alt=""/>
         <span class="text-base">Sign out</span>
     </button>
@@ -37,7 +39,9 @@ type Item = { label: string; route: string | UrlTree; icon: string };
     `,
 })
 export class RegisteredSidebar {
-  constructor(private router: Router) {}
+  router = inject(Router);
+  authService = inject(AuthService);
+
   items: Item[] = [];
 
   ngOnInit() {
@@ -58,7 +62,7 @@ export class RegisteredSidebar {
     ];
   }
 
-  isActive(route: string | UrlTree) {
+  isActive(route: string | UrlTree) : boolean {
     const currentUrl = this.router.url;
 
     if (route instanceof UrlTree) {
@@ -68,8 +72,13 @@ export class RegisteredSidebar {
     return route === currentUrl;
   }
 
-  iconSrc(icon: string, route: string | UrlTree) {
+  iconSrc(icon: string, route: string | UrlTree) : string {
     const variant = this.isActive(route) ? 'black' : 'white';
     return `/icons/${icon}-${variant}.png`;
+  }
+
+  signOut() : void {
+    this.authService.logout();
+    this.router.navigateByUrl('/').catch(console.error);
   }
 }

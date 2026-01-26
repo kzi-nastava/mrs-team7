@@ -1,6 +1,7 @@
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router, RouterLink, UrlTree } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 type Item = { label: string; route: string | UrlTree; icon: string };
 
 @Component({
@@ -9,7 +10,9 @@ type Item = { label: string; route: string | UrlTree; icon: string };
   templateUrl: './admin-sidebar.html',
 })
 export class AdminSidebar {
-  constructor(private router: Router) {}
+  router = inject(Router)
+  authService = inject(AuthService)
+
   items: Item[] = [];
 
   ngOnInit() {
@@ -35,5 +38,10 @@ export class AdminSidebar {
   iconSrc(icon: string, route: string | UrlTree) {
     const variant = this.isActive(route) ? 'black' : 'white';
     return `/icons/${icon}-${variant}.png`;
+  }
+
+  signOut() : void {
+    this.authService.logout();
+    this.router.navigateByUrl('/').catch(console.error);
   }
 }
