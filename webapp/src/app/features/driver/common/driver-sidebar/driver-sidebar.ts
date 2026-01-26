@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 
 type Item = { label: string; route: string; icon: string };
 
@@ -11,7 +12,8 @@ type Item = { label: string; route: string; icon: string };
   templateUrl: './driver-sidebar.html',
 })
 export class DriverSidebar {
-  constructor(private router: Router) {}
+  router = inject(Router)
+  authService = inject(AuthService)
 
   items: Item[] = [
     { label: 'Dashboard', route: '/driver/dashboard', icon: 'dashboard' },
@@ -29,5 +31,10 @@ export class DriverSidebar {
   iconSrc(icon: string, route: string) {
     const variant = this.isActive(route) ? 'black' : 'white';
     return `/icons/${icon}-${variant}.png`;
+  }
+
+  signOut() : void {
+    this.authService.logout();
+    this.router.navigateByUrl('/').catch(console.error);
   }
 }

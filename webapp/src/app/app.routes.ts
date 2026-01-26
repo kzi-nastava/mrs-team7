@@ -22,6 +22,7 @@ import { PanicResponseComponent } from './features/admin/pages/panic-response/pa
 import { FavouriteRoutes } from './features/registered/pages/favourite-rides/favourite-routes';
 import { BookedRidesComponent } from './features/driver/pages/booked-rides/booked-rides';
 import { PassengerBookedRidesComponent } from './features/registered/pages/booked-rides/booked-rides';
+import { DriverProfileChanges } from './features/admin/pages/driver-profile-changes/driver-profile-changes';
 
 export const routes: Routes = [
   { path: '', component: UnregisteredHomeComponent },
@@ -56,6 +57,7 @@ export const routes: Routes = [
     { path: 'register-driver', component: DriverRegistration },
     { path: 'dashboard', component: RegisteredDashboard },
     { path: 'panic-notifications', component: PanicResponseComponent },
+    { path: 'driver-profile-changes', component: DriverProfileChanges},
     { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   ] }
 ];
