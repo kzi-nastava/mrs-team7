@@ -212,7 +212,17 @@ public class RideServiceImpl implements RideService {
                 .filter(rideDTO -> (rideDTO.getStatus() != RideStatus.CANCELLED && rideDTO.getStatus() != RideStatus.COMPLETED))
                 .toList();
     }
+    @Override
+    public List<RideDTO> getPassengerRides(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(
+                ()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")
+        );
 
+        return rideRepository.findActiveRidesByPassengerEmail(email)
+                .stream()
+                .map(RideDTO::new)
+                .toList();
+    }
     @Override
     @Transactional
     public RideDTO startRide(Integer rideId) {

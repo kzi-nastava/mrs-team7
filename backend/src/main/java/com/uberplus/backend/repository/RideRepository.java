@@ -1,6 +1,7 @@
 package com.uberplus.backend.repository;
 
 import com.uberplus.backend.model.Driver;
+import com.uberplus.backend.model.Passenger;
 import com.uberplus.backend.model.Ride;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -15,6 +16,15 @@ import java.util.Optional;
 public interface RideRepository extends JpaRepository<Ride, Integer>, JpaSpecificationExecutor<Ride> {
     List<Ride> findByDriver(Driver driver);
     List<Ride> findAllByPanicActivated(boolean state);
+
+    @Query("""
+        SELECT r FROM Ride r
+        JOIN r.passengers p
+        WHERE LOWER(p.email) = LOWER(:email)
+        AND r.status != 'CANCELLED'
+        AND r.status != 'COMPLETED'
+        """)
+    List<Ride> findActiveRidesByPassengerEmail(@Param("email") String email);
 
     @Query("""
         select r from Ride r

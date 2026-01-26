@@ -1,9 +1,11 @@
 import { HttpClient } from "@angular/common/http";
 import { ConfigService } from "./config.service";
-import { Injectable } from "@angular/core";
+import { computed, Injectable, Signal, signal, WritableSignal } from "@angular/core";
 import { Observable } from "rxjs/internal/Observable";
 import { LocationDTO } from "../../features/shared/models/location";
 import {PassengerDTO} from '../../features/shared/models/passenger';
+import { tap } from "rxjs";
+import { RideDTO } from "../../features/shared/models/ride";
 
 
 export interface RideEstimateDTO {
@@ -18,7 +20,7 @@ export interface RideEstimateResponseDTO {
 
 export type RideStatus = 'PENDING' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
-export interface RideDTO {
+export interface UserRideDTO {
   id: number;
   status: RideStatus;
   startLocation: LocationDTO;
@@ -37,6 +39,8 @@ export interface RideDTO {
 })
 
 export class RideService{
+   public rides: WritableSignal<RideDTO[]> = signal<RideDTO[]>([]);
+   
     constructor(
     private http: HttpClient,
     private config: ConfigService
@@ -46,7 +50,20 @@ export class RideService{
     return this.http.post<{finalPrice: number, priceDisplay: string}>(this.config.priceEstimateUrl, request);
   }
 
-  getMyInProgressRide(): Observable<RideDTO> {
-    return this.http.get<RideDTO>(this.config.ridesUrl + '/current-in-progress');
+  getMyInProgressRide(): Observable<UserRideDTO> {
+    return this.http.get<UserRideDTO>(this.config.ridesUrl + '/current-in-progress');
   }
+  fetchRides() : Observable<RideDTO[]> {
+          return this.http.get<RideDTO[]>(this.config.ridesUrl+'/passenger').pipe(
+              tap(res => this.rides.set(res))
+          );
+      }
+  cancelRide(rideId: number, userId: number, reason: string): Observable<RideDTO> {
+        return this.http.post<RideDTO>(`${this.config.ridesUrl}/${rideId}/cancel`, { reason, userId }).pipe(
+          tap((cancelledRide) => {
+            let ridesArr: RideDTO[] = this.rides().filter(r => r.id !== cancelledRide.id);
+            this.rides.set(ridesArr);
+          })
+        );
+      }
 }

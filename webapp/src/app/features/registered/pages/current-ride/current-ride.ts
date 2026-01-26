@@ -7,7 +7,7 @@ import { MapComponent } from '../../../shared/map/map';
 
 import { CurrentRideStateService } from '../../services/current-ride-state.service';
 import { UserService } from '../../../../core/services/user.service';
-import { RideDTO, RideService } from '../../../../core/services/ride.service';
+import { UserRideDTO, RideService } from '../../../../core/services/ride.service';
 
 import { LatLng } from '../../../shared/services/routing.service';
 import { LocationDTO } from '../../../shared/models/location';
@@ -35,7 +35,7 @@ export class CurrentRideComponent implements OnInit, OnDestroy {
 
   private driverEmail?: string;
 
-  ride: RideDTO | null = null;
+  ride: UserRideDTO | null = null;
 
   waypoints: string[] = [];
   waypointLocations: LocationDTO[] = [];

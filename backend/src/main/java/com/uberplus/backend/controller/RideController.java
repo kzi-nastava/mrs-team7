@@ -48,6 +48,12 @@ public class RideController {
     public ResponseEntity<List<RideDTO>> getRides(Authentication auth) {
         return ResponseEntity.ok(rideService.getRides(auth.getName()));
     }
+
+    // GET /api/rides/passenger
+    @GetMapping("/passenger")
+    public ResponseEntity<List<RideDTO>> getPassengerRides(Authentication auth) {
+        return ResponseEntity.ok(rideService.getPassengerRides(auth.getName()));
+    }
     // GET /api/rides/{rideId}
     @GetMapping("/{rideId}")
     public ResponseEntity<RideDTO> getRide(@PathVariable Integer rideId) {

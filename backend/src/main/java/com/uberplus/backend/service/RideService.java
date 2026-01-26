@@ -11,6 +11,7 @@ import java.util.List;
 public interface RideService {
     RideDTO requestRide(String email, @Valid CreateRideRequestDTO request);
     List<RideDTO> getRides(String email);
+    List<RideDTO> getPassengerRides(String email);
 
     RideDTO startRide(Integer rideId);
 
