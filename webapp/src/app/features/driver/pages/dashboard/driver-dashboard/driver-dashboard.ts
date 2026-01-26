@@ -285,4 +285,5 @@ export class DriverDashboard implements OnDestroy {
     if (ride.vehicleType) requirements.push(ride.vehicleType);
     return requirements;
   }
+  openCancel() { }
 }

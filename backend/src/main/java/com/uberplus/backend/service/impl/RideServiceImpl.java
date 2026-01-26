@@ -212,7 +212,17 @@ public class RideServiceImpl implements RideService {
                 .filter(rideDTO -> (rideDTO.getStatus() != RideStatus.CANCELLED && rideDTO.getStatus() != RideStatus.COMPLETED))
                 .toList();
     }
+    @Override
+    public List<RideDTO> getPassengerRides(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(
+                ()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")
+        );
 
+        return rideRepository.findActiveRidesByPassengerEmail(email)
+                .stream()
+                .map(RideDTO::new)
+                .toList();
+    }
     @Override
     @Transactional
     public RideDTO startRide(Integer rideId) {
@@ -390,6 +400,25 @@ public class RideServiceImpl implements RideService {
         driverRepository.save(driver);
 
         // TODO: posalji notifikacije putnicima
+
+        return new RideDTO(ride);
+    }
+
+    @Override
+    public RideDTO cancelRide(Integer rideId, String reason, Integer userId){
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Ride not found."
+                ));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found."
+                ));
+        ride.setStatus(RideStatus.CANCELLED);
+        ride.setCancellationReason(reason);
+        ride.setCancellationTime(LocalDateTime.now());
+        ride.setCancelledBy(user.getEmail());
+        rideRepository.save(ride);
 
         return new RideDTO(ride);
     }

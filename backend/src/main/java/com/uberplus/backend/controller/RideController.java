@@ -48,6 +48,12 @@ public class RideController {
     public ResponseEntity<List<RideDTO>> getRides(Authentication auth) {
         return ResponseEntity.ok(rideService.getRides(auth.getName()));
     }
+
+    // GET /api/rides/passenger
+    @GetMapping("/passenger")
+    public ResponseEntity<List<RideDTO>> getPassengerRides(Authentication auth) {
+        return ResponseEntity.ok(rideService.getPassengerRides(auth.getName()));
+    }
     // GET /api/rides/{rideId}
     @GetMapping("/{rideId}")
     public ResponseEntity<RideDTO> getRide(@PathVariable Integer rideId) {
@@ -72,7 +78,8 @@ public class RideController {
     // POST /api/rides/{rideId}/cancel
     @PostMapping("/{rideId}/cancel")
     public ResponseEntity<RideDTO> cancelRide(@PathVariable Integer rideId, @RequestBody RideCancellationDTO request) {
-        return ResponseEntity.ok(new RideDTO());
+        RideDTO response = rideService.cancelRide(rideId,request.getReason(), request.getUserId());
+        return ResponseEntity.ok(response);
     }
 
     // PUT /api/rides/{rideId}/start

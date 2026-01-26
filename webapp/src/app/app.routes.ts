@@ -20,6 +20,8 @@ import { AdminLayout } from './features/admin/layout/admin-layout/admin-layout';
 import { DriverActivationComponent } from './core/auth/driver-activation';
 import { PanicResponseComponent } from './features/admin/pages/panic-response/panic-response';
 import { FavouriteRoutes } from './features/registered/pages/favourite-rides/favourite-routes';
+import { BookedRidesComponent } from './features/driver/pages/booked-rides/booked-rides';
+import { PassengerBookedRidesComponent } from './features/registered/pages/booked-rides/booked-rides';
 import { DriverProfileChanges } from './features/admin/pages/driver-profile-changes/driver-profile-changes';
 
 export const routes: Routes = [
@@ -37,6 +39,7 @@ export const routes: Routes = [
       { path: 'current-ride', component: CurrentRideComponent },
       { path: 'booking', outlet: 'aside', component: RideBookingSidebar },
       { path: '', outlet: 'aside', component: RegisteredSidebar },
+      { path: 'booked-rides', component: PassengerBookedRidesComponent },
       { path: 'favorite-routes', component: FavouriteRoutes }
   ] },
   { path: 'registerUser', component: UserRegistrationComponent },
@@ -45,6 +48,7 @@ export const routes: Routes = [
       { path: 'profile', component: DriverProfileComponent },
       { path: 'ride-history', component: DriverRideHistory },
       { path: 'dashboard', component: DriverDashboard },
+      { path: 'booked-rides', component: BookedRidesComponent },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ] },
 
