@@ -58,13 +58,14 @@ export class RideBookingSidebar {
   step = signal<number>(1);
 
   user = signal<User>({
-    id: '',
+    id: 0,
     firstName: '',
     lastName: '',
     email: '',
     address: '',
     phoneNumber: '',
-    role: 'PASSENGER'
+    role: 'PASSENGER',
+    profilePicture: 'defaultprofile.png'
   });
 
   // ---- Favorite routes ----

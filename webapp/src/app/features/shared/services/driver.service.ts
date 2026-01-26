@@ -52,12 +52,12 @@ export class DriverService {
         private config: ConfigService
     ) {}
 
-    updateDriver(updated: User) : Observable<User> {
-        return this.http.put<User>(this.config.driverProfileUrl, updated);
+    updateDriver(form: FormData) : Observable<User> {
+        return this.http.put<User>(this.config.driverProfileUrl, form);
     }
 
-    createDriver(driver: DriverCreationDTO) : Observable<void> {
-        return this.http.post<void>(this.config.driverUrl, driver);
+    createDriver(form: FormData) : Observable<void> {
+        return this.http.post<void>(this.config.driverUrl, form);
     }
 
     activateDriver(token: string, password: string) : Observable<void> {

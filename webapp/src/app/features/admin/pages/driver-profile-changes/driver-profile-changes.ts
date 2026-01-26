@@ -5,10 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { DriverService, DriverUpdateDTO } from '../../../shared/services/driver.service';
 import { ErrorAlert } from "../../../shared/components/error-alert";
 import { SuccessAlert } from "../../../shared/components/success-alert";
+import { ProfilePictureComponent } from "../../../shared/components/profile-picture.component";
 
 @Component({
   selector: 'app-driver-profile-changes',
-  imports: [CommonModule, FormsModule, ErrorAlert, SuccessAlert],
+  imports: [CommonModule, FormsModule, ErrorAlert, SuccessAlert, ProfilePictureComponent],
   templateUrl: './driver-profile-changes.html',
 })
 export class DriverProfileChanges implements OnInit {

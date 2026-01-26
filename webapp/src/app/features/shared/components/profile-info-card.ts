@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { User } from '../../../core/models/user';
 import { log } from 'console';
+import { ProfilePictureComponent } from "./profile-picture.component";
 
 @Component({
   selector: 'profile-info-card',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProfilePictureComponent],
   template: `
       <div class="flex flex-col">
         <div class="flex flex-col gap-6 w-full">
@@ -15,18 +16,11 @@ import { log } from 'console';
               <div class="border-[1.5px] border-gray-200 rounded-3xl shadow-lg p-8">
                 <div class="flex items-center gap-6">
                   <!-- Profile Picture -->
-                  <div class="relative group w-30 h-30 cursor-pointer">
-                    <div class="w-full h-full rounded-full border-[3px] border-app-accent p-0.5">
-                      <img
-                        class="w-full h-full rounded-full object-cover group-hover:brightness-80"
-                        src="defaultprofile.png"
-                        alt="Profile"
-                      />
-                    </div>
-                    <button class="absolute bottom-0 right-0 w-9 h-9 bg-app-accent rounded-full shadow-lg flex items-center justify-center">
-                      <img src="camera.svg" alt="Camera">
-                    </button>
-                  </div>
+                  <app-profile-picture
+                  [editable]="true"
+                  [inputSrc]="editableUser.profilePicture"
+                  (avatarSelected)="setPicture($event)"
+                  class="w-30 h-30"></app-profile-picture>
 
                   <!-- User Info -->
                   <div class="flex flex-col gap-1">
@@ -143,9 +137,12 @@ import { log } from 'console';
   `,
 })
 export class ProfileInfoCard {
-  @Output() save = new EventEmitter<User>();
+  @Output() save = new EventEmitter<{user: User, picture: File | null}>();
   @Output() openPswdChange = new EventEmitter<void>();
   
+  profilePictureUrl: string | null = null;
+
+  selectedPicture: File | null = null;
   editableUser!: User;
 
   private _user!: User;
@@ -180,7 +177,7 @@ export class ProfileInfoCard {
     this.errorMessage = validation.message;
     
     if (validation.valid) {
-      this.save.emit({ ...this.editableUser });
+      this.save.emit({user: { ...this.editableUser }, picture: this.selectedPicture});
     }
   }
 
@@ -229,5 +226,9 @@ export class ProfileInfoCard {
     }
     const re = /^[\d+\-\s().]+$/;
     return re.test(phone);
+  }
+
+  setPicture(file: File) {
+    this.selectedPicture = file;
   }
 }

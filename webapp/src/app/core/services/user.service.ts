@@ -32,17 +32,14 @@ export class UserService {
                 if(user.role == 'DRIVER'){
                     return this.http.get<Driver>(this.config.driverProfileUrl).pipe(
                         map(dto => {
-                            console.log(dto);
                             let driver: Driver = { ...dto };
-
-                            console.log(driver);
                             
                             this.currentUserSubject.next(driver as Driver);
                             return driver as Driver;
                         }))
 
                 } else {
-                    this.currentUserSubject.next(user);
+                    this.currentUserSubject.next(user);                    
                     return of(user);
                 }
             })
@@ -53,7 +50,7 @@ export class UserService {
         this.currentUserSubject.next(null);
     };
 
-    updateUser(updated: User) : Observable<User> {
+    updateUser(updated: FormData) : Observable<User> {
         return this.http.put<User>(this.config.profile_url, updated).pipe(
             tap((user) => this.currentUserSubject.next(user))
         );

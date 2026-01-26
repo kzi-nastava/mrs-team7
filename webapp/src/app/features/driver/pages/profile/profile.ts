@@ -175,12 +175,13 @@ export class DriverProfileComponent {
     rides: [],
     ratings: [],
     averageRating: 0,
-    id: '',
+    id: 0,
     firstName: '',
     lastName: '',
     email: '',
     address: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    profilePicture: "defaultprofile.png"
   }
 
   private sub?: Subscription;
@@ -238,8 +239,18 @@ export class DriverProfileComponent {
     this.isChangePasswordOpen = true;
   }
 
-  saveProfile(updated: User): void {
-      this.driverService.updateDriver(updated).subscribe(
+  saveProfile(updated: {user: User, picture: File | null}): void {
+      const form: FormData = new FormData();
+
+      const jsonBlob: Blob  = new Blob([JSON.stringify(updated.user)], { type: 'application/json' });
+      form.append('update', jsonBlob);
+          
+      if (updated.picture) {
+        form.append('avatar', updated.picture, updated.picture.name);
+      }
+
+
+      this.driverService.updateDriver(form).subscribe(
       {
         next: (user) => {
           this.successMessage = "Profile update request sent. Changes will be visible once the request is approved."
