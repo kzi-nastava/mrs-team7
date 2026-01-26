@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { VehicleType, vehicleTypeKeyFromValue } from '../../../shared/models/vehicle';
 import { CommonModule } from '@angular/common';
 import { DriverCreationDTO, DriverService, VehicleCreationDTO } from '../../../shared/services/driver.service';
+import { ProfilePictureComponent } from "../../../shared/components/profile-picture.component";
 
 @Component({
   selector: 'app-driver-registration',
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, ProfilePictureComponent],
   templateUrl: './driver-registration.html',
 })
 export class DriverRegistration {
@@ -34,6 +35,8 @@ export class DriverRegistration {
 
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+
+  selectedPicture: File | null = null;
 
   constructor(public driverService : DriverService) {
   }
@@ -63,8 +66,17 @@ export class DriverRegistration {
       phoneNumber: this.phone,
       vehicle: vehicle
     }
+
+    const form: FormData = new FormData();
+
+    const jsonBlob: Blob  = new Blob([JSON.stringify(req)], { type: 'application/json' });
+    form.append('user', jsonBlob);
+        
+    if (this.selectedPicture) {
+      form.append('avatar', this.selectedPicture, this.selectedPicture.name);
+    }
     
-    this.driverService.createDriver(req).subscribe({
+    this.driverService.createDriver(form).subscribe({
           next: () => {
             this.isSubmitting = false;
             this.registrationSuccess = true;
@@ -78,7 +90,12 @@ export class DriverRegistration {
             console.error('Signup failed', err);
           }}
         )
-      }
+  }
+
+  setPicture(file: File) {
+    this.selectedPicture = file;
+  }
+
   closeSuccessPopup() {
     this.registrationSuccess = false;
     this.router.navigate(['/admin/dashboard']);

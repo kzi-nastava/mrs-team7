@@ -1,11 +1,11 @@
 
 export interface User {
-  id: string;
+  id: number;
   firstName: string;
   lastName: string;
   email: string;
   address: string;
   phoneNumber: string;
-  avatarUrl?: string;
+  profilePicture: string;
   role: "ADMIN" | "DRIVER" | "PASSENGER"
 }

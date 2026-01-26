@@ -6,11 +6,12 @@ import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { RegisterRequestDto } from './register-request.dto';
 import { first } from 'rxjs';
+import { ProfilePictureComponent } from "../../features/shared/components/profile-picture.component";
 
 @Component({
   selector: 'user-registration',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, ProfilePictureComponent],
   template: `
     <div class="min-h-screen flex flex-col bg-linear-to-b from-[#d6f4a2] to-[#f7f7f7] font-poppins">
       <!-- Header -->
@@ -20,14 +21,12 @@ import { first } from 'rxjs';
       <main class="flex-1 flex items-center justify-center px-4 py-8">
         <div class="w-full max-w-4xl bg-[#181818] rounded-[44px] px-8 py-10 md:px-16 md:py-12 shadow-xl">
           <div class="flex justify-center mb-8">
-            <div class="w-32 h-32 rounded-full bg-white flex items-center justify-center">
-              <img
-                src="defaultprofile.png"
-                alt="Profile"
-                class="w-28 h-28 rounded-full object-cover"
-              />
-            </div>
+              <app-profile-picture
+              [editable]="true"
+              (avatarSelected)="setPicture($event)"
+              class="w-30 h-30"></app-profile-picture>
           </div>
+
 
           <form #registerForm="ngForm" (ngSubmit)="registerForm.valid && onSubmit()" class="space-y-6">
             <!-- Row 1 -->
@@ -232,7 +231,7 @@ import { first } from 'rxjs';
       @if (registrationError) {
         <div class="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg max-w-md">
           <div class="flex items-start gap-3">
-            <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <div class="flex-1">
@@ -263,6 +262,8 @@ export class UserRegistrationComponent {
   registrationError: string | null = null;
   isSubmitting = false;
 
+  selectedPicture: File | null = null;
+
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
@@ -283,22 +284,36 @@ export class UserRegistrationComponent {
       address: this.address,
       phoneNumber: this.phone
     }
+
+    const form: FormData = new FormData();
+
+    const jsonBlob: Blob  = new Blob([JSON.stringify(req)], { type: 'application/json' });
+    form.append('user', jsonBlob);
+        
+    if (this.selectedPicture) {
+      form.append('avatar', this.selectedPicture, this.selectedPicture.name);
+    }
     
-    this.authService.register(req).subscribe({
-  next: () => {
-    this.isSubmitting = false;
-    this.registrationSuccess = true;
-    this.cdr.detectChanges();
-    console.log('Signup request sent successfully!');
-  },
-  error: (err) => {
-    this.isSubmitting = false;
-    this.registrationError = err.error?.message || 'Registration failed. Please try again.';
-    this.cdr.detectChanges();
-    console.error('Signup failed', err);
-  }}
-  )
+    this.authService.register(form).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.registrationSuccess = true;
+          this.cdr.detectChanges();
+          console.log('Signup request sent successfully!');
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          this.registrationError = err.error?.message || 'Registration failed. Please try again.';
+          this.cdr.detectChanges();
+          console.error('Signup failed', err);
+        }}
+      )
   }
+
+  setPicture(file: File) {
+    this.selectedPicture = file;
+  }
+
   closeSuccessPopup() {
     this.registrationSuccess = false;
     this.router.navigate(['/signin']);

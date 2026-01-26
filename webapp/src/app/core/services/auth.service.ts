@@ -63,8 +63,8 @@ export class AuthService {
   }
 
 
-  public register(registerRequest: RegisterRequestDto) {    
-    return this.http.post(this.config.registerUrl, registerRequest).pipe(
+  public register(form: FormData) {
+    return this.http.post(this.config.registerUrl, form).pipe(
       map(() => {
         console.log('Sent sign up request.');
       }),

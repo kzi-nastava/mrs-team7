@@ -47,13 +47,14 @@ import { SuccessAlert } from "../../shared/components/success-alert";
 })
 export class RegisteredProfileComponent {
   user: User = {
-    id: '',
+    id: 0,
     firstName: '',
     lastName: '',
     email: '',
     address: '',
     phoneNumber: '',
-    role: 'PASSENGER'
+    role: 'PASSENGER',
+    profilePicture: 'defaultprofile.png'
   };
 
   private sub?: Subscription;
@@ -67,8 +68,9 @@ export class RegisteredProfileComponent {
   ngOnInit(): void {
     this.sub = this.userService.currentUser$.subscribe(current => {
       if (current) {
-        this.user = { ...current };
+        this.user = { ...current };        
         this.cdr.detectChanges();
+        console.log(current);
       }
     });
 
@@ -96,8 +98,17 @@ export class RegisteredProfileComponent {
     this.isChangePasswordOpen = true;
   }
 
-  saveProfile(updated: User): void {
-    this.userService.updateUser(updated).subscribe(
+    saveProfile(updated: {user: User, picture: File | null}): void {
+      const form: FormData = new FormData();
+
+      const jsonBlob: Blob  = new Blob([JSON.stringify(updated.user)], { type: 'application/json' });
+      form.append('update', jsonBlob);
+          
+      if (updated.picture) {
+        form.append('avatar', updated.picture, updated.picture.name);
+      }
+
+    this.userService.updateUser(form).subscribe(
       {
         next: (user) => {
           this.successMessage = "Profile successfully updated."

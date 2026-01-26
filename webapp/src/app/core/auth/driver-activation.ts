@@ -144,7 +144,7 @@ export class DriverActivationComponent{
           this.loading.set(false);
           this.success.set(true);
         //   this.cdr.detectChanges();
-          setTimeout(() => this.router.navigate(['/login']), 2000);
+          setTimeout(() => this.router.navigate(['/signIn']), 2000);
       },
       error: (err) => {
           this.loading.set(false);

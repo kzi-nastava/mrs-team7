@@ -1,8 +1,9 @@
-import { ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, signal } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import {Router, RouterLink} from '@angular/router';
 import { Subscription } from 'rxjs';
 import { UserService } from '../../../core/services/user.service';
+import { User } from '../../../core/models/user';
 
 @Component({
   selector: 'app-header',
@@ -30,13 +31,14 @@ import { UserService } from '../../../core/services/user.service';
         @if (showUserProfile) {
           <div class="flex items-center gap-2.5 bg-white rounded-full px-3 py-1.5 md:px-2 md:py-2 shadow-lg">
             <div class="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center shrink-0 ml-2"></div>
-            <span class="text-black text-base md:text-[18px] font-normal mr-1">{{firstName}} {{lastName}}</span>
+            <span class="text-black text-base md:text-[18px] font-normal mr-1">{{user.firstName}} {{user.lastName}}</span>
             <img
-              ngSrc="/defaultprofile.png"
+              [ngSrc]="displayedProfilePicture()"
               width="40"
               height="40"
               alt="Profile"
               class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover"
+              (error)="onProfileImgError($event)"
             />
           </div>
         }
@@ -56,8 +58,19 @@ import { UserService } from '../../../core/services/user.service';
   styles: []
 })
 export class HeaderComponent {
-  firstName: string = '';
-  lastName: string = '';
+  user: User = {
+    id: 0,
+    firstName: '',
+    lastName: '',
+    email: '',
+    address: '',
+    phoneNumber: '',
+    profilePicture: 'defaultprofile.png',
+    role: 'PASSENGER'
+  }
+
+  displayedProfilePicture = signal<string>('/defaultprofile.png');
+
   @Input() showUserProfile: boolean = true;
 
   private sub?: Subscription;
@@ -66,8 +79,11 @@ export class HeaderComponent {
   ngOnInit(): void {
     this.sub = this.userService.currentUser$.subscribe(current => {
       if (current) {
-        this.firstName = current.firstName;
-        this.lastName = current.lastName;
+        this.displayedProfilePicture.set(current.profilePicture
+          ? `${current.profilePicture}?cb=${Date.now()}`
+          : '/defaultprofile.png');
+
+        this.user = {...current}
         this.cdr.detectChanges();
       }
     });
@@ -77,6 +93,20 @@ export class HeaderComponent {
   constructor(private router: Router, private userService: UserService, private cdr: ChangeDetectorRef) {}
 
   onLogoClick(): void {
-    this.router.navigateByUrl('/').catch(console.error);
+    switch(this.user.role) {
+      case "ADMIN":
+        this.router.navigate(["/admin/dashboard"]); break;
+      case "DRIVER":
+        this.router.navigate(["/driver/dashboard"]); break;
+      case "PASSENGER":
+        this.router.navigate(["/user/dashboard"]); break;
+      default:
+        this.router.navigateByUrl("/");
+    }
+  }
+
+  onProfileImgError(ev: Event) {
+    const img = ev.target as HTMLImageElement;
+    img.src = '/defaultprofile.png';
   }
 }
