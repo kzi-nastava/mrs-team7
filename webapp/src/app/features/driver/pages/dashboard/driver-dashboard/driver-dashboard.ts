@@ -364,12 +364,13 @@ export class DriverDashboard implements OnInit, OnDestroy {
       return;
     }
 
-    this.rideApi.completeRide(r.id).subscribe({
+    this.ridesService.completeRide(r.id).subscribe({
       next: () => {
-        this.ridesService.fetchRides().subscribe();
         this.simRunner.stopForRide(r.id);
         this.simulationCompleted.set(false);
         this.rideState.clearPanic(r.id);
+
+        this.ridesService.fetchRides().subscribe();
       },
       error: (err) => console.error('Failed to complete ride', err)
     });
