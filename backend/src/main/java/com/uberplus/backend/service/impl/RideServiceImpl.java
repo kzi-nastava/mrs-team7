@@ -12,6 +12,7 @@ import com.uberplus.backend.repository.DriverRepository;
 import com.uberplus.backend.repository.RideInconsistencyRepository;
 import com.uberplus.backend.repository.RideRepository;
 import com.uberplus.backend.repository.UserRepository;
+import com.uberplus.backend.service.EmailService;
 import com.uberplus.backend.service.OSRMService;
 import com.uberplus.backend.service.RideService;
 import jakarta.transaction.Transactional;
@@ -35,6 +36,7 @@ public class RideServiceImpl implements RideService {
     private DriverRepository driverRepository;
     private OSRMService osrmService;
     private RideInconsistencyRepository rideInconsistencyRepository;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -406,8 +408,7 @@ public class RideServiceImpl implements RideService {
 
         rideRepository.save(ride);
         driverRepository.save(driver);
-
-        // TODO: posalji notifikacije putnicima
+        emailService.sendRideEndingEmail(ride);
 
         return new RideDTO(ride);
     }
