@@ -5,5 +5,6 @@ public enum RideStatus {
     ACCEPTED,       // driver accepted
     IN_PROGRESS,    // started
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    STOPPED,
 }

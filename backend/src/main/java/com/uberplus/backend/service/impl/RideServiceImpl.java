@@ -1,10 +1,7 @@
 package com.uberplus.backend.service.impl;
 
 import com.uberplus.backend.dto.notification.PanicNotificationDTO;
-import com.uberplus.backend.dto.ride.CreateRideRequestDTO;
-import com.uberplus.backend.dto.ride.LocationDTO;
-import com.uberplus.backend.dto.ride.RideDTO;
-import com.uberplus.backend.dto.ride.RideETADTO;
+import com.uberplus.backend.dto.ride.*;
 import com.uberplus.backend.model.*;
 import com.uberplus.backend.model.enums.RideStatus;
 import com.uberplus.backend.model.enums.VehicleStatus;
@@ -212,7 +209,7 @@ public class RideServiceImpl implements RideService {
         return rideRepository.findByDriver((Driver) user)
                 .stream()
                 .map(RideDTO::new)
-                .filter(rideDTO -> (rideDTO.getStatus() != RideStatus.CANCELLED && rideDTO.getStatus() != RideStatus.COMPLETED))
+                .filter(rideDTO -> (rideDTO.getStatus() != RideStatus.CANCELLED && rideDTO.getStatus() != RideStatus.COMPLETED && rideDTO.getStatus() != RideStatus.STOPPED))
                 .toList();
     }
     @Override
@@ -508,5 +505,45 @@ public class RideServiceImpl implements RideService {
         rideRepository.save(ride);
         return new RideDTO(ride);
     }
+    @Override
+    @Transactional
+    public RideDTO stopEarly(Integer rideId, LocationDTO dto){
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ride not found."));
+
+        Location endLocation = new Location();
+        endLocation.setLongitude(dto.getLongitude());
+        endLocation.setLatitude(dto.getLatitude());
+        endLocation.setAddress(dto.getAddress());
+
+        ride.setStoppedAt(LocalDateTime.now());
+        ride.setActualEndTime(LocalDateTime.now());
+        ride.setEndLocation(endLocation);
+        ride.setStoppedLocation(endLocation);
+        ride.setStatus(RideStatus.STOPPED);
+        double totalDistance = endLocation.distanceTo(ride.getStartLocation());
+        double actualPrice = pricingService.calculatePrice(new RideEstimateDTO((int)totalDistance,ride.getVehicleType()));
+        ride.setTotalPrice(actualPrice);
+
+        Driver driver = ride.getDriver();
+        if (driver.getVehicle() != null) {
+            driver.getVehicle().setStatus(VehicleStatus.AVAILABLE);
+        }
+
+        if (ride.getActualStartTime() != null) {
+            long minutesWorked = java.time.Duration.between(
+                    ride.getActualStartTime(),
+                    ride.getActualEndTime()
+            ).toMinutes();
+
+            driver.setWorkedMinutesLast24h(
+                    driver.getWorkedMinutesLast24h() + minutesWorked
+            );
+        }
+        driverRepository.save(driver);
+        rideRepository.save(ride);
+        return new RideDTO(ride);
+    }
 }
+
 
