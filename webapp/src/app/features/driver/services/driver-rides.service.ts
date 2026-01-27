@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { computed, Injectable, signal, Signal, WritableSignal } from "@angular/core";
 import { ConfigService } from "../../../core/services/config.service";
-import { RideDTO } from "../../shared/models/ride";
+import {RideDetailDTO, RideDTO} from "../../shared/models/ride";
 import { Observable, tap } from "rxjs";
 
 
@@ -11,19 +11,17 @@ import { Observable, tap } from "rxjs";
 export class DriverRidesService {
     public rides: WritableSignal<RideDTO[]> = signal<RideDTO[]>([]);
     public readonly currentRide: Signal<RideDTO | null> = computed(() => {
+      const activeRides: RideDTO[] = this.rides()
+        .sort((a: RideDTO, b: RideDTO) => {
+          if (a.status === 'IN_PROGRESS' && b.status !== 'IN_PROGRESS') return -1;
+          if (b.status === 'IN_PROGRESS' && a.status !== 'IN_PROGRESS') return 1;
+          if (a.status === 'ACCEPTED' && b.status !== 'ACCEPTED') return -1;
+          if (b.status === 'ACCEPTED' && a.status !== 'ACCEPTED') return 1;
 
-      const pastRides: RideDTO[] = this.rides()
-        .filter((r: RideDTO) => new Date(r.scheduledTime).getTime() <= Date.now())
-        .sort((a: RideDTO, b: RideDTO) =>
-          Number(b.status === 'IN_PROGRESS') - Number(a.status === 'IN_PROGRESS')
-        );
+          return new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime();
+        });
 
-
-      if (pastRides.length === 0) {
-            return null;
-        }
-
-        return pastRides[0];
+      return activeRides.length === 0 ? null : activeRides[0];
     });
 
     constructor(
@@ -67,5 +65,9 @@ export class DriverRidesService {
           this.rides.set(ridesArr);
         })
       );
+    }
+
+    getRideDetails(rideId: number): Observable<RideDetailDTO> {
+      return this.http.get<RideDetailDTO>(`${this.config.baseUrl}/drivers/rides/${rideId}/details`);
     }
 }

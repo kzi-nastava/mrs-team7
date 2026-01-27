@@ -7,9 +7,7 @@ import com.sendgrid.helpers.mail.Mail;
 import com.sendgrid.helpers.mail.objects.Content;
 import com.sendgrid.helpers.mail.objects.Email;
 import com.sendgrid.helpers.mail.objects.Personalization;
-import com.uberplus.backend.model.Driver;
-import com.uberplus.backend.model.Passenger;
-import com.uberplus.backend.model.User;
+import com.uberplus.backend.model.*;
 import com.uberplus.backend.service.EmailService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -106,6 +104,34 @@ public class EmailServiceImpl implements EmailService {
             sg.api(request);
         } catch (IOException e) {
             throw new RuntimeException("Failed to send password reset email", e);
+        }
+    }
+
+    @Override
+    public void sendRideEndingEmail(Ride ride){
+        Passenger creator = ride.getCreator();
+
+        Email from = new Email(fromEmail, "UberPLUS");
+        Email to = new Email(creator.getEmail());
+        System.out.println(from);
+
+        Personalization personalization = new Personalization();
+        personalization.addDynamicTemplateData("firstName", creator.getFirstName());
+        personalization.addTo(to);
+
+        Mail mail = new Mail();
+        mail.setFrom(from);
+        mail.addPersonalization(personalization);
+        mail.setTemplateId("d-3dc73d3eeafe4510897d5513833511ea");
+
+        Request request = new Request();
+        try {
+            request.setMethod(Method.POST);
+            request.setEndpoint("mail/send");
+            request.setBody(mail.build());
+            sg.api(request);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to send ride ending email", e);
         }
     }
 }

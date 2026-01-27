@@ -30,8 +30,8 @@ export class BookedRidesComponent {
   cancelReason = '';
   isCancelOpen = false;
   readonly maxLength = 500;
-  rideCancelledReason = ""; 
-  
+  rideCancelledReason = "";
+
   isValidReason(): boolean {
     return this.cancelReason.trim().length >= 10 && this.cancelReason.trim().length <= this.maxLength;
   }
@@ -72,7 +72,7 @@ export class BookedRidesComponent {
       CANCELLED: 'bg-red-100 text-red-700',
       STOPPED: 'bg-yellow-100 text-yellow-700',
     };
-  
+
     requirementEmoji: Record<string, string> = {
       Baby: '🧸',
       Luxury: '🚗',
@@ -80,7 +80,7 @@ export class BookedRidesComponent {
       Pets: '🐾',
       Van: '🚐',
     };
-  
+
     requirementClasses: Record<string, string> = {
       Baby: 'bg-[#FFEDD4] text-[#CA3500]',
       Luxury: 'bg-[#DBEAFE] text-[#1447E6]',
@@ -92,12 +92,12 @@ export class BookedRidesComponent {
         const d = new Date(date);
         return d.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit' });
       }
-    
+
       private formatTime(date: string | Date): string {
         const d = new Date(date);
         return d.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
       }
-    
+
       private formatRequirements(ride: RideDTO): string[] {
         const requirements: string[] = [];
         if (ride.isBabyFriendly) requirements.push('Baby');

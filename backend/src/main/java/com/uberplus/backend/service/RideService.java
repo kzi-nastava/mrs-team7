@@ -25,6 +25,7 @@ public interface RideService {
     RideDTO completeRide(Integer rideId, String driverEmail);
     RideETADTO getRideETA(Integer rideId) throws IOException, InterruptedException;
     RideDTO arrivedAtPickup(Integer rideId);
+    void reportInconsistency(Integer rideId, Integer passengerId, String description);
 
     RideDTO stopEarly(Integer rideId, LocationDTO dto);
 }

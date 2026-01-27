@@ -121,12 +121,6 @@ public class RideController {
         return ResponseEntity.ok(stopped);
     }
 
-    // POST /api/rides/{rideId}/inconsistency
-    @PostMapping("/{rideId}/inconsistency")
-    public ResponseEntity<MessageDTO> reportInconsistency(@PathVariable Integer rideId, @RequestBody RideInconsistencyDTO request) {
-        return ResponseEntity.ok(new MessageDTO());
-    }
-
     // GET /api/rides/current-in-progress
     @GetMapping("/current-in-progress")
     public ResponseEntity<RideDTO> getMyInProgress(Authentication auth) {
@@ -146,5 +140,14 @@ public class RideController {
     @PutMapping("/{id}/arrived-pickup")
     public ResponseEntity<RideDTO> arrivedAtPickup(@PathVariable Integer id) {
         return ResponseEntity.ok(rideService.arrivedAtPickup(id));
+    }
+
+    // POST /api/rides/{rideId}/inconsistency
+    @PostMapping("/{rideId}/inconsistency")
+    public ResponseEntity<MessageDTO> reportInconsistency(
+            @PathVariable Integer rideId,
+            @RequestBody RideInconsistencyDTO request) {
+        rideService.reportInconsistency(rideId, request.getPassengerId(), request.getDescription());
+        return ResponseEntity.ok(new MessageDTO());
     }
 }

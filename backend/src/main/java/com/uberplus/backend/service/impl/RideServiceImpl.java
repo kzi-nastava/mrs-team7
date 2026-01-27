@@ -6,8 +6,10 @@ import com.uberplus.backend.model.*;
 import com.uberplus.backend.model.enums.RideStatus;
 import com.uberplus.backend.model.enums.VehicleStatus;
 import com.uberplus.backend.repository.DriverRepository;
+import com.uberplus.backend.repository.RideInconsistencyRepository;
 import com.uberplus.backend.repository.RideRepository;
 import com.uberplus.backend.repository.UserRepository;
+import com.uberplus.backend.service.EmailService;
 import com.uberplus.backend.service.OSRMService;
 import com.uberplus.backend.service.PricingService;
 import com.uberplus.backend.service.RideService;
@@ -31,6 +33,8 @@ public class RideServiceImpl implements RideService {
     private UserRepository userRepository;
     private DriverRepository driverRepository;
     private OSRMService osrmService;
+    private RideInconsistencyRepository rideInconsistencyRepository;
+    private final EmailService emailService;
     private PricingService pricingService;
 
     @Override
@@ -407,8 +411,7 @@ public class RideServiceImpl implements RideService {
 
         rideRepository.save(ride);
         driverRepository.save(driver);
-
-        // TODO: posalji notifikacije putnicima
+        emailService.sendRideEndingEmail(ride);
 
         return new RideDTO(ride);
     }
@@ -504,6 +507,37 @@ public class RideServiceImpl implements RideService {
 
         rideRepository.save(ride);
         return new RideDTO(ride);
+    }
+
+    @Override
+    @Transactional
+    public void reportInconsistency(Integer rideId, Integer passengerId, String description) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Ride not found."
+                ));
+
+        Passenger passenger = (Passenger) userRepository.findById(passengerId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Passenger not found."
+                ));
+
+        boolean isPassengerInRide = ride.getPassengers().stream()
+                .anyMatch(p -> p.getId().equals(passengerId));
+
+        if (!isPassengerInRide) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "You are not a passenger in this ride."
+            );
+        }
+
+        RideInconsistency inconsistency = new RideInconsistency();
+        inconsistency.setRide(ride);
+        inconsistency.setReportedBy(passenger);
+        inconsistency.setDescription(description);
+        inconsistency.setCreatedAt(LocalDateTime.now());
+
+        rideInconsistencyRepository.save(inconsistency);
     }
     @Override
     @Transactional
