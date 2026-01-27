@@ -500,15 +500,21 @@ public class RideServiceImpl implements RideService {
         return new RideDTO(ride);
     }
     @Override
+    @Transactional
     public RideDTO stopEarly(Integer rideId, LocationDTO dto){
         Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ride not found."));
 
+        Location endLocation = new Location();
+        endLocation.setLongitude(dto.getLongitude());
+        endLocation.setLatitude(dto.getLatitude());
+        endLocation.setAddress(dto.getAddress());
+
         ride.setStoppedAt(LocalDateTime.now());
         ride.setActualEndTime(LocalDateTime.now());
-        ride.setEndLocation(dto.toEntity());
-        ride.setStoppedLocation(dto.toEntity());
-        ride.setStatus(RideStatus.COMPLETED);
+        ride.setEndLocation(endLocation);
+        ride.setStoppedLocation(endLocation);
+        ride.setStatus(RideStatus.STOPPED);
 
         rideRepository.save(ride);
         return new RideDTO(ride);

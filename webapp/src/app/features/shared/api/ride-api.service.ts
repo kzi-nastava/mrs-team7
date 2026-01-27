@@ -35,6 +35,6 @@ export class RideApiService {
   }
   stopRideEarly(rideId: number, dto: LocationDTO): Observable<any> {
     console.log('Stopping ride early with DTO:', dto);
-    return this.http.put(`${this.baseUrl}/${rideId}/stop-early`, { dto });
+    return this.http.post(`${this.baseUrl}/${rideId}/stop-early`, dto );
   }
 }

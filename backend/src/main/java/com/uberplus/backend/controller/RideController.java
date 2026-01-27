@@ -109,9 +109,8 @@ public class RideController {
     }
 
     // POST /api/rides/{rideId}/stop-early
-    @PutMapping("/{rideId}/stop-early")
+    @PostMapping("/{rideId}/stop-early")
     public ResponseEntity<RideDTO> stopEarly(@PathVariable Integer rideId, @RequestBody LocationDTO request) {
-        System.out.println(request);
         RideDTO stopped = rideService.stopEarly(rideId,request);
         return ResponseEntity.ok(stopped);
     }
