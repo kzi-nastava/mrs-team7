@@ -102,13 +102,13 @@ export class CurrentRideComponent implements OnInit, OnDestroy {
         this.rideState.loadPanic(r.id);
         this.startETAPolling(r.id);
 
-        // FOLLOW (per driver)
+        // pokreni pracenje vozila
         if (r.driverEmail) {
           this.driverEmail = r.driverEmail;
           this.follow.start(this.driverEmail, 1000);
           this.subs.push(
             this.follow.vehicle$(this.driverEmail).subscribe(v => {
-              this.vehicles = v ? [v] : [];
+              this.vehicles = v ? [v] : []; // apdejtuje vozilo na mapi
               this.cdr.detectChanges();
             })
           );
@@ -138,7 +138,8 @@ export class CurrentRideComponent implements OnInit, OnDestroy {
     this.stopETAPolling();
 
     this.etaPollSub = interval(2000)
-      .pipe(switchMap(() => this.rideApi.getRideETA(rideId)))
+      .pipe(switchMap(() => this.rideApi.getRideETA(rideId))) // da mozemo subscribe u subscribe(za svaki emitovani broj pokrenem novi observable)
+      // , sprecava nagomilavanje http poziva, suprotno exaustMap, ignorise nove pozive dok ne zavrsi prethodni
       .subscribe({
         next: (eta) => {
           this.currentETA = eta;

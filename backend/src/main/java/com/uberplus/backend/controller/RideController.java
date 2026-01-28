@@ -76,6 +76,7 @@ public class RideController {
 
     // GET /api/rides/history?driverId=1&startDate=2026-01-01&endDate=2026-01-31&page=0&size=20
     @GetMapping("/history")
+    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<RideHistoryResponseDTO> getRideHistory(
             @RequestParam Integer driverId,
             @Valid RideHistoryFilterDTO filter
@@ -99,6 +100,7 @@ public class RideController {
 
     // PUT /api/rides/{rideId}/complete
     @PutMapping("/{rideId}/complete")
+    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<RideDTO> completeRide(
             Authentication auth,
             @PathVariable Integer rideId
@@ -123,6 +125,7 @@ public class RideController {
 
     // GET /api/rides/current-in-progress
     @GetMapping("/current-in-progress")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<RideDTO> getMyInProgress(Authentication auth) {
         return ResponseEntity.ok(rideService.getInProgressForPassenger(auth.getName()));
     }
@@ -146,7 +149,7 @@ public class RideController {
     @PostMapping("/{rideId}/inconsistency")
     public ResponseEntity<MessageDTO> reportInconsistency(
             @PathVariable Integer rideId,
-            @RequestBody RideInconsistencyDTO request) {
+            @Valid @RequestBody RideInconsistencyDTO request) {
         rideService.reportInconsistency(rideId, request.getPassengerId(), request.getDescription());
         return ResponseEntity.ok(new MessageDTO());
     }

@@ -79,7 +79,7 @@ export class DriverDashboard implements OnInit, OnDestroy {
       if (this.currentRideId && (!r || r.id !== this.currentRideId)) {
         this.cleanupCurrentRideSubscriptions();
       }
-
+      // scenario 1: nema voznje
       if (!r) {
         this.simulationCompleted.set(false);
         this.stopETAPolling();
@@ -94,6 +94,7 @@ export class DriverDashboard implements OnInit, OnDestroy {
         return;
       }
 
+      // scenario 2: ima voznje
       this.currentRideId = r.id;
 
       // route points
@@ -108,8 +109,9 @@ export class DriverDashboard implements OnInit, OnDestroy {
       ];
       this.rideState.loadPanic(r.id);
 
+      // scenario 3: voznja je in progress
       if (r.status === 'IN_PROGRESS') {
-        // Stopuj follow jer simulacija preuzima
+        // Stopuj follow jer simulacija preuzima da ne bi bilo konflikata jer pocne auto da se krece izmedju dvije medjutacke
         if (this.driverEmail) {
           this.follow.stop(this.driverEmail);
         }
@@ -151,10 +153,12 @@ export class DriverDashboard implements OnInit, OnDestroy {
 
         this.startETAPolling(r.id);
       } else {
+        // Scenario 4: voznja je accepted, tj ceka start, prati vozaca
         if (r.driverEmail && r.driverEmail !== this.driverEmail) {
           if (this.driverEmail) this.follow.stop(this.driverEmail);
           this.driverEmail = r.driverEmail;
 
+          // prati se pozicija vozaca i prikazuje se na mapi - ovdje nema rout patha jer ceka start, nema linije od vozila do pickupa
           this.follow.start(this.driverEmail, 1000);
           this.subs.push(
             this.follow.vehicle$(this.driverEmail).subscribe(v => {
@@ -170,6 +174,7 @@ export class DriverDashboard implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // ucita sve voznje vozaca
     this.ridesService.fetchRides().subscribe();
 
     this.userService.currentUser$.subscribe(current => {
@@ -177,9 +182,10 @@ export class DriverDashboard implements OnInit, OnDestroy {
         this.workMinutes.set((current as Driver).workedMinutesLast24h);
       }
     });
-
+    // ucita podatke o vozacu
     this.userService.fetchMe().subscribe();
 
+    // osluskuj kad vozilo stane na pickup
     this.subs.push(
       this.simRunner.onPickupReached$.subscribe(rideId => {
         const current = this.currentRide();
@@ -191,11 +197,12 @@ export class DriverDashboard implements OnInit, OnDestroy {
       })
     );
 
+    // osluskuje kad se simulacija zavrsi
     this.subs.push(
       this.simRunner.onSimulationComplete$.subscribe(rideId => {
         const current = this.currentRide();
         if (current && current.id === rideId) {
-          this.simulationCompleted.set(true);
+          this.simulationCompleted.set(true); // omoguci complete ride dugme
           this.stopETAPolling();
           this.cdr.detectChanges();
         }
@@ -337,7 +344,7 @@ export class DriverDashboard implements OnInit, OnDestroy {
 
     this.rideApi.startRide(r.id).subscribe({
       next: () => {
-        this.ridesService.fetchRides().subscribe();
+        this.ridesService.fetchRides().subscribe(); // backend mijenja status u in_progress i refresa
         this.ridePhase.set('TO_PICKUP');
       },
     });
@@ -404,17 +411,17 @@ export class DriverDashboard implements OnInit, OnDestroy {
   if (!r) return;
 
   const result = this.simRunner.stopRideEarly(r.id);
-  
+
   if (result.location) {
     this.nominatim.getAddress(result.location.latitude, result.location.longitude)
       .subscribe({
         next: (address) => {
-          const dto: LocationDTO = { 
+          const dto: LocationDTO = {
               latitude: result.location!.latitude,
               longitude: result.location!.longitude,
               address: address
           };
-          
+
           this.rideApi.stopRideEarly(r.id, dto).subscribe({
             next: () => {
               this.ridesService.fetchRides().subscribe();
