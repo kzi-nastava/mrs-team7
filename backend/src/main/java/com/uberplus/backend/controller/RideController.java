@@ -149,7 +149,7 @@ public class RideController {
     @PostMapping("/{rideId}/inconsistency")
     public ResponseEntity<MessageDTO> reportInconsistency(
             @PathVariable Integer rideId,
-            @RequestBody RideInconsistencyDTO request) {
+            @Valid @RequestBody RideInconsistencyDTO request) {
         rideService.reportInconsistency(rideId, request.getPassengerId(), request.getDescription());
         return ResponseEntity.ok(new MessageDTO());
     }
