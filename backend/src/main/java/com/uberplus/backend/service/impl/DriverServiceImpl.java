@@ -158,10 +158,10 @@ public class DriverServiceImpl implements DriverService {
         driver.setLastName(request.getLastName());
         driver.setAddress(request.getAddress());
         driver.setPhoneNumber(request.getPhoneNumber());
-        driver.setRole(UserRole.PASSENGER);
         driver.setBlocked(false);
         driver.setBlockReason(null);
         driver.setActivated(false);
+        driver.setRole(UserRole.DRIVER);
 
         Vehicle vehicle = new Vehicle();
         vehicle.setModel(request.getVehicle().getModel());
