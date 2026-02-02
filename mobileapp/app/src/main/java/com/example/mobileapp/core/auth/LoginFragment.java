@@ -129,7 +129,10 @@ public class LoginFragment extends Fragment {
             public void onResponse(Call<User> meCall, Response<User> meResponse) {
                 if (meResponse.isSuccessful() && meResponse.body() != null) {
                     User user = meResponse.body();
-
+                    if (!user.isActivated()) {
+                        showError("Please verify your email first");
+                        return;
+                    }
                     if (user.getRole() == UserRole.DRIVER) {
                         goToDriverMain();
                     } else if (user.getRole() == UserRole.PASSENGER) {
