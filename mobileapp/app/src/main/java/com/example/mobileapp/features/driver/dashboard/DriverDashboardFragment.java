@@ -618,6 +618,8 @@ public class DriverDashboardFragment extends Fragment {
     }
 
     private void drawRoutePoints(@NonNull List<double[]> stopsLatLon, boolean hasVehicle) {
+        if (!isAdded() || isDetached() || getActivity() == null) return;
+        if (getView() == null) return;
         Fragment mf = getChildFragmentManager().findFragmentById(R.id.mapContainer);
         if (!(mf instanceof MapFragment)) return;
 
