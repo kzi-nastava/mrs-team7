@@ -23,9 +23,10 @@ public class RideSimulationService {
 
     public interface Listener {
         void onTick(double lat, double lon);
+        void onPickupArrived();
         void onArrived();
     }
-
+    private boolean pickupNotified = false;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final VehiclesApi vehiclesApi = ApiClient.get().create(VehiclesApi.class);
 
@@ -75,6 +76,7 @@ public class RideSimulationService {
     }
 
     public void stop() {
+        pickupNotified = false;
         running = false;
         handler.removeCallbacksAndMessages(null);
         path.clear();
@@ -208,6 +210,12 @@ public class RideSimulationService {
             if (now - lastStepMs >= stepEveryMs) {
                 lastStepMs = now;
                 idx++;
+
+                // pickup je prvi stopIndex
+                if (!pickupNotified && !stopIndices.isEmpty() && idx == stopIndices.get(0)) {
+                    pickupNotified = true;
+                    if (listener != null) listener.onPickupArrived();
+                }
 
                 if (isStopIndex(idx)) {
                     pausedUntilMs = now + pauseAtStopMs;
