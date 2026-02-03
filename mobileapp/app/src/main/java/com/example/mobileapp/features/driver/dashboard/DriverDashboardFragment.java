@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class DriverDashboardFragment extends Fragment {
-
+    private Integer lastMapVehicleId = null;
     private TextView tvCurrentRideTitle;
     private TextView tvPassengersTitle;
     private View currentRideContent;
@@ -151,6 +151,16 @@ public class DriverDashboardFragment extends Fragment {
             passengerAdapter.setItems(new ArrayList<>());
             tvCurrentStatus.setVisibility(View.GONE);
             tvCurrentRoute.setVisibility(View.GONE);
+
+            lastMapVehicleId = null;
+
+            if (getChildFragmentManager().findFragmentById(R.id.mapContainer) != null) {
+                getChildFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.mapContainer, new MapFragment())
+                        .commit();
+            }
+
             return;
         }
 
@@ -202,6 +212,27 @@ public class DriverDashboardFragment extends Fragment {
             }
         }
         passengerAdapter.setItems(ps);
+
+        // show only assigned vehicle for this ride
+        if (r.vehicleId != null) {
+            if (lastMapVehicleId == null || !lastMapVehicleId.equals(r.vehicleId)) {
+                lastMapVehicleId = r.vehicleId;
+
+                getChildFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.mapContainer, MapFragment.newSingleVehicle(r.vehicleId))
+                        .commit();
+            }
+        } else {
+            // ako backend nekad ne posalje vehicle, vrati all
+            lastMapVehicleId = null;
+
+            getChildFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.mapContainer, new MapFragment())
+                    .commit();
+        }
+
     }
 
     private void renderBookedRides(@Nullable List<DriverRideDto> list) {

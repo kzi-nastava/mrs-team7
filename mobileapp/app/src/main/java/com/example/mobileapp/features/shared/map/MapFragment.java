@@ -28,6 +28,20 @@ import retrofit2.Response;
 
 public class MapFragment extends Fragment {
 
+    private static final String ARG_ONLY_VEHICLE_ID = "onlyVehicleId";
+
+    public static MapFragment newSingleVehicle(int vehicleId) {
+        MapFragment f = new MapFragment();
+        Bundle b = new Bundle();
+        b.putInt(ARG_ONLY_VEHICLE_ID, vehicleId);
+        f.setArguments(b);
+        return f;
+    }
+
+    public static MapFragment newAllVehicles() {
+        return new MapFragment();
+    }
+
     private WebView webView;
     private VehiclesApi vehiclesApi;
     private final Gson gson = new Gson();
@@ -94,9 +108,18 @@ public class MapFragment extends Fragment {
                                    @NonNull Response<List<VehicleMarker>> response) {
                 if (!response.isSuccessful() || response.body() == null) return;
 
-                String json = gson.toJson(response.body());
+                List<VehicleMarker> vehicles = response.body();
 
-                // escape for JS string in single-quote
+                // ako je postavljen onlyVehicleId, ostavi samo taj marker
+                Bundle args = getArguments();
+                if (args != null && args.containsKey(ARG_ONLY_VEHICLE_ID)) {
+                    int onlyId = args.getInt(ARG_ONLY_VEHICLE_ID);
+
+                    vehicles.removeIf(v -> v == null || v.id != onlyId);
+                }
+
+                String json = gson.toJson(vehicles);
+
                 String escaped = json
                         .replace("\\", "\\\\")
                         .replace("'", "\\'")
