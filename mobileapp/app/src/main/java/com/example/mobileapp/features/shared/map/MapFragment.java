@@ -20,6 +20,7 @@ import com.example.mobileapp.core.network.ApiClient;
 import com.example.mobileapp.features.shared.api.VehiclesApi;
 import com.google.gson.Gson;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -27,7 +28,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MapFragment extends Fragment {
-
+    private boolean pageReady = false;
+    private List<MapFragment.RoutePoint> pendingRoute = null;
     private static final String ARG_ONLY_VEHICLE_ID = "onlyVehicleId";
 
     public static MapFragment newSingleVehicle(int vehicleId) {
@@ -86,6 +88,19 @@ public class MapFragment extends Fragment {
             return false;
         });
 
+        webView.setWebViewClient(new android.webkit.WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                pageReady = true;
+
+                // kad se stranica ucita, odmah posalji pending rutu ako postoji
+                if (pendingRoute != null) {
+                    setRoutePoints(pendingRoute);
+                    pendingRoute = null;
+                }
+            }
+        });
+
         return v;
     }
 
@@ -138,4 +153,41 @@ public class MapFragment extends Fragment {
             }
         });
     }
+
+    public static class RoutePoint {
+        public double lat;
+        public double lon;
+        public String label;
+
+        public RoutePoint(double lat, double lon, String label) {
+            this.lat = lat;
+            this.lon = lon;
+            this.label = label;
+        }
+    }
+
+    public void setRoutePoints(List<RoutePoint> points) {
+        if (points == null) return;
+
+        // ako JS nije spreman, zapamti rutu pa posalji kad se ucita
+        if (!pageReady || webView == null) {
+            pendingRoute = new ArrayList<>(points);
+            return;
+        }
+
+        String json = gson.toJson(points);
+        String escaped = json
+                .replace("\\", "\\\\")
+                .replace("'", "\\'")
+                .replace("\n", "");
+
+        String js = "window.setRoutePointsJson && window.setRoutePointsJson('" + escaped + "');";
+        webView.evaluateJavascript(js, null);
+    }
+
+    public void clearRouteOnMap() {
+        if (!pageReady || webView == null) return;
+        webView.evaluateJavascript("window.clearRoute && window.clearRoute();", null);
+    }
+
 }

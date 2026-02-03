@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class DriverDashboardFragment extends Fragment {
+    private Integer lastRouteRideId = null;
     private Integer lastMapVehicleId = null;
     private TextView tvCurrentRideTitle;
     private TextView tvPassengersTitle;
@@ -160,6 +161,12 @@ public class DriverDashboardFragment extends Fragment {
                         .replace(R.id.mapContainer, new MapFragment())
                         .commit();
             }
+            lastRouteRideId = null;
+
+            Fragment mf = getChildFragmentManager().findFragmentById(R.id.mapContainer);
+            if (mf instanceof MapFragment) {
+                ((MapFragment) mf).clearRouteOnMap();
+            }
 
             return;
         }
@@ -221,7 +228,7 @@ public class DriverDashboardFragment extends Fragment {
                 getChildFragmentManager()
                         .beginTransaction()
                         .replace(R.id.mapContainer, MapFragment.newSingleVehicle(r.vehicleId))
-                        .commit();
+                        .commitNow();
             }
         } else {
             // ako backend nekad ne posalje vehicle, vrati all
@@ -231,6 +238,49 @@ public class DriverDashboardFragment extends Fragment {
                     .beginTransaction()
                     .replace(R.id.mapContainer, new MapFragment())
                     .commit();
+        }
+        // always draw route when ride exists
+        if (lastRouteRideId == null || !lastRouteRideId.equals(r.id)) {
+            lastRouteRideId = r.id;
+
+            Fragment mf = getChildFragmentManager().findFragmentById(R.id.mapContainer);
+            if (mf instanceof MapFragment) {
+                MapFragment mapF = (MapFragment) mf;
+
+                ArrayList<MapFragment.RoutePoint> pts = new ArrayList<>();
+
+                if (r.startLocation != null) {
+                    pts.add(new MapFragment.RoutePoint(
+                            r.startLocation.latitude,
+                            r.startLocation.longitude,
+                            "Pickup"
+                    ));
+                }
+
+                if (r.waypoints != null) {
+                    for (int i = 0; i < r.waypoints.size(); i++) {
+                        LocationDto w = r.waypoints.get(i);
+                        if (w == null) continue;
+                        pts.add(new MapFragment.RoutePoint(
+                                w.latitude,
+                                w.longitude,
+                                "Stop " + (i + 1)
+                        ));
+                    }
+                }
+
+                if (r.endLocation != null) {
+                    pts.add(new MapFragment.RoutePoint(
+                            r.endLocation.latitude,
+                            r.endLocation.longitude,
+                            "Destination"
+                    ));
+                }
+
+                if (pts.size() >= 2) {
+                    mapF.setRoutePoints(pts);
+                }
+            }
         }
 
     }
