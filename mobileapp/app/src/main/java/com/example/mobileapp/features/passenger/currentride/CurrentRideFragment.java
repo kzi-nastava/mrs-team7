@@ -15,45 +15,49 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.mobileapp.features.shared.models.PassengerItem;
 
 import com.example.mobileapp.R;
+import com.example.mobileapp.features.shared.api.dto.LocationDto;
+import com.example.mobileapp.features.shared.api.dto.PassengerDto;
+import com.example.mobileapp.features.shared.api.dto.PassengerRideDto;
 import com.example.mobileapp.features.shared.map.MapFragment;
+import com.example.mobileapp.features.shared.models.PassengerItem;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CurrentRideFragment extends Fragment {
 
-    private enum RideStatus { ASSIGNED, STARTED, FINISHED, CANCELLED }
-
-    private RideStatus currentRideStatus = RideStatus.STARTED;
-
-    private final String fromAddress = "Bulevar oslobođenja 46";
-    private final String toAddress = "Ulica Narodnih heroja 14";
-    private final String vehicleText = "Vehicle: Skoda Octavia • NS-123-AB";
-
-    private int etaMinutes = 7;
+    // UI
+    private View noCurrentRideRoot;
+    private View currentRideContentRoot;
 
     private android.widget.TextView tvRideStatus;
-    private android.widget.TextView tvEta;
     private android.widget.TextView tvRoute;
     private android.widget.TextView tvVehicle;
+
     private android.widget.TextView tvCharCount;
     private android.widget.TextView tvGuard;
     private android.widget.TextView btnSubmit;
-
     private android.widget.EditText etReportNote;
 
+    private RecyclerView rvPassengers;
+
+    // state
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean submitting = false;
 
-    private final Handler handler = new Handler(Looper.getMainLooper());
+    private PassengerCurrentRideService rideService;
+
+    private Integer lastMapVehicleId = null;
+    private Integer lastRouteRideId = null;
 
     public CurrentRideFragment() {}
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_current_ride, container, false);
     }
@@ -63,55 +67,55 @@ public class CurrentRideFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         bindViews(view);
-        setupPassengers(view);
+        setupPassengers();
         setupReport();
-        bindMockData();
-
-        applyStatusStyle();
-        refreshEta();
-        refreshActiveGuard();
         setupMapChild();
+
+        rideService = new PassengerCurrentRideService(requireContext());
+        rideService.currentRide().observe(getViewLifecycleOwner(), this::renderRide);
+
+        rideService.fetchCurrentRide();
     }
 
-    private void bindViews(View view) {
+    private void bindViews(@NonNull View view) {
+        noCurrentRideRoot = view.findViewById(R.id.noCurrentRideRoot);
+        currentRideContentRoot = view.findViewById(R.id.currentRideContentRoot);
+
         tvRideStatus = view.findViewById(R.id.tvRideStatus);
-        tvEta = view.findViewById(R.id.tvEta);
         tvRoute = view.findViewById(R.id.tvRoute);
         tvVehicle = view.findViewById(R.id.tvVehicle);
+
         tvCharCount = view.findViewById(R.id.tvCharCount);
         tvGuard = view.findViewById(R.id.tvGuard);
         btnSubmit = view.findViewById(R.id.btnSubmitReport);
         etReportNote = view.findViewById(R.id.etReportNote);
+
+        rvPassengers = view.findViewById(R.id.rvPassengers);
     }
 
-    @SuppressLint("SetTextI18n")
-    private void bindMockData() {
-        tvRoute.setText(fromAddress + " → " + toAddress);
-        tvVehicle.setText(vehicleText);
-    }
-
-    private void setupPassengers(View view) {
-        RecyclerView rvPassengers = view.findViewById(R.id.rvPassengers);
+    private void setupPassengers() {
         rvPassengers.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvPassengers.setAdapter(new PassengerCurrentRideAdapter(new ArrayList<>()));
+    }
 
-        List<PassengerItem> list = new ArrayList<>();
-        list.add(new PassengerItem(1, "Milan Kacarevic", "You"));
-        list.add(new PassengerItem(2, "Mirko Mirkovic", "Passenger"));
-        list.add(new PassengerItem(3, "Ana Jovanovic", "Passenger"));
-        list.add(new PassengerItem(4, "Ana Markovic", "Passenger"));
-
-        rvPassengers.setAdapter(new PassengerCurrentRideAdapter(list));
+    private void setupMapChild() {
+        if (getChildFragmentManager().findFragmentById(R.id.mapContainer) == null) {
+            getChildFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.mapContainer, MapFragment.newAllVehicles())
+                    .commit();
+        }
     }
 
     private void setupReport() {
         updateCharCount();
-        updateSubmitState();
+        updateSubmitState(false);
 
         etReportNote.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 updateCharCount();
-                updateSubmitState();
+                updateSubmitState(true);
             }
             @Override public void afterTextChanged(Editable s) {}
         });
@@ -119,48 +123,179 @@ public class CurrentRideFragment extends Fragment {
         btnSubmit.setOnClickListener(v -> submitReport());
     }
 
-    private boolean isRideActive() {
-        return currentRideStatus == RideStatus.STARTED || currentRideStatus == RideStatus.ASSIGNED;
-    }
+    private void renderRide(@Nullable PassengerRideDto r) {
+        if (!isAdded()) return;
 
-    @SuppressLint("SetTextI18n")
-    private void refreshEta() {
-        if (!isRideActive()) {
-            tvEta.setText("ETA: --");
-        } else if (etaMinutes <= 1) {
-            tvEta.setText("ETA: < 1 min");
+        if (r == null) {
+            showNoCurrentRide();
+            clearMapState();
+            return;
+        }
+
+        if (r.status == null || !"IN_PROGRESS".equals(r.status)) {
+            showNoCurrentRide();
+            clearMapState();
+            return;
+        }
+
+        showRideContent();
+
+        applyStartedStyle();
+
+        String from = (r.startLocation != null) ? safe(r.startLocation.address) : "";
+        String to = (r.endLocation != null) ? safe(r.endLocation.address) : "";
+        tvRoute.setText(from + " → " + to);
+
+        String vehicleText =
+                (safe(r.vehicleModel).isEmpty() || safe(r.vehicleLicensePlate).isEmpty())
+                        ? "Vehicle"
+                        : (safe(r.vehicleModel) + " • " + safe(r.vehicleLicensePlate));
+        tvVehicle.setText(vehicleText);
+
+        // passengers list
+        List<PassengerItem> items = new ArrayList<>();
+        if (r.passengers != null) {
+            int idx = 1;
+            for (PassengerDto p : r.passengers) {
+                if (p == null) continue;
+                String name = (safe(p.firstName) + " " + safe(p.lastName)).trim();
+                if (name.isEmpty()) name = safe(p.email);
+                items.add(new PassengerItem(idx++, name, "Passenger"));
+            }
+        }
+        setPassengers(items);
+
+        refreshActiveGuard(true);
+
+        if (r.vehicleId != null) {
+            if (lastMapVehicleId == null || !lastMapVehicleId.equals(r.vehicleId)) {
+                lastMapVehicleId = r.vehicleId;
+                getChildFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.mapContainer, MapFragment.newSingleVehicle(r.vehicleId))
+                        .commitNow();
+            }
         } else {
-            tvEta.setText("ETA: " + etaMinutes + " min");
+            lastMapVehicleId = null;
+            getChildFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.mapContainer, MapFragment.newAllVehicles())
+                    .commit();
+        }
+
+        if (lastRouteRideId == null || !lastRouteRideId.equals(r.id)) {
+            lastRouteRideId = r.id;
+
+            Fragment mf = getChildFragmentManager().findFragmentById(R.id.mapContainer);
+            if (mf instanceof MapFragment) {
+                MapFragment mapF = (MapFragment) mf;
+
+                ArrayList<MapFragment.RoutePoint> pts = new ArrayList<>();
+
+                if (r.startLocation != null) {
+                    pts.add(new MapFragment.RoutePoint(
+                            r.startLocation.latitude,
+                            r.startLocation.longitude,
+                            "Pickup"
+                    ));
+                }
+
+                if (r.waypoints != null) {
+                    for (int i = 0; i < r.waypoints.size(); i++) {
+                        LocationDto w = r.waypoints.get(i);
+                        if (w == null) continue;
+                        pts.add(new MapFragment.RoutePoint(
+                                w.latitude,
+                                w.longitude,
+                                "Stop " + (i + 1)
+                        ));
+                    }
+                }
+
+                if (r.endLocation != null) {
+                    pts.add(new MapFragment.RoutePoint(
+                            r.endLocation.latitude,
+                            r.endLocation.longitude,
+                            "Destination"
+                    ));
+                }
+
+                if (pts.size() >= 2) mapF.setRoutePoints(pts);
+                else mapF.clearRouteOnMap();
+            }
         }
     }
 
-    private void refreshActiveGuard() {
-        if (!isRideActive()) {
-            tvGuard.setVisibility(View.VISIBLE);
-            etReportNote.setEnabled(false);
-            btnSubmit.setEnabled(false);
-            btnSubmit.setAlpha(0.5f);
+    private void setPassengers(@NonNull List<PassengerItem> items) {
+        RecyclerView.Adapter<?> adapter = rvPassengers.getAdapter();
+        if (adapter instanceof PassengerCurrentRideAdapter) {
+            ((PassengerCurrentRideAdapter) adapter).setItems(items);
         } else {
-            tvGuard.setVisibility(View.GONE);
-            etReportNote.setEnabled(true);
-            updateSubmitState();
+            rvPassengers.setAdapter(new PassengerCurrentRideAdapter(items));
+        }
+    }
+
+    private void showNoCurrentRide() {
+        if (noCurrentRideRoot != null) noCurrentRideRoot.setVisibility(View.VISIBLE);
+        if (currentRideContentRoot != null) currentRideContentRoot.setVisibility(View.GONE);
+
+        refreshActiveGuard(false);
+    }
+
+    private void showRideContent() {
+        if (noCurrentRideRoot != null) noCurrentRideRoot.setVisibility(View.GONE);
+        if (currentRideContentRoot != null) currentRideContentRoot.setVisibility(View.VISIBLE);
+    }
+
+    private void clearMapState() {
+        lastMapVehicleId = null;
+        lastRouteRideId = null;
+
+        Fragment mf = getChildFragmentManager().findFragmentById(R.id.mapContainer);
+        if (mf instanceof MapFragment) ((MapFragment) mf).clearRouteOnMap();
+
+        getChildFragmentManager()
+                .beginTransaction()
+                .replace(R.id.mapContainer, MapFragment.newAllVehicles())
+                .commit();
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void applyStartedStyle() {
+        tvRideStatus.setText("Started");
+        tvRideStatus.setBackgroundResource(R.drawable.bg_started);
+        tvRideStatus.setTextColor(0xFF065F46);
+    }
+
+    private void refreshActiveGuard(boolean rideActive) {
+        if (!rideActive) {
+            if (tvGuard != null) tvGuard.setVisibility(View.VISIBLE);
+            if (etReportNote != null) etReportNote.setEnabled(false);
+            if (btnSubmit != null) {
+                btnSubmit.setEnabled(false);
+                btnSubmit.setAlpha(0.5f);
+            }
+        } else {
+            if (tvGuard != null) tvGuard.setVisibility(View.GONE);
+            if (etReportNote != null) etReportNote.setEnabled(true);
+            updateSubmitState(true);
         }
     }
 
     @SuppressLint("SetTextI18n")
     private void updateCharCount() {
-        String txt = etReportNote.getText() == null ? "" : etReportNote.getText().toString();
+        String txt = (etReportNote.getText() == null) ? "" : etReportNote.getText().toString();
         tvCharCount.setText(txt.length() + "/300");
     }
 
-    private void updateSubmitState() {
-        if (!isRideActive() || submitting) {
+    private void updateSubmitState(boolean rideActive) {
+        if (!rideActive || submitting) {
             btnSubmit.setEnabled(false);
             btnSubmit.setAlpha(0.5f);
             return;
         }
 
-        String note = etReportNote.getText() == null ? "" : etReportNote.getText().toString().trim();
+        String note = (etReportNote.getText() == null) ? "" : etReportNote.getText().toString().trim();
         boolean enabled = !note.isEmpty();
         btnSubmit.setEnabled(enabled);
         btnSubmit.setAlpha(enabled ? 1f : 0.5f);
@@ -168,56 +303,23 @@ public class CurrentRideFragment extends Fragment {
 
     @SuppressLint("SetTextI18n")
     private void submitReport() {
-        if (!isRideActive()) return;
-
-        String note = etReportNote.getText() == null ? "" : etReportNote.getText().toString().trim();
+        String note = (etReportNote.getText() == null) ? "" : etReportNote.getText().toString().trim();
         if (note.isEmpty()) return;
 
         submitting = true;
         btnSubmit.setText("Sending...");
-        updateSubmitState();
+        updateSubmitState(true);
 
         handler.postDelayed(() -> {
             submitting = false;
             if (etReportNote.getText() != null) etReportNote.getText().clear();
             btnSubmit.setText("Submit");
             updateCharCount();
-            updateSubmitState();
+            updateSubmitState(true);
         }, 600);
     }
 
-    @SuppressLint("SetTextI18n")
-    private void applyStatusStyle() {
-        switch (currentRideStatus) {
-            case ASSIGNED:
-                tvRideStatus.setText("Assigned");
-                tvRideStatus.setBackgroundResource(R.drawable.bg_assigned);
-                tvRideStatus.setTextColor(0xFF1D4ED8);
-                break;
-            case STARTED:
-                tvRideStatus.setText("Started");
-                tvRideStatus.setBackgroundResource(R.drawable.bg_started);
-                tvRideStatus.setTextColor(0xFF065F46);
-                break;
-            case FINISHED:
-                tvRideStatus.setText("Completed");
-                tvRideStatus.setBackgroundResource(R.drawable.bg_completed);
-                tvRideStatus.setTextColor(0xFF374151);
-                break;
-            case CANCELLED:
-                tvRideStatus.setText("Cancelled");
-                tvRideStatus.setBackgroundResource(R.drawable.bg_cancelled);
-                tvRideStatus.setTextColor(0xFF7F1D1D);
-                break;
-        }
-    }
-
-    private void setupMapChild() {
-        if (getChildFragmentManager().findFragmentById(R.id.mapContainer) == null) {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.mapContainer, new MapFragment())
-                    .commit();
-        }
+    private String safe(String s) {
+        return s == null ? "" : s;
     }
 }

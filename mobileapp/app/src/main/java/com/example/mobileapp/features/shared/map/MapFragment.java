@@ -20,6 +20,7 @@ import com.example.mobileapp.core.network.ApiClient;
 import com.example.mobileapp.features.shared.api.VehiclesApi;
 import com.google.gson.Gson;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -27,6 +28,22 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MapFragment extends Fragment {
+    private long refreshIntervalMs = 5000L;
+    private boolean pageReady = false;
+    private List<MapFragment.RoutePoint> pendingRoute = null;
+    private static final String ARG_ONLY_VEHICLE_ID = "onlyVehicleId";
+
+    public static MapFragment newSingleVehicle(int vehicleId) {
+        MapFragment f = new MapFragment();
+        Bundle b = new Bundle();
+        b.putInt(ARG_ONLY_VEHICLE_ID, vehicleId);
+        f.setArguments(b);
+        return f;
+    }
+
+    public static MapFragment newAllVehicles() {
+        return new MapFragment();
+    }
 
     private WebView webView;
     private VehiclesApi vehiclesApi;
@@ -36,7 +53,7 @@ public class MapFragment extends Fragment {
     private final Runnable refreshTask = new Runnable() {
         @Override public void run() {
             fetchVehicles();
-            handler.postDelayed(this, 5000);
+            handler.postDelayed(this, refreshIntervalMs);
         }
     };
 
@@ -60,6 +77,13 @@ public class MapFragment extends Fragment {
 
         vehiclesApi = ApiClient.get().create(VehiclesApi.class);
 
+        Bundle args = getArguments();
+        if (args != null && args.containsKey(ARG_ONLY_VEHICLE_ID)) {
+            refreshIntervalMs = 1000L; // 1s za single vehicle
+        } else {
+            refreshIntervalMs = 5000L;
+        }
+
         webView.setOnTouchListener((view, event) -> {
             if (event.getActionMasked() == android.view.MotionEvent.ACTION_DOWN ||
                     event.getActionMasked() == android.view.MotionEvent.ACTION_MOVE) {
@@ -70,6 +94,19 @@ public class MapFragment extends Fragment {
                 view.performClick();
             }
             return false;
+        });
+
+        webView.setWebViewClient(new android.webkit.WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                pageReady = true;
+
+                // kad se stranica ucita, odmah posalji pending rutu ako postoji
+                if (pendingRoute != null) {
+                    setRoutePoints(pendingRoute);
+                    pendingRoute = null;
+                }
+            }
         });
 
         return v;
@@ -94,9 +131,18 @@ public class MapFragment extends Fragment {
                                    @NonNull Response<List<VehicleMarker>> response) {
                 if (!response.isSuccessful() || response.body() == null) return;
 
-                String json = gson.toJson(response.body());
+                List<VehicleMarker> vehicles = response.body();
 
-                // escape for JS string in single-quote
+                // ako je postavljen onlyVehicleId, ostavi samo taj marker
+                Bundle args = getArguments();
+                if (args != null && args.containsKey(ARG_ONLY_VEHICLE_ID)) {
+                    int onlyId = args.getInt(ARG_ONLY_VEHICLE_ID);
+
+                    vehicles.removeIf(v -> v == null || v.id != onlyId);
+                }
+
+                String json = gson.toJson(vehicles);
+
                 String escaped = json
                         .replace("\\", "\\\\")
                         .replace("'", "\\'")
@@ -115,4 +161,41 @@ public class MapFragment extends Fragment {
             }
         });
     }
+
+    public static class RoutePoint {
+        public double lat;
+        public double lon;
+        public String label;
+
+        public RoutePoint(double lat, double lon, String label) {
+            this.lat = lat;
+            this.lon = lon;
+            this.label = label;
+        }
+    }
+
+    public void setRoutePoints(List<RoutePoint> points) {
+        if (points == null) return;
+
+        // ako JS nije spreman, zapamti rutu pa posalji kad se ucita
+        if (!pageReady || webView == null) {
+            pendingRoute = new ArrayList<>(points);
+            return;
+        }
+
+        String json = gson.toJson(points);
+        String escaped = json
+                .replace("\\", "\\\\")
+                .replace("'", "\\'")
+                .replace("\n", "");
+
+        String js = "window.setRoutePointsJson && window.setRoutePointsJson('" + escaped + "');";
+        webView.evaluateJavascript(js, null);
+    }
+
+    public void clearRouteOnMap() {
+        if (!pageReady || webView == null) return;
+        webView.evaluateJavascript("window.clearRoute && window.clearRoute();", null);
+    }
+
 }
