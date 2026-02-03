@@ -11,18 +11,22 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.mobileapp.R;
 import com.example.mobileapp.features.shared.models.PassengerItem;
 
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Adapter for passengers list shown on Current Ride screen.
- */
 public class PassengerCurrentRideAdapter
         extends RecyclerView.Adapter<PassengerCurrentRideAdapter.PassengerViewHolder> {
 
-    private final List<PassengerItem> passengers;
+    private final List<PassengerItem> passengers = new ArrayList<>();
 
-    public PassengerCurrentRideAdapter(@NonNull List<PassengerItem> passengers) {
-        this.passengers = passengers;
+    public PassengerCurrentRideAdapter(@NonNull List<PassengerItem> initial) {
+        if (initial != null) passengers.addAll(initial);
+    }
+
+    public void setItems(@NonNull List<PassengerItem> newItems) {
+        passengers.clear();
+        if (newItems != null) passengers.addAll(newItems);
+        notifyDataSetChanged();
     }
 
     @NonNull

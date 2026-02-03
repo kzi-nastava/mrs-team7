@@ -1,6 +1,7 @@
 package com.example.mobileapp.features.shared.api;
 
 import com.example.mobileapp.features.shared.api.dto.DriverRideDto;
+import com.example.mobileapp.features.shared.api.dto.PassengerRideDto;
 import com.example.mobileapp.features.shared.api.dto.RideHistoryResponseDto;
 
 import java.util.List;
@@ -25,4 +26,7 @@ public interface RidesApi {
     Call<List<DriverRideDto>> getDriverRides(
             @Header("Authorization") String authHeader
     );
+
+    @GET("/api/rides/current-in-progress")
+    Call<PassengerRideDto> getPassengerCurrentInProgress(@Header("Authorization") String bearerToken);
 }
