@@ -9,6 +9,8 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -29,6 +31,9 @@ import java.util.List;
 public class CurrentRideFragment extends Fragment {
 
     // UI
+    private TextView btnOpenRating;
+    private Integer currentRideId = null;
+
     private View noCurrentRideRoot;
     private View currentRideContentRoot;
 
@@ -67,6 +72,10 @@ public class CurrentRideFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         bindViews(view);
+        currentRideId = null;
+        btnOpenRating.setEnabled(false);
+        btnOpenRating.setAlpha(0.6f);
+        if (btnOpenRating != null) btnOpenRating.setOnClickListener(v -> openRating());
         setupPassengers();
         setupReport();
         setupMapChild();
@@ -91,6 +100,7 @@ public class CurrentRideFragment extends Fragment {
         etReportNote = view.findViewById(R.id.etReportNote);
 
         rvPassengers = view.findViewById(R.id.rvPassengers);
+        btnOpenRating = view.findViewById(R.id.btnOpenRating);
     }
 
     private void setupPassengers() {
@@ -224,6 +234,12 @@ public class CurrentRideFragment extends Fragment {
                 else mapF.clearRouteOnMap();
             }
         }
+
+        currentRideId = r.id;
+        if (btnOpenRating != null) {
+            btnOpenRating.setEnabled(true);
+            btnOpenRating.setAlpha(1f);
+        }
     }
 
     private void setPassengers(@NonNull List<PassengerItem> items) {
@@ -238,7 +254,11 @@ public class CurrentRideFragment extends Fragment {
     private void showNoCurrentRide() {
         if (noCurrentRideRoot != null) noCurrentRideRoot.setVisibility(View.VISIBLE);
         if (currentRideContentRoot != null) currentRideContentRoot.setVisibility(View.GONE);
-
+        currentRideId = null;
+        if (btnOpenRating != null) {
+            btnOpenRating.setEnabled(false);
+            btnOpenRating.setAlpha(0.6f);
+        }
         refreshActiveGuard(false);
     }
 
@@ -321,5 +341,17 @@ public class CurrentRideFragment extends Fragment {
 
     private String safe(String s) {
         return s == null ? "" : s;
+    }
+
+    private void openRating() {
+        if (currentRideId == null) return;
+
+        RatingDialogFragment dialog = RatingDialogFragment.newInstance(currentRideId);
+        dialog.setListener(() -> {
+            if (isAdded()) {
+                android.widget.Toast.makeText(requireContext(), "Thanks! Rating saved.", android.widget.Toast.LENGTH_SHORT).show();
+            }
+        });
+        dialog.show(getChildFragmentManager(), "rating_dialog");
     }
 }
