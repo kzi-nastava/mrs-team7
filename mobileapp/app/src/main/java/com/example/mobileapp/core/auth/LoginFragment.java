@@ -125,7 +125,7 @@ public class LoginFragment extends Fragment {
             showError("No token found");
             return;
         }
-        userApi.fetchMe("Bearer " + token).enqueue(new Callback<User>() {
+        userApi.fetchMe().enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> meCall, Response<User> meResponse) {
                 if (meResponse.isSuccessful() && meResponse.body() != null) {
