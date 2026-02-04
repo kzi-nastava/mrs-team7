@@ -21,8 +21,8 @@
             android:layout_width="72dp"
             android:layout_height="72dp"
             android:src="@drawable/img_current_ride_black"
-            android:tint="#9CA3AF"
-            android:layout_marginBottom="14dp" />
+            android:layout_marginBottom="14dp"
+            app:tint="#9CA3AF" />
 
 
         <TextView
@@ -182,6 +182,20 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"/>
                 </androidx.cardview.widget.CardView>
+
+                <TextView
+                    android:id="@+id/btnOpenRating"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="Rate ride"
+                    android:textStyle="bold"
+                    android:textSize="13sp"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/bg_btn_dark"
+                    android:layout_marginBottom="12dp"/>
 
                 <!-- Report driver inconsistency -->
                 <androidx.cardview.widget.CardView

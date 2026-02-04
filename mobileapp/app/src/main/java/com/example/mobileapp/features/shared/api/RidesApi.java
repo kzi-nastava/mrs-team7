@@ -21,6 +21,7 @@ public interface RidesApi {
 
     @GET("api/rides/history")
     Call<RideHistoryResponseDto> getRideHistory(
+            @Header("Authorization") String authHeader,
             @Query("driverId") int driverId,
             @Query("startDate") String startDate,
             @Query("endDate") String endDate,
