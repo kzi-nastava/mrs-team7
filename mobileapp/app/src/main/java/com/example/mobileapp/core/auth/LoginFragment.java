@@ -26,6 +26,7 @@ import com.example.mobileapp.core.network.ApiClient;
 import com.example.mobileapp.features.shared.api.UserApi;
 import com.example.mobileapp.features.shared.models.User;
 import com.example.mobileapp.features.shared.models.enums.UserRole;
+import com.example.mobileapp.features.shared.repositories.UserRepository;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -133,6 +134,9 @@ public class LoginFragment extends Fragment {
                         showError("Please verify your email first");
                         return;
                     }
+
+                    UserRepository.getInstance().setCurrentUser(user);
+
                     if (user.getRole() == UserRole.DRIVER) {
                         goToDriverMain();
                     } else if (user.getRole() == UserRole.PASSENGER) {

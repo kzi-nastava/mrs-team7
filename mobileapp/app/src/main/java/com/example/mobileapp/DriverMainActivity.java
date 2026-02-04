@@ -14,7 +14,8 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.example.mobileapp.features.driver.dashboard.DriverDashboardFragment;
 import com.example.mobileapp.features.driver.ridehistory.RideHistoryFragment;
-import com.example.mobileapp.features.driver.profile.ProfileFragment;
+import com.example.mobileapp.features.shared.profile.ProfileFragment;
+import com.example.mobileapp.features.shared.repositories.UserRepository;
 import com.google.android.material.navigation.NavigationView;
 
 import com.example.mobileapp.core.auth.AuthActivity;
@@ -119,6 +120,7 @@ public class DriverMainActivity extends AppCompatActivity
                     .commit();
 
         } else if (id == R.id.nav_sign_out) {
+            UserRepository.getInstance().clearUser();
             Intent intent = new Intent(DriverMainActivity.this, AuthActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
