@@ -3,6 +3,7 @@ package com.example.mobileapp.features.shared.api;
 import com.example.mobileapp.features.shared.api.dto.DriverRideDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerRideDto;
 import com.example.mobileapp.features.shared.api.dto.PriceEstimateResponse;
+import com.example.mobileapp.features.shared.api.dto.RideDetailDto;
 import com.example.mobileapp.features.shared.api.dto.RideEstimateRequest;
 import com.example.mobileapp.features.shared.api.dto.RideHistoryResponseDto;
 import com.example.mobileapp.features.shared.api.dto.RideInconsistencyRequestDto;
@@ -28,6 +29,12 @@ public interface RidesApi {
             @Query("endDate") String endDate,
             @Query("page") Integer page,
             @Query("size") Integer size
+    );
+
+    @GET("api/drivers/rides/{rideId}/details")
+    Call<RideDetailDto> getRideDetails(
+            @Header("Authorization") String authHeader,
+            @Path("rideId") int rideId
     );
 
     @GET("api/rides")
