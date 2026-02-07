@@ -65,4 +65,16 @@ public interface RidesApi {
             @Path("rideId") int rideId,
             @Body RideInconsistencyRequestDto request
     );
+
+    @GET("api/rides/{id}/eta")
+    Call<com.example.mobileapp.features.shared.api.dto.RideEtaDto> getRideEta(
+            @Header("Authorization") String bearerToken,
+            @Path("id") int rideId
+    );
+
+    @PUT("api/rides/{id}/arrived-pickup")
+    Call<Void> arrivedAtPickup(
+            @Header("Authorization") String bearerToken,
+            @Path("id") int rideId
+    );
 }
