@@ -12,15 +12,19 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.bumptech.glide.Glide;
 import com.example.mobileapp.features.driver.ridehistory.RideHistoryFragment;
 import com.example.mobileapp.features.passenger.currentride.CurrentRideFragment;
 import com.example.mobileapp.features.passenger.dashboard.UserDashboardFragment;
+import com.example.mobileapp.features.passenger.rideBooking.RideBookingFragment;
 import com.example.mobileapp.features.shared.profile.ProfileFragment;
 import com.example.mobileapp.features.passenger.favoriteRoutes.FavoriteRoutesFragment;
 import com.example.mobileapp.features.shared.repositories.UserRepository;
 import com.google.android.material.navigation.NavigationView;
 
 import com.example.mobileapp.core.auth.AuthActivity;
+
+import java.time.LocalDateTime;
 
 public class UserMainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -83,6 +87,21 @@ public class UserMainActivity extends AppCompatActivity
             // Mark ride history as selected in the drawer
             navigationView.setCheckedItem(R.id.nav_dashboard);
         }
+
+        // Set pfp
+        ImageButton profileImage = toolbar.findViewById(R.id.btn_profile);
+        UserRepository.getInstance().getCurrentUser().observe(this, user -> {
+            if (user.getProfilePicture() != null && !user.getProfilePicture().isEmpty()) {
+                Glide.with(this)
+                        .load(user.getProfilePicture() + "?cb=" + LocalDateTime.now().toString())
+                        .placeholder(R.drawable.img_defaultprofile)
+                        .error(R.drawable.img_defaultprofile)
+                        .circleCrop()
+                        .into(profileImage);
+            } else {
+                profileImage.setImageResource(R.drawable.img_defaultprofile);
+            }
+        });
     }
 
     @Override
@@ -116,7 +135,11 @@ public class UserMainActivity extends AppCompatActivity
                     .commit();
 
         } else if (id == R.id.nav_book_ride) {
-            // TODO: open BookARideFragment
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new RideBookingFragment())
+                    .addToBackStack(null)
+                    .commit();
 
         } else if (id == R.id.nav_current_ride) {
             getSupportFragmentManager()

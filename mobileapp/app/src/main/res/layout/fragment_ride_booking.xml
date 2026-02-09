@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:ignore="HardcodedText">
+
+    <FrameLayout
+        android:id="@+id/success_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:elevation="100dp">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#80000000" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:layout_gravity="center"
+            android:background="@android:color/white">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/vec_checkmark"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp"/>
+
+            <TextView
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Booking Successful!"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_gravity="center"
+                android:id="@+id/success_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Your booking was created."
+                android:layout_marginBottom="16dp"
+                android:breakStrategy="simple"
+                android:hyphenationFrequency="none"/>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:layout_gravity="center"
+                android:id="@+id/btn_success_exit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Exit"
+                android:background="@drawable/btn_accent"/>
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/mapContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/bottom_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+        app:behavior_peekHeight="42dp"
+        app:behavior_hideable="false">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:id="@+id/sheet_content"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <View
+                    android:layout_width="40dp"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@android:color/darker_gray"
+                    android:alpha="0.5"/>
+
+                <!-- STEP 1 -->
+                <LinearLayout
+                    android:id="@+id/step1"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="visible">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Book a ride"
+                            android:fontFamily="@font/poppins"
+                            android:textSize="24sp"
+                            android:textFontWeight="700"
+                            android:textColor="@color/black"/>
+
+                        <!-- Pickup -->
+                        <com.example.mobileapp.features.shared.input.LocationSearchInputFragment
+                            android:id="@+id/pickup"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="16dp" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/stops_container"
+                            android:orientation="vertical"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                        <androidx.appcompat.widget.AppCompatImageButton
+                            android:layout_marginBottom="8dp"
+                            android:id="@+id/btn_add_stop"
+                            android:background="@drawable/vec_plus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Add a stop"
+                            android:layout_gravity="center"/>
+
+                        <!-- Dropoff -->
+                        <com.example.mobileapp.features.shared.input.LocationSearchInputFragment
+                            android:id="@+id/destination"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="24dp" />
+                    </LinearLayout>
+
+                    <!-- Schedule datetime -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Do you want to schedule ahead?" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/input_base"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:layout_marginBottom="16dp">
+
+                        <ImageView
+                            android:id="@+id/btn_date_icon"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_calendar" />
+
+                        <EditText
+                            android:id="@+id/et_date"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:background="@android:color/transparent"
+                            android:hint="@string/date_hint"
+                            android:importantForAutofill="no"
+                            android:inputType="text"
+                            android:digits="0123456789/"
+                            android:padding="0dp"
+                            android:textColor="@color/dark_grey"
+                            android:textColorHint="@color/neutral"
+                            android:textSize="15sp"
+                            tools:ignore="DuplicateSpeakableTextCheck,TouchTargetSizeCheck" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/input_base"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:layout_marginBottom="16dp">
+
+                        <ImageView
+                            android:id="@+id/btn_time_icon"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_calendar" />
+
+                        <EditText
+                            android:id="@+id/et_time"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:background="@android:color/transparent"
+                            android:hint="hh:mm"
+                            android:importantForAutofill="no"
+                            android:inputType="text"
+                            android:digits="0123456789:"
+                            android:padding="0dp"
+                            android:textColor="@color/dark_grey"
+                            android:textColorHint="@color/neutral"
+                            android:textSize="15sp"
+                            tools:ignore="DuplicateSpeakableTextCheck,TouchTargetSizeCheck" />
+                    </LinearLayout>
+
+                    <!-- Favorite routes -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fill from saved route" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_marginBottom="16dp">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/actvFavoriteRoute"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:background="@drawable/input_base"
+                            android:textColor="@color/app_dark"
+                            android:textColorHint="@color/app_text_secondary"
+                            android:textSize="16sp"
+                            android:inputType="none"
+                            android:importantForAutofill="no"
+                            app:fontFamily="@font/poppins_medium"
+                            android:includeFontPadding="false"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Buttons -->
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:layout_gravity="end">
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btn_step1_next"
+                            android:includeFontPadding="false"
+                            android:fontFamily="@font/poppins"
+                            android:textFontWeight="600"
+                            android:background="@drawable/btn_accent"
+                            android:layout_width="match_parent"
+                            android:textAllCaps="false"
+                            android:layout_height="48dp"
+                            android:text="Next" />
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:layout_marginTop="8dp"
+                            android:id="@+id/btn_step1_cancel"
+                            android:includeFontPadding="false"
+                            android:fontFamily="@font/poppins"
+                            android:textFontWeight="600"
+                            android:background="@drawable/btn_transparent"
+                            android:layout_width="match_parent"
+                            android:textAllCaps="false"
+                            android:layout_height="48dp"
+                            android:text="Cancel" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- STEP 2 -->
+                <LinearLayout
+                    android:id="@+id/step2"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Who is going?"
+                        android:fontFamily="@font/poppins"
+                        android:textSize="24sp"
+                        android:textFontWeight="700"
+                        android:textColor="@color/black"/>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/input_base"
+                        android:layout_marginBottom="8dp">
+
+                        <ImageView
+                            android:id="@+id/profile_image"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/img_defaultprofile" />
+
+                        <TextView
+                            android:id="@+id/user_email"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="user@example.com" />
+                    </LinearLayout>
+
+
+                    <!-- passenger emails container -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/passengers_container"
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/btn_add_passenger"
+                        android:background="@drawable/vec_plus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Add a passenger"
+                        android:layout_gravity="center"
+                        android:layout_marginBottom="16dp"/>
+
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:layout_gravity="end">
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btn_step2_next"
+                            android:includeFontPadding="false"
+                            android:fontFamily="@font/poppins"
+                            android:textFontWeight="600"
+                            android:background="@drawable/btn_accent"
+                            android:layout_width="match_parent"
+                            android:textAllCaps="false"
+                            android:layout_height="48dp"
+                            android:text="Next" />
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:layout_marginTop="8dp"
+                            android:id="@+id/btn_step2_back"
+                            android:includeFontPadding="false"
+                            android:fontFamily="@font/poppins"
+                            android:textFontWeight="600"
+                            android:background="@drawable/btn_transparent"
+                            android:layout_width="match_parent"
+                            android:textAllCaps="false"
+                            android:layout_height="48dp"
+                            android:text="Back" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- STEP 3 -->
+                <LinearLayout
+                    android:id="@+id/step3"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Any preferences?"
+                        android:fontFamily="@font/poppins"
+                        android:textSize="24sp"
+                        android:textFontWeight="700"
+                        android:textColor="@color/black"/>
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/checkbox_pets"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Traveling with pets" />
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/checkbox_infants"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Traveling with infants" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle type" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_marginBottom="16dp">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/actvVehicleType"
+                            android:layout_width="match_parent"
+                            android:background="@drawable/input_base"
+                            android:layout_height="56dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:textColor="@color/app_dark"
+                            android:textColorHint="@color/app_text_secondary"
+                            android:textSize="16sp"
+                            android:inputType="none"
+                            android:importantForAutofill="no"
+                            app:fontFamily="@font/poppins_medium"
+                            android:includeFontPadding="false"
+                            android:contentDescription="Select vehicle type" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Save route to favorites" />
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp">
+
+                        <EditText
+                            android:id="@+id/input_favorite_route_name"
+                            android:background="@drawable/input_base"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:hint="Favorite route name"
+                            android:layout_marginEnd="8dp"/>
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btn_save_route"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Save"
+                            android:background="@drawable/btn_accent"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:layout_gravity="end">
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btn_step3_book"
+                            android:includeFontPadding="false"
+                            android:fontFamily="@font/poppins"
+                            android:textFontWeight="600"
+                            android:background="@drawable/btn_accent"
+                            android:layout_width="match_parent"
+                            android:textAllCaps="false"
+                            android:layout_height="48dp"
+                            android:text="Book" />
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:layout_marginTop="8dp"
+                            android:id="@+id/btn_step3_back"
+                            android:includeFontPadding="false"
+                            android:fontFamily="@font/poppins"
+                            android:textFontWeight="600"
+                            android:background="@drawable/btn_transparent"
+                            android:layout_width="match_parent"
+                            android:textAllCaps="false"
+                            android:layout_height="48dp"
+                            android:text="Back" />
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

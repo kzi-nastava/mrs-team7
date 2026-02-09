@@ -1,5 +1,6 @@
 package com.example.mobileapp.features.shared.api;
 
+import com.example.mobileapp.features.shared.api.dto.FavoriteRouteCreateDto;
 import com.example.mobileapp.features.shared.api.dto.FavoriteRouteDto;
 import com.example.mobileapp.features.shared.api.dto.LocationDto;
 import com.example.mobileapp.features.shared.api.dto.RideHistoryResponseDto;
@@ -9,8 +10,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -20,4 +23,7 @@ public interface FavoriteRouteApi {
 
     @DELETE("api/favorite-routes/{id}")
     Call<Void> deleteFavoriteRoute(@Path("id") int id);
+
+    @POST("/api/favorite-routes")
+    Call<Void> createFavoriteRoute(@Body FavoriteRouteCreateDto dto);
 }

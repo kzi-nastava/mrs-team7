@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
 import okhttp3.MediaType;
@@ -193,7 +194,7 @@ public class ProfileFragment extends Fragment {
 
         if (user.getProfilePicture() != null && !user.getProfilePicture().isEmpty()) {
             Glide.with(this)
-                    .load(user.getProfilePicture())
+                    .load(user.getProfilePicture() + "?cb=" + LocalDateTime.now().toString())
                     .placeholder(R.drawable.img_defaultprofile)
                     .error(R.drawable.img_defaultprofile)
                     .circleCrop()

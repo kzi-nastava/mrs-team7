@@ -37,8 +37,11 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.Holder
     @Override
     public void onBindViewHolder(@NonNull Holder holder, int position) {
         GeocodeResult result = results.get(position);
-        holder.primaryText.setText(result.display_name.split(",")[0]);
-        holder.secondaryText.setText(result.display_name);
+        // Bio je problem kada se unese direktno adresa tipa "Bulevar Oslobodjenja 3", prikaze
+        // samo 3
+//        holder.primaryText.setText(result.display_name.split(",")[0]);
+        holder.primaryText.setText(result.formattedResult);
+//        holder.secondaryText.setText(result.formattedResult);
         holder.itemView.setOnClickListener(v -> listener.onItemClick(result));
     }
 

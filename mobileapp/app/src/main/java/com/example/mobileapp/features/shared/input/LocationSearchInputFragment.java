@@ -1,14 +1,17 @@
 package com.example.mobileapp.features.shared.input;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -30,7 +33,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class LocationSearchInputFragment extends Fragment {
+public class LocationSearchInputFragment extends FrameLayout {
     private EditText searchEditText;
     private RecyclerView autocompleteList;
 
@@ -39,6 +42,7 @@ public class LocationSearchInputFragment extends Fragment {
     private LocationAdapter adapter;
     private Handler debounceHandler = new Handler(Looper.getMainLooper());
     private Runnable pendingSearch;
+    private boolean suppressTextWatcher = false;
 
     public interface OnLocationSelectedListener {
         void onLocationSelected(GeocodeResult location);
@@ -50,12 +54,25 @@ public class LocationSearchInputFragment extends Fragment {
         this.listener = listener;
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_location_search, container, false);
+    public LocationSearchInputFragment(Context context) {
+        super(context);
+        init(context);
+    }
 
-        searchEditText = view.findViewById(R.id.search_input);
-        autocompleteList = view.findViewById(R.id.autocomplete_list);
+    public LocationSearchInputFragment(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init(context);
+    }
+
+    public LocationSearchInputFragment(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init(context);
+    }
+
+    public void init(Context context) {
+        LayoutInflater.from(context).inflate(R.layout.fragment_location_search, this, true);
+        searchEditText = findViewById(R.id.search_input);
+        autocompleteList = findViewById(R.id.autocomplete_list);
 
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(chain -> {
@@ -91,6 +108,12 @@ public class LocationSearchInputFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
+                if(suppressTextWatcher) {
+                    // Izabere se result -> upise se u tekst -> opet se pokazuje dropdown, pa mora da se ugasi ovako
+                    suppressTextWatcher = false;
+                    return;
+                }
+
                 debounceHandler.removeCallbacks(pendingSearch);
                 pendingSearch = () -> searchNominatim(s.toString());
                 debounceHandler.postDelayed(pendingSearch, 400);
@@ -99,8 +122,6 @@ public class LocationSearchInputFragment extends Fragment {
         searchEditText.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) hideDropdown();
         });
-
-        return view;
     }
 
     private void searchNominatim(String query) {
@@ -109,11 +130,12 @@ public class LocationSearchInputFragment extends Fragment {
             return;
         }
 
-        nominatimApi.searchAddress(query + ", RS", "json", 5, 1)
+        nominatimApi.searchAddress(query, 5)
                 .enqueue(new Callback<List<GeocodeResult>>() {
                     @Override
                     public void onResponse(Call<List<GeocodeResult>> call, Response<List<GeocodeResult>> response) {
                         if (response.isSuccessful() && response.body() != null) {
+                            response.body().forEach(GeocodeResult::formatAddress);
                             results.clear();
                             results.addAll(response.body());
                             adapter.notifyDataSetChanged();
@@ -130,7 +152,8 @@ public class LocationSearchInputFragment extends Fragment {
     }
 
     private void onLocationSelected(GeocodeResult result) {
-        searchEditText.setText(result.display_name);
+        suppressTextWatcher = true;
+        searchEditText.setText(result.formattedResult);
         hideDropdown();
         if (listener != null) listener.onLocationSelected(result);
     }
@@ -142,6 +165,18 @@ public class LocationSearchInputFragment extends Fragment {
     public String getAddress(){
         String address = String.valueOf(searchEditText.getText());
         return address;
+    }
+
+    public void setAddress(String address) {
+        if (address == null) address = "";
+        suppressTextWatcher = true;
+        searchEditText.setText(address);
+        suppressTextWatcher = false;
+        searchEditText.setSelection(searchEditText.length());
+    }
+
+    public void clearAddress() {
+        setAddress("");
     }
 }
 

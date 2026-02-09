@@ -8,6 +8,8 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:hint="Search Address"
+        android:textColor="@color/black"
+        android:textColorHint="@color/app_text_secondary"
         android:inputType="text"
         android:background="@drawable/input_white_background"
         android:padding="16dp" />
