@@ -19,17 +19,13 @@ import com.example.mobileapp.features.shared.models.Ride;
 import com.example.mobileapp.features.shared.models.enums.RideStatus;
 import com.example.mobileapp.core.network.ApiClient;
 import com.example.mobileapp.features.shared.api.RidesApi;
-import com.example.mobileapp.features.shared.api.dto.RideDto;
+import com.example.mobileapp.features.shared.api.dto.RideHistoryDto;
 import com.example.mobileapp.features.shared.api.dto.RideHistoryResponseDto;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class RideHistoryFragment extends Fragment {
     private android.content.SharedPreferences prefs;
@@ -203,7 +199,7 @@ public class RideHistoryFragment extends Fragment {
                         }
 
                         rides.clear();
-                        for (RideDto dto : response.body().rides) {
+                        for (RideHistoryDto dto : response.body().rides) {
                             rides.add(mapDto(dto));
                         }
                         if (adapter != null) adapter.notifyDataSetChanged();
@@ -217,7 +213,7 @@ public class RideHistoryFragment extends Fragment {
                 });
     }
 
-    private Ride mapDto(@NonNull RideDto dto) {
+    private Ride mapDto(@NonNull RideHistoryDto dto) {
         RideStatus st;
         try {
             st = RideStatus.valueOf(dto.status);

@@ -6,6 +6,8 @@ public class OsrmRouteResponse {
     public List<Route> routes;
 
     public static class Route {
+        public double distance;
+        public double duration;
         public Geometry geometry;
     }
 

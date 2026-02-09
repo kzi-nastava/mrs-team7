@@ -32,14 +32,16 @@ public class EstimateBottomSheetFragment extends BottomSheetDialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bottom_sheet_estimate, container, false);
 
-        pickupSearch = new LocationSearchInputFragment();
-        destSearch = new LocationSearchInputFragment();
+        pickupSearch = view.findViewById(R.id.pickup);
+        destSearch = view.findViewById(R.id.destination);
+
         getEstimateButton = view.findViewById(R.id.get_estimate_button);
+
+
         pickupSearch.setOnLocationSelectedListener(result -> {
             pickupLatLon = new double[]{result.lat, result.lon};
             pickupAddress = pickupSearch.getAddress();
         });
-
         destSearch.setOnLocationSelectedListener(result -> {
             destLatLon = new double[]{result.lat, result.lon};
             destinationAddress = destSearch.getAddress();
@@ -47,10 +49,7 @@ public class EstimateBottomSheetFragment extends BottomSheetDialogFragment {
         getEstimateButton.setOnClickListener(v -> {
             showEstimate();
         });
-        getChildFragmentManager().beginTransaction()
-                .replace(R.id.pickup_container, pickupSearch)
-                .replace(R.id.dest_container, destSearch)
-                .commit();
+
 
         return view;
     }

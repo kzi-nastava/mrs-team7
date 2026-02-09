@@ -106,13 +106,13 @@
                             android:textColor="@color/black"/>
 
                         <!-- Pickup -->
-                        <FrameLayout
-                            android:id="@+id/pickup_container"
+                        <com.example.mobileapp.features.shared.input.LocationSearchInputFragment
+                            android:id="@+id/pickup"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="16dp" />
 
-                        <LinearLayout
+                        <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/stops_container"
                             android:orientation="vertical"
                             android:layout_width="match_parent"
@@ -128,8 +128,8 @@
                             android:layout_gravity="center"/>
 
                         <!-- Dropoff -->
-                        <FrameLayout
-                            android:id="@+id/dest_container"
+                        <com.example.mobileapp.features.shared.input.LocationSearchInputFragment
+                            android:id="@+id/destination"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="24dp" />
@@ -152,14 +152,14 @@
                         android:layout_marginBottom="16dp">
 
                         <ImageView
-                            android:id="@+id/btn_from_icon"
+                            android:id="@+id/btn_date_icon"
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:contentDescription="@null"
                             android:src="@drawable/ic_calendar" />
 
                         <EditText
-                            android:id="@+id/et_from"
+                            android:id="@+id/et_date"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
@@ -176,13 +176,40 @@
                             tools:ignore="DuplicateSpeakableTextCheck,TouchTargetSizeCheck" />
                     </LinearLayout>
 
-
-                    <TextView
-                        android:id="@+id/scheduled_error"
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text=""
-                        android:visibility="gone" />
+                        android:layout_height="48dp"
+                        android:background="@drawable/input_base"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:layout_marginBottom="16dp">
+
+                        <ImageView
+                            android:id="@+id/btn_time_icon"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_calendar" />
+
+                        <EditText
+                            android:id="@+id/et_time"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:background="@android:color/transparent"
+                            android:hint="hh:mm"
+                            android:importantForAutofill="no"
+                            android:inputType="text"
+                            android:digits="0123456789:"
+                            android:padding="0dp"
+                            android:textColor="@color/dark_grey"
+                            android:textColorHint="@color/neutral"
+                            android:textSize="15sp"
+                            tools:ignore="DuplicateSpeakableTextCheck,TouchTargetSizeCheck" />
+                    </LinearLayout>
 
                     <!-- Favorite routes -->
                     <TextView
@@ -193,7 +220,6 @@
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Select Route"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_marginBottom="16dp">
 
@@ -210,7 +236,7 @@
                             android:inputType="none"
                             android:importantForAutofill="no"
                             app:fontFamily="@font/poppins_medium"
-                            android:contentDescription="Select Route" />
+                            android:includeFontPadding="false"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- Buttons -->
@@ -288,7 +314,7 @@
 
 
                     <!-- passenger emails container -->
-                    <LinearLayout
+                    <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/passengers_container"
                         android:orientation="vertical"
                         android:layout_width="match_parent"
@@ -331,7 +357,7 @@
                             android:layout_width="match_parent"
                             android:textAllCaps="false"
                             android:layout_height="48dp"
-                            android:text="Cancel" />
+                            android:text="Back" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -372,23 +398,23 @@
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Vehicle Type"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_marginBottom="16dp">
 
                         <AutoCompleteTextView
                             android:id="@+id/actvVehicleType"
                             android:layout_width="match_parent"
+                            android:background="@drawable/input_base"
                             android:layout_height="56dp"
                             android:paddingStart="16dp"
                             android:paddingEnd="16dp"
-                            android:background="@drawable/input_base"
                             android:textColor="@color/app_dark"
                             android:textColorHint="@color/app_text_secondary"
                             android:textSize="16sp"
                             android:inputType="none"
                             android:importantForAutofill="no"
                             app:fontFamily="@font/poppins_medium"
+                            android:includeFontPadding="false"
                             android:contentDescription="Select vehicle type" />
                     </com.google.android.material.textfield.TextInputLayout>
 

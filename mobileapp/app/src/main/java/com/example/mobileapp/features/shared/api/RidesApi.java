@@ -1,8 +1,11 @@
 package com.example.mobileapp.features.shared.api;
 
+import com.example.mobileapp.features.shared.api.dto.CreateRideRequestDto;
 import com.example.mobileapp.features.shared.api.dto.DriverRideDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerRideDto;
 import com.example.mobileapp.features.shared.api.dto.PriceEstimateResponse;
+import com.example.mobileapp.features.shared.api.dto.RideDto;
+import com.example.mobileapp.features.shared.api.dto.RideHistoryDto;
 import com.example.mobileapp.features.shared.api.dto.RideEstimateRequest;
 import com.example.mobileapp.features.shared.api.dto.RideHistoryResponseDto;
 
@@ -18,6 +21,10 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface RidesApi {
+    @POST("api/rides")
+    Call<RideDto> requestRide(
+            @Body CreateRideRequestDto request
+            );
 
     @GET("api/rides/history")
     Call<RideHistoryResponseDto> getRideHistory(

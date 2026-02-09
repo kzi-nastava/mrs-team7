@@ -21,6 +21,12 @@ public class FavoriteRouteDto implements Parcelable {
     private boolean petsFriendly;
     private LocalDateTime createdAt;
 
+    @NonNull
+    @Override
+    public String toString() {
+        return name == null ? "" : name;
+    }
+
     public FavoriteRouteDto() {}
 
     public Integer getId() {

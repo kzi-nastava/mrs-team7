@@ -6,15 +6,15 @@
     android:padding="20dp">
 
     <!-- Pickup autocomplete container -->
-    <FrameLayout
-        android:id="@+id/pickup_container"
+    <com.example.mobileapp.features.shared.input.LocationSearchInputFragment
+        android:id="@+id/pickup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp" />
 
     <!-- Destination autocomplete container -->
-    <FrameLayout
-        android:id="@+id/dest_container"
+    <com.example.mobileapp.features.shared.input.LocationSearchInputFragment
+        android:id="@+id/destination"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp" />
