@@ -28,11 +28,14 @@ import com.example.mobileapp.R;
 import com.example.mobileapp.core.network.ApiClient;
 import com.example.mobileapp.features.passenger.dashboard.UserDashboardFragment;
 import com.example.mobileapp.features.shared.api.FavoriteRouteApi;
+import com.example.mobileapp.features.shared.api.GeocodingApi;
 import com.example.mobileapp.features.shared.api.RidesApi;
+import com.example.mobileapp.features.shared.api.RoutingApi;
 import com.example.mobileapp.features.shared.api.dto.CreateRideRequestDto;
 import com.example.mobileapp.features.shared.api.dto.FavoriteRouteCreateDto;
 import com.example.mobileapp.features.shared.api.dto.FavoriteRouteDto;
 import com.example.mobileapp.features.shared.api.dto.LocationDto;
+import com.example.mobileapp.features.shared.api.dto.OsrmRouteResponse;
 import com.example.mobileapp.features.shared.api.dto.RideDto;
 import com.example.mobileapp.features.shared.input.LocationSearchInputFragment;
 import com.example.mobileapp.features.shared.map.MapFragment;
@@ -179,7 +182,7 @@ public class RideBookingFragment extends Fragment {
             userEmail.setText(user.getEmail());
             if (user.getProfilePicture() != null && !user.getProfilePicture().isEmpty()) {
                 Glide.with(this)
-                        .load(user.getProfilePicture())
+                        .load(user.getProfilePicture() + "?cb=" + LocalDateTime.now().toString())
                         .placeholder(R.drawable.img_defaultprofile)
                         .error(R.drawable.img_defaultprofile)
                         .circleCrop()
@@ -309,34 +312,59 @@ public class RideBookingFragment extends Fragment {
                 etTime.getText().toString());
         request.vehicleType = getSelectedVehicleType();
 
-        request.distanceKm = 5.0; // TODO: PROMENI!!!
-        request.estimatedDurationMinutes = 5;
+        ApiClient.getOsrm().create(RoutingApi.class)
+                .route(buildOsrmCoords(startLocation, waypoints, endLocation), "full", "geojson")
+                .enqueue(new Callback<OsrmRouteResponse>() {
+                    @Override
+                    public void onResponse(Call<OsrmRouteResponse> call, Response<OsrmRouteResponse> response) {
+                        if(response.body() == null || !response.isSuccessful()) {
+                            showMessage("Failed to book. Please try again later.", false);
+                            return;
+                        }
 
-        ApiClient.get().create(RidesApi.class).requestRide(request).enqueue(new Callback<RideDto>() {
-            @Override
-            public void onResponse(@NonNull Call<RideDto> call, @NonNull Response<RideDto> response) {
-                if(response.body() == null) {
-                    showMessage("Failed to book. Please try again later.", false);
-                    return;
-                }
+                        request.distanceKm = response.body().routes.get(0).distance / 1000;
+                        request.estimatedDurationMinutes = (int) response.body().routes.get(0).duration / 60;
 
-                String message = String.format(
-                        Locale.getDefault(),
-                        "Ride successfully assigned to driver: %s!%n" +
-                                "Car is expected to arrive at %s. Price is: €%.2f.",
-                        response.body().driverEmail,
-                        response.body().estimatedStartTime,
-                        response.body().basePrice
-                );
-                successMessage.setText(message);
-                successOverlay.setVisibility(View.VISIBLE);
-            }
+                        ApiClient.get().create(RidesApi.class).requestRide(request).enqueue(new Callback<RideDto>() {
+                            @Override
+                            public void onResponse(@NonNull Call<RideDto> call, @NonNull Response<RideDto> response) {
+                                if(response.body() == null || !response.isSuccessful()) {
+                                    showMessage("Failed to book. Please try again later.", false);
+                                    return;
+                                }
 
-            @Override
-            public void onFailure(@NonNull Call<RideDto> call, @NonNull Throwable t) {
-                showMessage(t.getMessage(), false);
-            }
-        });
+                                DateTimeFormatter timeFormatter =
+                                        DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
+
+                                String formattedTime = response.body()
+                                        .estimatedStartTime
+                                        .format(timeFormatter);
+
+                                String message = String.format(
+                                        Locale.getDefault(),
+                                        "Ride successfully assigned to driver: %s! " +
+                                                "Car is expected to arrive at %s. Price is: €%.2f.",
+                                        response.body().driverEmail,
+                                        formattedTime,
+                                        response.body().basePrice
+                                );
+                                successMessage.setText(message);
+                                successOverlay.setVisibility(View.VISIBLE);
+                            }
+
+                            @Override
+                            public void onFailure(@NonNull Call<RideDto> call, @NonNull Throwable t) {
+                                showMessage("Failed to book ride: " + t.getMessage(), false);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(Call<OsrmRouteResponse> call, Throwable t) {
+                        showMessage("Failed to calculate route: " + t.getMessage(), false);
+                    }
+                });
+
     }
 
     private boolean validateInputs() {
@@ -562,6 +590,35 @@ public class RideBookingFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    private String buildOsrmCoords(LocationDto start, List<LocationDto> waypoints, LocationDto end) {
+        if (start == null || end == null) {
+            throw new IllegalArgumentException("start and end must be non-null");
+        }
+
+        StringBuilder sb = new StringBuilder(128);
+        java.util.function.BiConsumer<StringBuilder, LocationDto> appendPoint = (builder, loc) -> {
+            if (loc.getLatitude() == null || loc.getLongitude() == null) {
+                showMessage("Failed to calculate route because of null address.", false);
+                return;
+            }
+            builder.append(String.format(Locale.US, "%.6f,%.6f", loc.getLongitude(), loc.getLatitude()));
+        };
+
+        appendPoint.accept(sb, start);
+
+        if (waypoints != null) {
+            for (LocationDto wp : waypoints) {
+                sb.append(';');
+                appendPoint.accept(sb, wp);
+            }
+        }
+
+        sb.append(';');
+        appendPoint.accept(sb, end);
+
+        return sb.toString();
     }
 
     private void hideKeyboard(View view) {
