@@ -9,10 +9,14 @@ import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 public interface UserService {
     User getByEmail(String email);
     User updateProfile(String email, UserUpdateRequestDTO update, MultipartFile avatar);
     MessageDTO changePassword(String name, @Valid ChangePasswordDTO request);
 
     Resource getAvatar(Integer id);
+
+    List<UserProfileDTO> searchUsers(String searchString, int limit);
 }

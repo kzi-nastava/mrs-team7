@@ -26,6 +26,10 @@ export class ConfigService {
 
   public favouriteRoutesUrl = this.baseUrl + '/favorite-routes'
   
+  searchUsersUrl(searchString: string, limit:number) : string {
+    return `${this.baseUrl}/api/users?search=${searchString}&limit=${limit}`;
+  }
+
   startRideUrl(rideId: number): string {
       return this.ridesUrl + '/' + rideId.toString() + '/start';
   }

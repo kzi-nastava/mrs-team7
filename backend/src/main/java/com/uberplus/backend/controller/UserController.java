@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.nio.file.Files;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,6 +28,16 @@ import java.nio.file.Files;
 public class UserController {
 
     private final UserService userService;
+
+    // GET /api/users?search={search}&limit={limit}
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public ResponseEntity<List<UserProfileDTO>> getUsers(
+            @RequestParam("search") String searchString,
+            @RequestParam("limit") int limit
+    ) {
+        return ResponseEntity.ok(userService.searchUsers(searchString, limit));
+    }
 
     // GET /api/users/profile
     @PreAuthorize("isAuthenticated()")

@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.awt.*;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -112,5 +113,10 @@ public class UserServiceImpl implements UserService {
         }
 
         return avatar;
+    }
+
+    @Override
+    public List<UserProfileDTO> searchUsers(String searchString, int limit) {
+        return userRepository.searchUsers(searchString, limit);
     }
 }
