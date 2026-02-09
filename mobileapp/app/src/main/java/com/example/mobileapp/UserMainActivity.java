@@ -24,6 +24,8 @@ import com.google.android.material.navigation.NavigationView;
 
 import com.example.mobileapp.core.auth.AuthActivity;
 
+import java.time.LocalDateTime;
+
 public class UserMainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -91,7 +93,7 @@ public class UserMainActivity extends AppCompatActivity
         UserRepository.getInstance().getCurrentUser().observe(this, user -> {
             if (user.getProfilePicture() != null && !user.getProfilePicture().isEmpty()) {
                 Glide.with(this)
-                        .load(user.getProfilePicture())
+                        .load(user.getProfilePicture() + "?cb=" + LocalDateTime.now().toString())
                         .placeholder(R.drawable.img_defaultprofile)
                         .error(R.drawable.img_defaultprofile)
                         .circleCrop()
