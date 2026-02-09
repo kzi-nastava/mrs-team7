@@ -3,6 +3,7 @@ package com.uberplus.backend.controller;
 import com.uberplus.backend.dto.common.MessageDTO;
 import com.uberplus.backend.dto.user.ChangePasswordDTO;
 import com.uberplus.backend.dto.user.UserProfileDTO;
+import com.uberplus.backend.dto.user.UserSearchResultDTO;
 import com.uberplus.backend.dto.user.UserUpdateRequestDTO;
 import com.uberplus.backend.model.User;
 import com.uberplus.backend.service.UserService;
@@ -32,11 +33,12 @@ public class UserController {
     // GET /api/users?search={search}&limit={limit}
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<UserProfileDTO>> getUsers(
+    public ResponseEntity<List<UserSearchResultDTO>> getUsers(
             @RequestParam("search") String searchString,
             @RequestParam("limit") int limit
     ) {
-        return ResponseEntity.ok(userService.searchUsers(searchString, limit));
+        List<UserSearchResultDTO> found = userService.searchUsers(searchString, limit);
+        return ResponseEntity.ok(found);
     }
 
     // GET /api/users/profile

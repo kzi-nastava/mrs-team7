@@ -24,11 +24,11 @@ export class UserSearch {
     .pipe(
       startWith(this.searchControl.value || ''),
       map(v => (typeof v === 'string' ? v.trim() : '')),
-      filter(v => v.length > 4),
+      filter(v => v.length > 2),
       debounceTime(400),
       distinctUntilChanged(),
       switchMap(v =>
-        this.userService.searchUsers(v, 10).pipe(
+        this.userService.searchUsers(v, 15).pipe(
           catchError(err => {
             console.log("Search error.")
             return of([] as User[])
@@ -45,6 +45,7 @@ export class UserSearch {
 
   clearSearch() {
     this.searchControl.setValue("");
+    this.searchResults.set([]);
   }
 
   selectUser(user: User) {

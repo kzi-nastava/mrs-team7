@@ -3,6 +3,7 @@ package com.uberplus.backend.service.impl;
 import com.uberplus.backend.dto.common.MessageDTO;
 import com.uberplus.backend.dto.user.ChangePasswordDTO;
 import com.uberplus.backend.dto.user.UserProfileDTO;
+import com.uberplus.backend.dto.user.UserSearchResultDTO;
 import com.uberplus.backend.dto.user.UserUpdateRequestDTO;
 import com.uberplus.backend.model.User;
 import com.uberplus.backend.model.enums.UserRole;
@@ -116,7 +117,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserProfileDTO> searchUsers(String searchString, int limit) {
+    public List<UserSearchResultDTO> searchUsers(String searchString, int limit) {
         return userRepository.searchUsers(searchString, limit);
     }
 }

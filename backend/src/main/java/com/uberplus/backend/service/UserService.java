@@ -3,6 +3,7 @@ package com.uberplus.backend.service;
 import com.uberplus.backend.dto.common.MessageDTO;
 import com.uberplus.backend.dto.user.ChangePasswordDTO;
 import com.uberplus.backend.dto.user.UserProfileDTO;
+import com.uberplus.backend.dto.user.UserSearchResultDTO;
 import com.uberplus.backend.dto.user.UserUpdateRequestDTO;
 import com.uberplus.backend.model.User;
 import jakarta.validation.Valid;
@@ -18,5 +19,5 @@ public interface UserService {
 
     Resource getAvatar(Integer id);
 
-    List<UserProfileDTO> searchUsers(String searchString, int limit);
+    List<UserSearchResultDTO> searchUsers(String searchString, int limit);
 }
