@@ -19,6 +19,7 @@ import com.example.mobileapp.R;
 import com.example.mobileapp.features.shared.api.dto.DriverRideDto;
 import com.example.mobileapp.features.shared.api.dto.LocationDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerDto;
+import com.example.mobileapp.features.shared.api.dto.RidePanicDto;
 import com.example.mobileapp.features.shared.map.MapFragment;
 import com.example.mobileapp.features.shared.services.RideSimulationService;
 
@@ -53,6 +54,8 @@ public class DriverDashboardFragment extends Fragment {
     private DriverRidesService ridesService;
 
     private TextView btnStartRide;
+
+    private TextView btnPanic;
 
     private com.example.mobileapp.features.shared.services.RideSimulationService sim;
     private com.example.mobileapp.features.shared.api.RidesApi ridesApi;
@@ -96,6 +99,7 @@ public class DriverDashboardFragment extends Fragment {
         tvCurrentRoute = v.findViewById(R.id.tvCurrentRideRoute);
 
         btnStartRide = v.findViewById(R.id.btnStartRide);
+        btnPanic = v.findViewById(R.id.btnPanic);
 
         tvCurrentRideEta = v.findViewById(R.id.tvCurrentRideEta);
 
@@ -203,17 +207,28 @@ public class DriverDashboardFragment extends Fragment {
 
         tvCurrentStatus.setVisibility(View.VISIBLE);
         tvCurrentRoute.setVisibility(View.VISIBLE);
-
+        if (Boolean.TRUE.equals(r.getPanicTriggered())){
+            btnPanic.setText("Panic Sent");
+            btnPanic.setEnabled(false);
+            btnPanic.setAlpha(0.6f);
+        }
+        else {
+            btnPanic.setText("Panic");
+            btnPanic.setEnabled(true);
+            btnPanic.setAlpha(1f);
+        }
         if ("IN_PROGRESS".equals(r.status)) {
             startArrivalWatch(r);
             startEtaPolling(r.id);
             tvCurrentStatus.setText("Started");
             tvCurrentStatus.setBackgroundResource(R.drawable.bg_started);
+            btnPanic.setVisibility(View.VISIBLE);
             setBtnWaiting();
         } else if ("ACCEPTED".equals(r.status)) {
             stopArrivalWatch();
             tvCurrentStatus.setText("Accepted");
             tvCurrentStatus.setBackgroundResource(R.drawable.bg_assigned);
+            btnPanic.setVisibility(View.INVISIBLE);
             setBtnStartIdle();
         } else {
             stopEtaPolling();
@@ -223,6 +238,7 @@ public class DriverDashboardFragment extends Fragment {
             setBtnStartIdle();
             btnStartRide.setEnabled(false);
             btnStartRide.setAlpha(0.6f);
+            btnPanic.setVisibility(View.INVISIBLE);
         }
 
         String from = (r.startLocation != null) ? safe(r.startLocation.getAddress()) : "";
@@ -434,7 +450,83 @@ public class DriverDashboardFragment extends Fragment {
                 }
             }
         }
+        btnPanic.setOnClickListener(view -> {
 
+            btnPanic.setEnabled(false);
+            btnPanic.setAlpha(0.6f);
+            btnPanic.setText("Sending...");
+            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Panic")
+                    .setMessage("Are you sure you want to trigger panic for this ride?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        String token = prefs.getString("jwt", null);
+                        if (token == null || token.isEmpty()) {
+                            btnPanic.setEnabled(true);
+                            btnPanic.setAlpha(1f);
+                            btnPanic.setText("Panic");
+                            return;
+                        }
+                        int userId = prefs.getInt("userId", -1);
+                        if (userId == -1) {
+                            btnPanic.setEnabled(true);
+                            btnPanic.setAlpha(1f);
+                            btnPanic.setText("Panic");
+                            return;
+                        }
+                        btnPanic.setEnabled(false);
+                        btnPanic.setAlpha(0.6f);
+                        RidePanicDto panicDto = new RidePanicDto(userId);
+                        ridesApi.panic("Bearer " + token, r.id, panicDto)
+                                .enqueue(new retrofit2.Callback<Void>() {
+                                    @Override
+                                    public void onResponse(@NonNull retrofit2.Call<Void> call, @NonNull retrofit2.Response<Void> response) {
+                                        if (!isAdded()) return;
+                                        btnPanic.setEnabled(true);
+                                        btnPanic.setAlpha(1f);
+
+                                        if (response.isSuccessful()) {
+                                            android.widget.Toast.makeText(requireContext(),
+                                                            "Panic sent to dispatcher.",
+                                                            android.widget.Toast.LENGTH_LONG).show();
+                                            btnPanic.setText("Panic Sent");
+                                            btnPanic.setEnabled(false);
+                                            btnPanic.setAlpha(0.6f);
+                                            if (ridesService != null) ridesService.fetchRides();
+                                        } else {
+                                            btnPanic.setEnabled(true);
+                                            btnPanic.setAlpha(1f);
+                                            btnPanic.setText("Panic");
+                                            android.widget.Toast.makeText(requireContext(),
+                                                            "Failed to send panic. Try again.",
+                                                            android.widget.Toast.LENGTH_LONG).show();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(@NonNull retrofit2.Call<Void> call, @NonNull Throwable t) {
+                                        if (!isAdded()) return;
+                                        btnPanic.setEnabled(true);
+                                        btnPanic.setAlpha(1f);
+                                        btnPanic.setText("Panic");
+
+                                        android.widget.Toast.makeText(requireContext(),
+                                                        "Network error. Panic not sent.",
+                                                        android.widget.Toast.LENGTH_LONG) .show();
+                                    }
+                                });
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        btnPanic.setEnabled(true);
+                        btnPanic.setAlpha(1f);
+                        btnPanic.setText("Panic");
+                    })
+                    .setOnCancelListener(dialog -> {
+                        btnPanic.setEnabled(true);
+                        btnPanic.setAlpha(1f);
+                        btnPanic.setText("Panic");
+                    })
+                    .show();
+        });
     }
 
     private void renderBookedRides(@Nullable List<DriverRideDto> list) {
