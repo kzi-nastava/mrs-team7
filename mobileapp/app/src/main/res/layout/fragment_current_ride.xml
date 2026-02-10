@@ -197,6 +197,20 @@
                     android:background="@drawable/bg_btn_dark"
                     android:layout_marginBottom="12dp"/>
 
+                <TextView
+                    android:id="@+id/btnPanic"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="@string/panic"
+                    android:textStyle="bold"
+                    android:textSize="13sp"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/bg_btn_red"
+                    android:layout_marginBottom="12dp"/>
+
                 <!-- Report driver inconsistency -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardReport"

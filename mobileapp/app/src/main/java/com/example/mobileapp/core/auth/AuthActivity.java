@@ -1,12 +1,13 @@
 package com.example.mobileapp.core.auth;
 
-import static androidx.core.content.ContentProviderCompat.requireContext;
-
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.ViewCompat;
@@ -16,8 +17,10 @@ import com.example.mobileapp.AdminMainActivity;
 import com.example.mobileapp.DriverMainActivity;
 import com.example.mobileapp.R;
 import com.example.mobileapp.UserMainActivity;
+import com.example.mobileapp.core.api.AuthApi;
+import com.example.mobileapp.core.api.dto.LoginResponse;
+import com.example.mobileapp.core.network.ApiClient;
 import com.example.mobileapp.features.shared.map.MapFragment;
-import com.example.mobileapp.features.shared.models.User;
 import com.example.mobileapp.features.shared.models.enums.UserRole;
 import com.example.mobileapp.features.shared.repositories.UserRepository;
 
@@ -35,7 +38,7 @@ public class AuthActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
-
+        handleIntent(getIntent());
         UserRepository.getInstance().getCurrentUser().observe(this, user -> {
             if (user != null) {
                 if (user.getRole() == UserRole.ADMIN) {
@@ -104,8 +107,47 @@ public class AuthActivity extends AppCompatActivity {
                     .replace(R.id.fragment_container_view, new MapFragment())
                     .commit();
         });
-    }
 
+    }
+    private void handleIntent(Intent intent) {
+        Uri uri = intent.getData();
+        if (uri != null && "/activate".equals(uri.getPath())) {
+            String token = uri.getQueryParameter("token");
+            if (token != null) {
+                activateAccount(token);
+            }
+        }
+    }
+    private void activateAccount(String token) {
+        AuthApi api = ApiClient.get().create(AuthApi.class);
+        api.activate(token).enqueue(new retrofit2.Callback<LoginResponse>() {
+            @Override
+            public void onResponse(@NonNull retrofit2.Call<LoginResponse> call,
+                                   @NonNull retrofit2.Response<LoginResponse> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(AuthActivity.this,
+                            "Email verified successfully! Please log in.",
+                            Toast.LENGTH_LONG).show();
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container_view, new LoginFragment())
+                            .commit();
+                } else {
+                    Toast.makeText(AuthActivity.this,
+                            "Verification failed. Link may be expired.",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull retrofit2.Call<LoginResponse> call,
+                                  @NonNull Throwable t) {
+                Toast.makeText(AuthActivity.this,
+                        "Connection error: " + t.getMessage(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
     private void goToDriverMain() {
         Intent intent = new Intent(this, DriverMainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

@@ -15,6 +15,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.bumptech.glide.Glide;
 import com.example.mobileapp.features.admin.driverMonitoring.AdminDriverMonitorFragment;
 import com.example.mobileapp.features.admin.driverRegistration.DriverRegisterFragment;
+import com.example.mobileapp.features.admin.panicNotifications.AdminPanicsFragment;
 import com.example.mobileapp.features.admin.pricingManagement.PricingManagementFragment;
 import com.example.mobileapp.features.admin.profileChanges.ProfileChangesFragment;
 import com.example.mobileapp.features.passenger.dashboard.UserDashboardFragment;
@@ -149,7 +150,11 @@ public class AdminMainActivity extends AppCompatActivity
                     .commit();
 
         } else if (id == R.id.nav_panic_notifications) {
-            // TODO: open ReportsFragment
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new AdminPanicsFragment())
+                    .addToBackStack(null)
+                    .commit();
 
         } else if (id == R.id.nav_profile) {
             getSupportFragmentManager()

@@ -32,4 +32,7 @@ public class DriverRideDto {
     public String vehicleLicensePlate;
 
     public String arrivedAtPickupTime;
+
+    public Boolean getPanicTriggered() { return panicActivated; }
+    public void setPanicTriggered(Boolean panicTriggered) { this.panicActivated = panicTriggered; }
 }

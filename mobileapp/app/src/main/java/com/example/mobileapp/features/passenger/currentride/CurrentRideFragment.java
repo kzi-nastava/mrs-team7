@@ -23,6 +23,7 @@ import com.example.mobileapp.R;
 import com.example.mobileapp.features.shared.api.dto.LocationDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerRideDto;
+import com.example.mobileapp.features.shared.api.dto.RidePanicDto;
 import com.example.mobileapp.features.shared.map.MapFragment;
 import com.example.mobileapp.features.shared.models.PassengerItem;
 
@@ -45,6 +46,7 @@ public class CurrentRideFragment extends Fragment {
     private android.widget.TextView tvCharCount;
     private android.widget.TextView tvGuard;
     private android.widget.TextView btnSubmit;
+    private android.widget.TextView btnPanic;
     private android.widget.EditText etReportNote;
 
     private RecyclerView rvPassengers;
@@ -88,6 +90,7 @@ public class CurrentRideFragment extends Fragment {
         setupPassengers();
         setupReport();
         setupMapChild();
+        setupPanicButton();
 
         rideService = new PassengerCurrentRideService(requireContext());
         rideService.currentRide().observe(getViewLifecycleOwner(), this::renderRide);
@@ -113,6 +116,7 @@ public class CurrentRideFragment extends Fragment {
 
         rvPassengers = view.findViewById(R.id.rvPassengers);
         btnOpenRating = view.findViewById(R.id.btnOpenRating);
+        btnPanic = view.findViewById(R.id.btnPanic);
 
         tvEta = view.findViewById(R.id.tvEta);
     }
@@ -161,6 +165,7 @@ public class CurrentRideFragment extends Fragment {
             clearMapState();
             return;
         }
+        updatePanicButtonState(r);
 
         showRideContent();
 
@@ -278,6 +283,7 @@ public class CurrentRideFragment extends Fragment {
         }
         stopEtaPolling();
         refreshActiveGuard(false);
+        updatePanicButtonState(null);
     }
 
     private void showRideContent() {
@@ -462,4 +468,106 @@ public class CurrentRideFragment extends Fragment {
 
         etaH.post(etaRunnable);
     }
+    private void updatePanicButtonState(@Nullable PassengerRideDto r) {
+        if (btnPanic == null) return;
+
+        if (r == null || r.id == null || Boolean.TRUE.equals(r.getPanicTriggered())) {
+            btnPanic.setText("Panic Sent");
+            btnPanic.setEnabled(false);
+            btnPanic.setAlpha(0.6f);
+        } else {
+            btnPanic.setText("Panic");
+            btnPanic.setEnabled(true);
+            btnPanic.setAlpha(1f);
+        }
+    }
+    private void setupPanicButton() {
+        if (btnPanic == null) return;
+
+        btnPanic.setOnClickListener(v -> triggerPanic());
+    }
+    private void triggerPanic() {
+        if (currentRideId == null) {
+            Toast.makeText(requireContext(), "No active ride.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!btnPanic.isEnabled()) return; // already panicked
+
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Panic")
+                .setMessage("Are you sure you want to trigger panic for this ride?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    btnPanic.setEnabled(false);
+                    btnPanic.setAlpha(0.6f);
+                    btnPanic.setText("Sending...");
+
+                    String token = prefs.getString("jwt", null);
+                    if (token == null || token.isEmpty()) {
+                        btnPanic.setEnabled(true);
+                        btnPanic.setAlpha(1f);
+                        btnPanic.setText("Panic");
+                        return;
+                    }
+
+                    int userId = prefs.getInt("userId", -1);
+                    if (userId == -1) {
+                        btnPanic.setEnabled(true);
+                        btnPanic.setAlpha(1f);
+                        btnPanic.setText("Panic");
+                        return;
+                    }
+
+                    RidePanicDto panicDto = new RidePanicDto(userId);
+
+                    ridesApi.panic("Bearer " + token, currentRideId, panicDto)
+                            .enqueue(new retrofit2.Callback<Void>() {
+                                @Override
+                                public void onResponse(@NonNull retrofit2.Call<Void> call,
+                                                       @NonNull retrofit2.Response<Void> response) {
+                                    if (!isAdded()) return;
+
+                                    if (response.isSuccessful()) {
+                                        Toast.makeText(requireContext(),
+                                                "Panic sent to dispatcher.",
+                                                Toast.LENGTH_LONG).show();
+                                        btnPanic.setText("Panic Sent");
+                                        btnPanic.setEnabled(false);
+                                        btnPanic.setAlpha(0.6f);
+                                    } else {
+                                        btnPanic.setEnabled(true);
+                                        btnPanic.setAlpha(1f);
+                                        btnPanic.setText("Panic");
+                                        Toast.makeText(requireContext(),
+                                                "Failed to send panic. Try again.",
+                                                Toast.LENGTH_LONG).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(@NonNull retrofit2.Call<Void> call,
+                                                      @NonNull Throwable t) {
+                                    if (!isAdded()) return;
+                                    btnPanic.setEnabled(true);
+                                    btnPanic.setAlpha(1f);
+                                    btnPanic.setText("Panic");
+                                    Toast.makeText(requireContext(),
+                                            "Network error. Panic not sent.",
+                                            Toast.LENGTH_LONG).show();
+                                }
+                            });
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    btnPanic.setEnabled(true);
+                    btnPanic.setAlpha(1f);
+                    btnPanic.setText("Panic");
+                })
+                .setOnCancelListener(dialog -> {
+                    btnPanic.setEnabled(true);
+                    btnPanic.setAlpha(1f);
+                    btnPanic.setText("Panic");
+                })
+                .show();
+    }
+
 }
