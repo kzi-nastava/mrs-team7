@@ -11,15 +11,18 @@ import com.google.gson.JsonDeserializer;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import ua.naiksoftware.stomp.Stomp;
 import ua.naiksoftware.stomp.StompClient;
+import ua.naiksoftware.stomp.dto.StompHeader;
 
 public class WebSocketManager {
     private static final String TAG = "WebSocketManager";
-    private static final String WS_URL = "http://10.0.2.2:8080/ws/websocket";
+    private static final String WS_URL = "http://192.168.50.211:8080/ws/websocket";
 
     private StompClient stompClient;
     private final CompositeDisposable compositeDisposable;
@@ -83,7 +86,7 @@ public class WebSocketManager {
         compositeDisposable.add(lifecycleDisposable);
 
         // Subscribe to messages
-        Disposable messageDisposable = stompClient.topic("/user/" + userId + "/queue/messages")
+        Disposable messageDisposable = stompClient.topic("/topic/messages/" + userId)
                 .subscribe(topicMessage -> {
                     Log.d(TAG, "Received message: " + topicMessage.getPayload());
                     ChatMessageDto chatMessage = gson.fromJson(topicMessage.getPayload(), ChatMessageDto.class);
@@ -97,8 +100,11 @@ public class WebSocketManager {
                     }
                 });
         compositeDisposable.add(messageDisposable);
-
-        stompClient.connect();
+        List<StompHeader> headers = new ArrayList<>();
+        if (token != null) {
+            headers.add(new StompHeader("Authorization", "Bearer " + token));
+        }
+        stompClient.connect(headers);
     }
 
     public void disconnect() {
