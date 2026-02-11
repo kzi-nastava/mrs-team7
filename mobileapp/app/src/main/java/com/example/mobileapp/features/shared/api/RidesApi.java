@@ -2,6 +2,7 @@ package com.example.mobileapp.features.shared.api;
 
 import com.example.mobileapp.features.shared.api.dto.CreateRideRequestDto;
 import com.example.mobileapp.features.shared.api.dto.DriverRideDto;
+import com.example.mobileapp.features.shared.api.dto.LocationDto;
 import com.example.mobileapp.features.shared.api.dto.HistoryReportDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerRideDto;
 import com.example.mobileapp.features.shared.api.dto.PriceEstimateResponse;
@@ -100,4 +101,11 @@ public interface RidesApi {
             @Path("id") int rideId,
             @Body RidePanicDto request
     );
+
+    @POST("api/rides/{rideId}/stop-early")
+    Call<RideDto> stopEarly(
+            @Header("Authorization") String bearerToken,
+            @Path("rideId") int rideId,
+            @Body LocationDto body
+            );
 }
