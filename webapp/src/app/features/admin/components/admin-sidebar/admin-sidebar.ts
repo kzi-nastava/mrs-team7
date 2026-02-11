@@ -25,6 +25,7 @@ export class AdminSidebar {
       { label: 'Reports', route: '/admin/reports', icon: 'reports' },
       { label: 'Profile', route: '/admin/profile', icon: 'user' },
       { label: 'PANIC notifications', route: '/admin/panic-notifications', icon: 'panic' },
+      { label: 'Support', route: '/admin/support', icon: 'support' },
     ];
   }
 

@@ -28,6 +28,8 @@ import {AdminDriverMonitor} from './features/admin/pages/driver-monitor/admin-dr
 import { PricingManagement } from './features/admin/pages/pricing-management/pricing-management';
 import { AdminHistoryReport } from './features/admin/pages/history-report/history-report';
 import { UserHistoryReport } from './features/shared/pages/history-report/history-report';
+import { SupportChatComponent } from './features/shared/components/support-chat/support-chat';
+import { AdminSupportChatComponent} from './features/admin/pages/admin-support-chat/admin-support-chat';
 
 export const routes: Routes = [
   { path: '', component: UnregisteredHomeComponent },
@@ -47,7 +49,8 @@ export const routes: Routes = [
       { path: '', outlet: 'aside', component: RegisteredSidebar },
       { path: 'reports', component: UserHistoryReport},
       { path: 'booked-rides', component: PassengerBookedRidesComponent },
-      { path: 'favorite-routes', component: FavouriteRoutes }
+      { path: 'favorite-routes', component: FavouriteRoutes },
+      { path: 'support', component: SupportChatComponent }
   ] },
 
   { path: 'registerUser', component: UserRegistrationComponent },
@@ -61,6 +64,7 @@ export const routes: Routes = [
       { path: 'booked-rides', component: BookedRidesComponent },
       { path: 'reports', component: UserHistoryReport},
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: 'support', component: SupportChatComponent }
     ] },
 
   { path: 'admin', component: AdminLayout, canActivate: [AuthGuard], data:{roles: ['ADMIN']}, children: [
@@ -73,5 +77,6 @@ export const routes: Routes = [
     { path: 'driver-profile-changes', component: DriverProfileChanges},
     { path: 'reports', component: AdminHistoryReport},
     { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+    { path: 'support', component: AdminSupportChatComponent }
   ] }
 ];

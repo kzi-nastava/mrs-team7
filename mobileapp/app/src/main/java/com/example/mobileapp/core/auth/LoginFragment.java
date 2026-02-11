@@ -135,7 +135,7 @@ public class LoginFragment extends Fragment {
                         showError("Please verify your email first");
                         return;
                     }
-
+                    prefs.edit().putInt("userId",meResponse.body().getId()).apply();
                     UserRepository.getInstance().setCurrentUser(user);
 
                     if (user.getRole() == UserRole.DRIVER) {

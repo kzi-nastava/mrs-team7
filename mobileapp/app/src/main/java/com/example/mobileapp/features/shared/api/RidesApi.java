@@ -5,12 +5,12 @@ import com.example.mobileapp.features.shared.api.dto.DriverRideDto;
 import com.example.mobileapp.features.shared.api.dto.HistoryReportDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerRideDto;
 import com.example.mobileapp.features.shared.api.dto.PriceEstimateResponse;
-import com.example.mobileapp.features.shared.api.dto.RideDto;
-import com.example.mobileapp.features.shared.api.dto.RideHistoryDto;
 import com.example.mobileapp.features.shared.api.dto.RideDetailDto;
+import com.example.mobileapp.features.shared.api.dto.RideDto;
 import com.example.mobileapp.features.shared.api.dto.RideEstimateRequest;
 import com.example.mobileapp.features.shared.api.dto.RideHistoryResponseDto;
 import com.example.mobileapp.features.shared.api.dto.RideInconsistencyRequestDto;
+import com.example.mobileapp.features.shared.api.dto.RidePanicDto;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -92,5 +92,12 @@ public interface RidesApi {
     Call<Void> arrivedAtPickup(
             @Header("Authorization") String bearerToken,
             @Path("id") int rideId
+    );
+
+    @POST("api/rides/{id}/panic")
+    Call<Void> panic(
+            @Header("Authorization") String bearerToken,
+            @Path("id") int rideId,
+            @Body RidePanicDto request
     );
 }

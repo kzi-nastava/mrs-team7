@@ -14,6 +14,7 @@ recyclerview = "1.4.0"
 glide = "5.0.0-rc01"
 compiler = "5.0.0-rc01"
 materialVersion = "1.13.0"
+swiperefreshlayout = "1.2.0"
 
 [libraries]
 cardview = { module = "androidx.cardview:cardview", version.ref = "cardview" }
@@ -30,6 +31,7 @@ recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 compiler = { group = "com.github.bumptech.glide", name = "compiler", version.ref = "compiler" }
 google-material = { group = "com.google.android.material", name = "material", version.ref = "materialVersion" }
+swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
