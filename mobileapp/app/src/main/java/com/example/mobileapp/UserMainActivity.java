@@ -14,6 +14,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.bumptech.glide.Glide;
 import com.example.mobileapp.features.driver.ridehistory.RideHistoryFragment;
+import com.example.mobileapp.features.passenger.bookedRides.PassengerBookedRidesFragment;
 import com.example.mobileapp.features.passenger.currentride.CurrentRideFragment;
 import com.example.mobileapp.features.passenger.dashboard.UserDashboardFragment;
 import com.example.mobileapp.features.passenger.rideBooking.RideBookingFragment;
@@ -127,7 +128,11 @@ public class UserMainActivity extends AppCompatActivity
                     .commit();
 
         } else if (id == R.id.nav_booked_rides) {
-            // TODO: open BookedRidesFragment
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new PassengerBookedRidesFragment())
+                    .addToBackStack(null)
+                    .commit();
 
         } else if (id == R.id.nav_favorite_routes) {
             getSupportFragmentManager()
