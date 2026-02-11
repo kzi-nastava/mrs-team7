@@ -16,13 +16,14 @@ import com.bumptech.glide.Glide;
 import com.example.mobileapp.features.admin.chat.AdminSupportChatFragment;
 import com.example.mobileapp.features.admin.driverMonitoring.AdminDriverMonitorFragment;
 import com.example.mobileapp.features.admin.driverRegistration.DriverRegisterFragment;
+import com.example.mobileapp.features.admin.historyReport.AdminHistoryReportFragment;
 import com.example.mobileapp.features.admin.panicNotifications.AdminPanicsFragment;
 import com.example.mobileapp.features.admin.pricingManagement.PricingManagementFragment;
 import com.example.mobileapp.features.admin.profileChanges.ProfileChangesFragment;
 import com.example.mobileapp.features.passenger.dashboard.UserDashboardFragment;
 import com.example.mobileapp.features.shared.chat.SupportChatFragment;
 import com.example.mobileapp.features.shared.map.MapFragment;
-import com.example.mobileapp.features.shared.profile.ProfileFragment;
+import com.example.mobileapp.features.shared.pages.profile.ProfileFragment;
 import com.example.mobileapp.features.shared.repositories.UserRepository;
 import com.google.android.material.navigation.NavigationView;
 
@@ -155,6 +156,13 @@ public class AdminMainActivity extends AppCompatActivity
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.fragment_container, new AdminPanicsFragment())
+                    .addToBackStack(null)
+                    .commit();
+
+        } else if (id==R.id.nav_reports) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new AdminHistoryReportFragment())
                     .addToBackStack(null)
                     .commit();
 
