@@ -16,7 +16,6 @@ import com.bumptech.glide.Glide;
 import com.example.mobileapp.features.driver.dashboard.DriverDashboardFragment;
 import com.example.mobileapp.features.driver.ridehistory.RideHistoryFragment;
 import com.example.mobileapp.features.shared.chat.SupportChatFragment;
-import com.example.mobileapp.features.shared.profile.ProfileFragment;
 import com.example.mobileapp.features.shared.pages.historyReport.UserHistoryReportFragment;
 import com.example.mobileapp.features.shared.pages.profile.ProfileFragment;
 import com.example.mobileapp.features.shared.repositories.UserRepository;

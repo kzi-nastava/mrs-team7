@@ -18,7 +18,6 @@ import com.example.mobileapp.features.passenger.currentride.CurrentRideFragment;
 import com.example.mobileapp.features.passenger.dashboard.UserDashboardFragment;
 import com.example.mobileapp.features.passenger.rideBooking.RideBookingFragment;
 import com.example.mobileapp.features.shared.chat.SupportChatFragment;
-import com.example.mobileapp.features.shared.profile.ProfileFragment;
 import com.example.mobileapp.features.shared.pages.historyReport.UserHistoryReportFragment;
 import com.example.mobileapp.features.shared.pages.profile.ProfileFragment;
 import com.example.mobileapp.features.passenger.favoriteRoutes.FavoriteRoutesFragment;

@@ -56,6 +56,7 @@
             android:padding="12dp"
             android:background="@drawable/input_background"
             android:maxLines="4"
+            android:textColor="@color/black"
             android:textSize="14sp" />
 
         <ImageButton
