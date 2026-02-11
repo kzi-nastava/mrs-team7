@@ -329,10 +329,10 @@ export class UserHistoryReport {
   tooManyMonthsApart(d1: Date, d2: Date, limit:number) {
     if (d1 > d2) [d1, d2] = [d2, d1];
 
-    const plusTwoMonths = new Date(d1);
-    plusTwoMonths.setMonth(plusTwoMonths.getMonth() + limit);
+    const plusMonths = new Date(d1);
+    plusMonths.setMonth(plusMonths.getMonth() + limit);
 
-    return d2 > plusTwoMonths;
+    return d2 > plusMonths;
   }
 
   closeErrorAlert(): void {

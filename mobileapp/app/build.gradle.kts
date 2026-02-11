@@ -53,4 +53,5 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("androidx.recyclerview:recyclerview:1.4.0")
     implementation(libs.core.splashscreen)
+    implementation(libs.mpandroidchart)
 }
