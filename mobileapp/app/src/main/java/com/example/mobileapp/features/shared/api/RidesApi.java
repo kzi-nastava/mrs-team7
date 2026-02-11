@@ -116,4 +116,9 @@ public interface RidesApi {
             @Path("rideId") int rideId,
             @Body RideCancellationDto body
     );
+    @GET("api/rides/passenger")
+    Call<List<RideDto>> getPassengerBookedRides(
+            @Header("Authorization") String authHeader
+    );
+
 }
