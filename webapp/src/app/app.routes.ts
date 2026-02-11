@@ -31,6 +31,7 @@ import { UserHistoryReport } from './features/shared/pages/history-report/histor
 import { SupportChatComponent } from './features/shared/components/support-chat/support-chat';
 import { AdminSupportChatComponent} from './features/admin/pages/admin-support-chat/admin-support-chat';
 import { PassengerRideHistory } from './features/registered/pages/ride-history/passenger-ride-history';
+import { BlockUsersComponent } from './features/admin/pages/block-users/block-users';
 
 export const routes: Routes = [
   { path: '', component: UnregisteredHomeComponent },
@@ -79,6 +80,7 @@ export const routes: Routes = [
     { path: 'driver-profile-changes', component: DriverProfileChanges},
     { path: 'reports', component: AdminHistoryReport},
     { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-    { path: 'support', component: AdminSupportChatComponent }
+    { path: 'support', component: AdminSupportChatComponent },
+    { path: 'block-users', component: BlockUsersComponent }
   ] }
 ];
