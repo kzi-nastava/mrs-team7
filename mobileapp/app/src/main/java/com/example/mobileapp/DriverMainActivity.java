@@ -15,7 +15,9 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.bumptech.glide.Glide;
 import com.example.mobileapp.features.driver.dashboard.DriverDashboardFragment;
 import com.example.mobileapp.features.driver.ridehistory.RideHistoryFragment;
-import com.example.mobileapp.features.shared.profile.ProfileFragment;
+import com.example.mobileapp.features.shared.chat.SupportChatFragment;
+import com.example.mobileapp.features.shared.pages.historyReport.UserHistoryReportFragment;
+import com.example.mobileapp.features.shared.pages.profile.ProfileFragment;
 import com.example.mobileapp.features.shared.repositories.UserRepository;
 import com.google.android.material.navigation.NavigationView;
 
@@ -125,10 +127,18 @@ public class DriverMainActivity extends AppCompatActivity
             // TODO: open BookedRidesFragment
 
         } else if (id == R.id.nav_reports) {
-            // TODO: open ReportsFragment
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new UserHistoryReportFragment())
+                    .addToBackStack(null)
+                    .commit();
 
         } else if (id == R.id.nav_support) {
-            // TODO: open SupportFragment
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new SupportChatFragment())
+                    .addToBackStack(null)
+                    .commit();
 
         } else if (id == R.id.nav_profile) {
             getSupportFragmentManager()

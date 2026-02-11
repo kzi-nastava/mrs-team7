@@ -3,6 +3,7 @@ package com.example.mobileapp.features.shared.api;
 import com.example.mobileapp.features.shared.api.dto.CreateRideRequestDto;
 import com.example.mobileapp.features.shared.api.dto.DriverRideDto;
 import com.example.mobileapp.features.shared.api.dto.LocationDto;
+import com.example.mobileapp.features.shared.api.dto.HistoryReportDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerRideDto;
 import com.example.mobileapp.features.shared.api.dto.PriceEstimateResponse;
 import com.example.mobileapp.features.shared.api.dto.RideDetailDto;
@@ -12,6 +13,7 @@ import com.example.mobileapp.features.shared.api.dto.RideHistoryResponseDto;
 import com.example.mobileapp.features.shared.api.dto.RideInconsistencyRequestDto;
 import com.example.mobileapp.features.shared.api.dto.RidePanicDto;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import retrofit2.Call;
@@ -37,6 +39,13 @@ public interface RidesApi {
             @Query("endDate") String endDate,
             @Query("page") Integer page,
             @Query("size") Integer size
+    );
+
+    @GET("api/rides/history-report")
+    Call<HistoryReportDto> getHistoryReport(
+            @Query("from") LocalDate from,
+            @Query("to") LocalDate to,
+            @Query("uuid") Integer uuid
     );
 
     @GET("api/drivers/rides/{rideId}/details")
