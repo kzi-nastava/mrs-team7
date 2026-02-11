@@ -792,7 +792,8 @@ public class DriverDashboardFragment extends Fragment {
                         android.widget.Toast.LENGTH_LONG).show();
             }
         });
-    }).show();
+    })          .setNegativeButton("Keep Ride", null)
+                .show();
     }
     private String safe(String s) {
         return s == null ? "" : s;

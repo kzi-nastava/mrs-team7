@@ -13,6 +13,8 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.bumptech.glide.Glide;
+import com.example.mobileapp.core.auth.AuthActivity;
+import com.example.mobileapp.features.driver.bookedRides.DriverBookedRidesFragment;
 import com.example.mobileapp.features.driver.dashboard.DriverDashboardFragment;
 import com.example.mobileapp.features.driver.ridehistory.RideHistoryFragment;
 import com.example.mobileapp.features.shared.chat.SupportChatFragment;
@@ -20,8 +22,6 @@ import com.example.mobileapp.features.shared.pages.historyReport.UserHistoryRepo
 import com.example.mobileapp.features.shared.pages.profile.ProfileFragment;
 import com.example.mobileapp.features.shared.repositories.UserRepository;
 import com.google.android.material.navigation.NavigationView;
-
-import com.example.mobileapp.core.auth.AuthActivity;
 
 import java.time.LocalDateTime;
 
@@ -124,7 +124,11 @@ public class DriverMainActivity extends AppCompatActivity
                     .commit();
 
         } else if (id == R.id.nav_booked_rides) {
-            // TODO: open BookedRidesFragment
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new DriverBookedRidesFragment())
+                    .addToBackStack(null)
+                    .commit();
 
         } else if (id == R.id.nav_reports) {
             getSupportFragmentManager()
