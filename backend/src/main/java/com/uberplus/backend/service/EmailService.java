@@ -12,5 +12,7 @@ public interface EmailService {
 
     void sendPasswordResetEmail(User user, String token);
 
-    void sendRideEndingEmail(Ride ride);
+    void sendRideAcceptedEmail(Ride ride, Passenger passenger);
+
+    void sendRideCompletedEmail(Ride ride, Passenger passenger);
 }

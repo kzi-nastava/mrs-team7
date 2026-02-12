@@ -48,4 +48,5 @@ export class ConfigService {
   }
 
   readonly chatUrl = `${this.baseUrl}/chat`;
+  readonly notificationUrl = `${this.baseUrl}/notifications`;
 }
