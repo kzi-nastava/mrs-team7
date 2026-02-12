@@ -6,10 +6,7 @@ import com.uberplus.backend.model.*;
 import com.uberplus.backend.model.enums.RideStatus;
 import com.uberplus.backend.model.enums.VehicleStatus;
 import com.uberplus.backend.repository.*;
-import com.uberplus.backend.service.EmailService;
-import com.uberplus.backend.service.OSRMService;
-import com.uberplus.backend.service.PricingService;
-import com.uberplus.backend.service.RideService;
+import com.uberplus.backend.service.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,6 +32,7 @@ public class RideServiceImpl implements RideService {
     private RideInconsistencyRepository rideInconsistencyRepository;
     private final EmailService emailService;
     private PricingService pricingService;
+    private NotificationService notificationService;
 
     @Override
     @Transactional
@@ -199,7 +197,7 @@ public class RideServiceImpl implements RideService {
         ride.setScheduledTime(request.getScheduledTime());
         ride.setCreatedAt(LocalDateTime.now());
         rideRepository.save(ride);
-
+        notificationService.notifyRideAccepted(ride);
         return new RideDTO(ride);
     }
 
@@ -410,8 +408,7 @@ public class RideServiceImpl implements RideService {
 
         rideRepository.save(ride);
         driverRepository.save(driver);
-        emailService.sendRideEndingEmail(ride);
-
+        notificationService.notifyRideCompleted(ride);
         return new RideDTO(ride);
     }
 

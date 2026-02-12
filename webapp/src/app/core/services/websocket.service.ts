@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { ChatMessage } from '../../features/shared/models/chat';
 import { AuthService } from './auth.service';
+import {AppNotification} from '../../features/shared/models/notification';
 
 interface SockJSClass {
   new (url: string): WebSocket;
@@ -20,10 +21,13 @@ declare global {
 export class WebSocketService {
   private stompClient: Client | null = null;
   private messageSubject = new BehaviorSubject<ChatMessage | null>(null);
+  private notificationSubject = new BehaviorSubject<AppNotification | null>(null);
   private connected = false;
-  private subscription: StompSubscription | undefined;
+  private chatSubscription: StompSubscription | undefined;
+  private notificationSubscription: StompSubscription | undefined;
 
   public messages$: Observable<ChatMessage | null> = this.messageSubject.asObservable();
+  public notifications$: Observable<AppNotification | null> = this.notificationSubject.asObservable();
 
   constructor(private authService: AuthService) {}
 
@@ -58,7 +62,7 @@ export class WebSocketService {
 
         if (this.stompClient) {
           // Subscribe na /topic/messages/{userId}
-          this.subscription = this.stompClient.subscribe(
+          this.chatSubscription = this.stompClient.subscribe(
             `/topic/messages/${userId}`,
             (message: IMessage) => {
               try {
@@ -66,6 +70,18 @@ export class WebSocketService {
                 this.messageSubject.next(chatMessage);
               } catch (error) {
                 console.error('Error parsing message:', error);
+              }
+            }
+          );
+
+          this.notificationSubscription = this.stompClient.subscribe(
+            `/topic/notifications/${userId}`,
+            (message: IMessage) => {
+              try {
+                const notification: AppNotification = JSON.parse(message.body);
+                this.notificationSubject.next(notification);
+              } catch (error) {
+                console.error('Error parsing notification:', error);
               }
             }
           );
@@ -114,9 +130,14 @@ export class WebSocketService {
   }
 
   disconnect(): void {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-      this.subscription = undefined;
+    if (this.chatSubscription) {
+      this.chatSubscription.unsubscribe();
+      this.chatSubscription = undefined;
+    }
+
+    if (this.notificationSubscription) {
+      this.notificationSubscription.unsubscribe();
+      this.notificationSubscription = undefined;
     }
 
     if (this.stompClient) {

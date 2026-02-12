@@ -108,15 +108,44 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public void sendRideEndingEmail(Ride ride){
-        Passenger creator = ride.getCreator();
+    public void sendRideAcceptedEmail(Ride ride, Passenger passenger) {
+        String rideTrackingLink = "http://localhost:4200/user/current-ride";
 
         Email from = new Email(fromEmail, "UberPLUS");
-        Email to = new Email(creator.getEmail());
-        System.out.println(from);
+        Email to = new Email(passenger.getEmail());
 
         Personalization personalization = new Personalization();
-        personalization.addDynamicTemplateData("firstName", creator.getFirstName());
+        personalization.addDynamicTemplateData("firstName", passenger.getFirstName());
+        personalization.addDynamicTemplateData("trackingLink", rideTrackingLink);
+        personalization.addTo(to);
+
+        Mail mail = new Mail();
+        mail.setFrom(from);
+        mail.addPersonalization(personalization);
+        mail.setTemplateId("d-38d95cf62b7a4a78b33a4a27bb02c7d4");
+
+        Request request = new Request();
+        try {
+            request.setMethod(Method.POST);
+            request.setEndpoint("mail/send");
+            request.setBody(mail.build());
+            sg.api(request);
+        } catch (IOException e) {
+            System.err.println("Failed to send email: " + e.getMessage());
+            throw new RuntimeException("Failed to send ride accepted email", e);
+        }
+    }
+
+    @Override
+    public void sendRideCompletedEmail(Ride ride, Passenger passenger) {
+        Email from = new Email(fromEmail, "UberPLUS");
+        Email to = new Email(passenger.getEmail());
+
+        Personalization personalization = new Personalization();
+        personalization.addDynamicTemplateData("firstName", passenger.getFirstName());
+        personalization.addDynamicTemplateData("rideId", ride.getId());
+        personalization.addDynamicTemplateData("destinationAddress", ride.getEndLocation().getAddress());
+        personalization.addDynamicTemplateData("totalPrice", String.format("%.2f", ride.getTotalPrice()));
         personalization.addTo(to);
 
         Mail mail = new Mail();
@@ -131,7 +160,7 @@ public class EmailServiceImpl implements EmailService {
             request.setBody(mail.build());
             sg.api(request);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to send ride ending email", e);
+            throw new RuntimeException("Failed to send ride completed email", e);
         }
     }
 }
