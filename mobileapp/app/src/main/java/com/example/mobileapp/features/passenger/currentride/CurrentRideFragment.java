@@ -69,6 +69,11 @@ public class CurrentRideFragment extends Fragment {
 
     private boolean arrivedAtDestination = false;
 
+    private RecyclerView rvWaypoints;
+    private TextView tvWaypointsLabel;
+    private View cardWaypoints;
+    private WaypointAdapter waypointAdapter;
+
 
     public CurrentRideFragment() {}
 
@@ -92,6 +97,7 @@ public class CurrentRideFragment extends Fragment {
         setupPassengers();
         setupReport();
         setupMapChild();
+        setupWaypoints();
         setupPanicButton();
 
         rideService = new PassengerCurrentRideService(requireContext());
@@ -121,6 +127,10 @@ public class CurrentRideFragment extends Fragment {
         btnPanic = view.findViewById(R.id.btnPanic);
 
         tvEta = view.findViewById(R.id.tvEta);
+
+        rvWaypoints = view.findViewById(R.id.rvWaypoints);
+        tvWaypointsLabel = view.findViewById(R.id.tvWaypointsLabel);
+        cardWaypoints = view.findViewById(R.id.cardWaypoints);
     }
 
     private void setupPassengers() {
@@ -197,6 +207,26 @@ public class CurrentRideFragment extends Fragment {
             }
         }
         setPassengers(items);
+
+        boolean hasWaypoints = r.waypoints != null && !r.waypoints.isEmpty();
+
+        if (tvWaypointsLabel != null) {
+            tvWaypointsLabel.setVisibility(hasWaypoints ? View.VISIBLE : View.GONE);
+        }
+        if (cardWaypoints != null) {
+            cardWaypoints.setVisibility(hasWaypoints ? View.VISIBLE : View.GONE);
+        }
+
+        if (!hasWaypoints) {
+            waypointAdapter.setItems(new ArrayList<>());
+        } else {
+            List<Waypoint> wp = new ArrayList<>();
+            for (LocationDto w : r.waypoints) {
+                if (w == null) continue;
+                wp.add(new Waypoint(safe(w.getAddress())));
+            }
+            waypointAdapter.setItems(wp);
+        }
 
         refreshActiveGuard(true);
 
@@ -588,4 +618,60 @@ public class CurrentRideFragment extends Fragment {
                 .show();
     }
 
+    private void setupWaypoints() {
+        rvWaypoints.setLayoutManager(new LinearLayoutManager(requireContext()));
+        waypointAdapter = new WaypointAdapter(new ArrayList<>());
+        rvWaypoints.setAdapter(waypointAdapter);
+    }
+
+    private static final class Waypoint {
+        final String address;
+
+        Waypoint(String address) {
+            this.address = address;
+        }
+    }
+
+    private static final class WaypointAdapter extends RecyclerView.Adapter<WaypointAdapter.WaypointVH> {
+
+        private final List<Waypoint> items;
+
+        WaypointAdapter(List<Waypoint> items) {
+            this.items = items;
+        }
+
+        void setItems(List<Waypoint> newItems) {
+            items.clear();
+            if (newItems != null) items.addAll(newItems);
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public WaypointVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_waypoint, parent, false);
+            return new WaypointVH(v);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull WaypointVH h, int position) {
+            Waypoint w = items.get(position);
+            h.tvAddress.setText(w.address);
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+
+        static final class WaypointVH extends RecyclerView.ViewHolder {
+            final TextView tvAddress;
+
+            WaypointVH(@NonNull View itemView) {
+                super(itemView);
+                tvAddress = itemView.findViewById(R.id.tvWaypointAddress);
+            }
+        }
+    }
 }
