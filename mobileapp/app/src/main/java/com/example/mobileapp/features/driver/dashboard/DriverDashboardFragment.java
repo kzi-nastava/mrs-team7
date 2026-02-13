@@ -700,7 +700,7 @@ public class DriverDashboardFragment extends Fragment {
                 if (r.vehicleType != null) {
                     if ("VAN".equals(r.vehicleType)) reqs.add(DriverDashboardAdapter.Requirement.VAN);
                     else if ("STANDARD".equals(r.vehicleType)) reqs.add(DriverDashboardAdapter.Requirement.SEDAN);
-                    else reqs.add(DriverDashboardAdapter.Requirement.SUV);
+                    else reqs.add(DriverDashboardAdapter.Requirement.LUXURY);
                 }
 
                 if (r.babyFriendly) reqs.add(DriverDashboardAdapter.Requirement.BABY);
