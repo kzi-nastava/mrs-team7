@@ -3,7 +3,7 @@
   <component name="deploymentTargetSelector">
     <selectionStates>
       <SelectionState runConfigName="app">
-        <option name="selectionMode" value="DROPDOWN" />
+        <option name="selectionMode" value="DIALOG" />
         <DropdownSelection timestamp="2026-02-13T14:12:53.018889159Z">
           <Target type="DEFAULT_BOOT">
             <handle>
@@ -15,12 +15,12 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="PhysicalDevice" identifier="serial=RFCX50BVP5N" />
+                <DeviceId pluginId="PhysicalDevice" identifier="serial=R8YWC09X0QV" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="PhysicalDevice" identifier="serial=R8YWC09X0QV" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=/home/milank/.android/avd/Medium_Phone.avd" />
               </handle>
             </Target>
           </targets>

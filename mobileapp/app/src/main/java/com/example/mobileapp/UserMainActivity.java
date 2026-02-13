@@ -23,6 +23,7 @@ import com.example.mobileapp.features.passenger.favoriteRoutes.FavoriteRoutesFra
 import com.example.mobileapp.features.passenger.rideBooking.RideBookingFragment;
 import com.example.mobileapp.features.passenger.rideHistory.PassengerRideHistoryFragment;
 import com.example.mobileapp.features.shared.chat.SupportChatFragment;
+import com.example.mobileapp.features.shared.models.Notification;
 import com.example.mobileapp.features.shared.notifications.NotificationsBottomSheetFragment;
 import com.example.mobileapp.features.shared.pages.historyReport.UserHistoryReportFragment;
 import com.example.mobileapp.features.shared.pages.profile.ProfileFragment;
@@ -97,22 +98,28 @@ public class UserMainActivity extends AppCompatActivity
         notificationRepository.loadNotifications();
 
         // Observe unread count and update badge
-        notificationRepository.getUnreadCount().observe(this, count -> {
-            if (count != null && count > 0) {
-                tvNotificationBadge.setText(String.valueOf(count));
+        notificationRepository = NotificationRepository.getInstance();
+        notificationRepository.loadNotifications();
+
+        notificationRepository.getHasUnread().observe(this, hasUnread -> {
+            if (hasUnread != null && hasUnread) {
                 tvNotificationBadge.setVisibility(View.VISIBLE);
             } else {
                 tvNotificationBadge.setVisibility(View.GONE);
             }
         });
 
-        // Setup WebSocket
+        // Setup Websocket
         webSocketManager = new WebSocketManager(this);
         UserRepository.getInstance().getCurrentUser().observe(this, user -> {
             if (user != null && user.getId() != null) {
                 webSocketManager.connect(user.getId(), null);
                 webSocketManager.setNotificationListener(notificationDto -> {
-                    notificationRepository.addNotification(notificationDto.toModel());
+                    runOnUiThread(() -> {
+                        Notification notification = notificationDto.toModel();
+                        notification.setRead(false);
+                        notificationRepository.addNotification(notification);
+                    });
                 });
             }
         });
