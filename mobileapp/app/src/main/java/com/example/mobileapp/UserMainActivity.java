@@ -242,6 +242,12 @@ public class UserMainActivity extends AppCompatActivity
         return true;
     }
 
+    public void setNavigationCheckedItem(int itemId) {
+        if (navigationView != null) {
+            navigationView.setCheckedItem(itemId);
+        }
+    }
+
     // Cleanup WebSocket on destroy
     @Override
     protected void onDestroy() {
