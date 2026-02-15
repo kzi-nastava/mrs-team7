@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mobileapp.R;
+import com.example.mobileapp.core.network.ApiClient;
+import com.example.mobileapp.features.shared.api.DriversApi;
 import com.example.mobileapp.features.shared.api.GeocodingApi;
 import com.example.mobileapp.features.shared.api.dto.DriverRideDto;
 import com.example.mobileapp.features.shared.api.dto.GeocodeResult;
@@ -63,6 +65,11 @@ public class DriverDashboardFragment extends Fragment {
     private View cardWaypoints;
     private TextView tvWorkActive;
     private TextView tvWorkLimit;
+    private TextView btnChangeStatus;
+    private View statusDot;
+    private TextView statusText;
+
+    private DriversApi driversApi;
 
     private TextView tvCurrentStatus;
     private TextView tvCurrentRoute;
@@ -85,13 +92,14 @@ public class DriverDashboardFragment extends Fragment {
     private Runnable arrivalRunnable;
     private Integer watchingRideId = null;
 
-    private final int workMinutes = 265;
+    private final int workMinutes = 220;
     private final int workLimitMinutes = 480;
 
     private TextView tvCurrentRideEta;
     private final android.os.Handler etaH = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable etaRunnable;
     private Integer watchingEtaRideId = null;
+    private boolean isOnline = true;
 
 
     @Nullable
@@ -111,6 +119,9 @@ public class DriverDashboardFragment extends Fragment {
         cardWaypoints = v.findViewById(R.id.cardWaypoints);
         tvWorkActive = v.findViewById(R.id.tvWorkActive);
         tvWorkLimit = v.findViewById(R.id.tvWorkLimit);
+        btnChangeStatus = v.findViewById(R.id.btn_status);
+        statusDot = v.findViewById(R.id.statusDot);
+        statusText = v.findViewById(R.id.statusText);
 
         rvWayPoints = v.findViewById(R.id.rvWaypoints);
         rvPassengers = v.findViewById(R.id.rvPassengers);
@@ -122,11 +133,12 @@ public class DriverDashboardFragment extends Fragment {
         btnStartRide = v.findViewById(R.id.btnStartRide);
         btnPanic = v.findViewById(R.id.btnPanic);
         btnStopRide = v.findViewById(R.id.btnStop);
-
+        btnChangeStatus.setOnClickListener(view -> toggleDriverStatus());
         tvCurrentRideEta = v.findViewById(R.id.tvCurrentRideEta);
 
         prefs = requireContext().getSharedPreferences("auth", android.content.Context.MODE_PRIVATE);
         ridesApi = com.example.mobileapp.core.network.ApiClient.get().create(com.example.mobileapp.features.shared.api.RidesApi.class);
+        driversApi = ApiClient.get().create(DriversApi.class);
         sim = new com.example.mobileapp.features.shared.services.RideSimulationService();
 
         setupWorkingHours();
@@ -134,6 +146,7 @@ public class DriverDashboardFragment extends Fragment {
         setupPassengers();
         setupBookedRides();
         setupMapChild();
+        loadStatus();
 
         ridesService = new DriverRidesService(requireContext());
 
@@ -294,6 +307,74 @@ public class DriverDashboardFragment extends Fragment {
                     .beginTransaction()
                     .replace(R.id.mapContainer, new MapFragment())
                     .commit();
+        }
+    }
+
+    private void loadStatus(){
+        String token = bearer();
+        if (token == null) return;
+
+        int driverId = prefs.getInt("userId", -1);
+        if (driverId == -1) return;
+        driversApi.getStatus(token, driverId).enqueue(new Callback<Boolean>() {
+            @Override
+            public void onResponse(@NonNull Call<Boolean> call, @NonNull Response<Boolean> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    isOnline = response.body();
+                    updateStatusUI(isOnline);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Boolean> call, @NonNull Throwable t) {
+                Toast.makeText(requireContext(), "Failed to get status", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void toggleDriverStatus() {
+        String token = bearer();
+        if (token == null) return;
+
+        int driverId = prefs.getInt("userId", -1);
+        if (driverId == -1) return;
+
+        btnChangeStatus.setEnabled(false);
+        btnChangeStatus.setAlpha(0.6f);
+
+        driversApi.updateStatus(token, driverId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                btnChangeStatus.setEnabled(true);
+                btnChangeStatus.setAlpha(1f);
+
+                if (response.isSuccessful()) {
+                    isOnline = !isOnline;
+                    updateStatusUI(isOnline);
+                    Toast.makeText(requireContext(), "Status updated", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "Failed to update status", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                btnChangeStatus.setEnabled(true);
+                btnChangeStatus.setAlpha(1f);
+                Toast.makeText(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void updateStatusUI(boolean isOnline) {
+        if (isOnline) {
+            statusDot.setBackgroundResource(R.drawable.bg_dot_green);
+            statusText.setText("Active");
+            btnChangeStatus.setText("Go offline");
+            btnChangeStatus.setBackgroundResource(R.drawable.bg_btn_dark);
+        } else {
+            statusDot.setBackgroundResource(R.drawable.bg_dot_red);
+            statusText.setText("Offline");
+            btnChangeStatus.setText("Go online");
+            btnChangeStatus.setBackgroundResource(R.drawable.bg_dot_green);
         }
     }
 
@@ -860,7 +941,7 @@ public class DriverDashboardFragment extends Fragment {
         input.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
         input.setPadding(50, 40, 50, 40);
 
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        new AlertDialog.Builder(requireContext())
                 .setTitle("Cancel Ride")
                 .setMessage("Please provide a reason for cancelling this ride:")
                 .setView(input)
