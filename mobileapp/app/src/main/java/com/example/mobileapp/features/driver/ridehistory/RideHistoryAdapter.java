@@ -85,6 +85,10 @@ public class RideHistoryAdapter extends RecyclerView.Adapter<RideHistoryAdapter.
             h.chipStatus.setText("Cancelled");
             h.chipStatus.setBackgroundTintList(ColorStateList.valueOf(cancelledBg));
             h.chipStatus.setTextColor(cancelledText);
+        } else if (st == RideStatus.STOPPED) {
+            h.chipStatus.setText("Stopped");
+            h.chipStatus.setBackgroundTintList(ColorStateList.valueOf(panicBg));
+            h.chipStatus.setTextColor(panicText);
 
         } else if (st == RideStatus.ASSIGNED) {
             h.chipStatus.setText("Assigned");

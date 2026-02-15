@@ -80,7 +80,10 @@ public class AdminRideHistoryAdapter extends RecyclerView.Adapter<AdminRideHisto
             h.chipStatus.setText("Completed");
             h.chipStatus.setBackgroundTintList(ColorStateList.valueOf(completedBg));
             h.chipStatus.setTextColor(completedText);
-
+        } else if (st == RideStatus.STOPPED) {
+            h.chipStatus.setText("Stopped");
+            h.chipStatus.setBackgroundTintList(ColorStateList.valueOf(panicBg));
+            h.chipStatus.setTextColor(panicText);
         } else if (st == RideStatus.CANCELLED) {
             h.chipStatus.setText("Cancelled");
             h.chipStatus.setBackgroundTintList(ColorStateList.valueOf(cancelledBg));
