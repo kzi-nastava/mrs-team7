@@ -19,7 +19,7 @@ export interface RatingData {
       <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
            (click)="$event.stopPropagation()">
 
-        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-between rating-modal-title">
           Rate Your Ride
           <button
             type="button"
@@ -33,14 +33,14 @@ export interface RatingData {
 
         <!-- Driver Rating -->
         <div class="mb-6">
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
+          <label class="block text-sm font-semibold text-gray-700 mb-2 driver-rating-label">
             Driver Rating
           </label>
           <div class="flex gap-2">
             <button *ngFor="let star of [1,2,3,4,5]"
                     type="button"
                     (click)="setDriverRating(star)"
-                    class="text-3xl transition-colors hover:scale-110 transform"
+                    class="text-3xl transition-colors hover:scale-110 transform driver-star-button"
                     [class.text-yellow-400]="star <= driverRating"
                     [class.text-gray-300]="star > driverRating">
               ★
@@ -50,14 +50,14 @@ export interface RatingData {
 
         <!-- Vehicle Rating -->
         <div class="mb-6">
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
+          <label class="block text-sm font-semibold text-gray-700 mb-2 vehicle-rating-label">
             Vehicle Rating
           </label>
           <div class="flex gap-2">
             <button *ngFor="let star of [1,2,3,4,5]"
                     type="button"
                     (click)="setVehicleRating(star)"
-                    class="text-3xl transition-colors hover:scale-110 transform"
+                    class="text-3xl transition-colors hover:scale-110 transform vehicle-star-button"
                     [class.text-yellow-400]="star <= vehicleRating"
                     [class.text-gray-300]="star > vehicleRating">
               ★
@@ -89,7 +89,7 @@ export interface RatingData {
           <button
             (click)="onSubmit()"
             [disabled]="!isValid()"
-            class="flex-1 h-11 px-6 rounded-full bg-neutral-900 text-white text-sm font-semibold hover:bg-neutral-800 active:scale-[0.99] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer">
+            class="flex-1 h-11 px-6 rounded-full bg-neutral-900 text-white text-sm font-semibold hover:bg-neutral-800 active:scale-[0.99] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer submit-rating-button">
             Submit Rating
           </button>
         </div>

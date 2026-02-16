@@ -12,7 +12,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 
 public class LoginPage {
-    private WebDriver driver;
+    private final WebDriver driver;
 
     @FindBy(css = "input[name='email']")
     private WebElement emailInput;
@@ -40,6 +40,8 @@ public class LoginPage {
 
     public void login() {
         submitButton.click();
+        new WebDriverWait(driver, Duration.ofMillis(300)).
+                until(ExpectedConditions.urlContains("/user/"));
     }
 
     public boolean isOnLoginPage() {
