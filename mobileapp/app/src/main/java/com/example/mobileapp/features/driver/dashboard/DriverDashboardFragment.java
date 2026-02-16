@@ -64,6 +64,7 @@ public class DriverDashboardFragment extends Fragment {
     private View cardWaypoints;
     private TextView tvWorkActive;
     private TextView tvWorkLimit;
+    private ProgressBar pbWork;
     private TextView btnChangeStatus;
     private View statusDot;
     private TextView statusText;
@@ -91,7 +92,7 @@ public class DriverDashboardFragment extends Fragment {
     private Runnable arrivalRunnable;
     private Integer watchingRideId = null;
 
-    private final int workMinutes = 220;
+    private final int workMinutes = 0;
     private final int workLimitMinutes = 480;
 
     private TextView tvCurrentRideEta;
@@ -117,6 +118,7 @@ public class DriverDashboardFragment extends Fragment {
         cardWaypoints = v.findViewById(R.id.cardWaypoints);
         tvWorkActive = v.findViewById(R.id.tvWorkActive);
         tvWorkLimit = v.findViewById(R.id.tvWorkLimit);
+        pbWork = v.findViewById(R.id.pbWork);
         btnChangeStatus = v.findViewById(R.id.btn_status);
         statusDot = v.findViewById(R.id.statusDot);
         statusText = v.findViewById(R.id.statusText);
@@ -139,6 +141,7 @@ public class DriverDashboardFragment extends Fragment {
         driversApi = ApiClient.get().create(DriversApi.class);
         sim = new com.example.mobileapp.features.shared.services.RideSimulationService();
 
+        setupWorkingHours();
         setupWaypoints();
         setupPassengers();
         setupBookedRides();
