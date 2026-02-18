@@ -6,9 +6,11 @@ import com.example.mobileapp.features.shared.api.dto.DriverUpdateDto;
 import com.example.mobileapp.features.shared.api.dto.UserUpdateRequestDto;
 
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.MultipartBody;
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Multipart;
@@ -47,4 +49,7 @@ public interface DriversApi {
     @GET("api/drivers/{driverId}/status")
     Call<Boolean> getStatus(@Header("Authorization") String auth,
                             @Path("driverId") Integer driverId);
+
+    @PUT("api/drivers/activate")
+    Call<Void> activate(@Body Map<String, String> body);
 }
