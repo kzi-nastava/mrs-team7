@@ -12,16 +12,24 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.bumptech.glide.Glide;
+import com.example.mobileapp.core.auth.AuthActivity;
+import com.example.mobileapp.features.admin.blockUsers.BlockUsersFragment;
+import com.example.mobileapp.features.admin.chat.AdminSupportChatFragment;
 import com.example.mobileapp.features.admin.driverMonitoring.AdminDriverMonitorFragment;
 import com.example.mobileapp.features.admin.driverRegistration.DriverRegisterFragment;
+import com.example.mobileapp.features.admin.historyReport.AdminHistoryReportFragment;
+import com.example.mobileapp.features.admin.panicNotifications.AdminPanicsFragment;
+import com.example.mobileapp.features.admin.pricingManagement.PricingManagementFragment;
 import com.example.mobileapp.features.admin.profileChanges.ProfileChangesFragment;
+import com.example.mobileapp.features.admin.rideHistory.AdminRideHistoryFragment;
 import com.example.mobileapp.features.passenger.dashboard.UserDashboardFragment;
 import com.example.mobileapp.features.shared.map.MapFragment;
-import com.example.mobileapp.features.shared.profile.ProfileFragment;
+import com.example.mobileapp.features.shared.pages.profile.ProfileFragment;
 import com.example.mobileapp.features.shared.repositories.UserRepository;
 import com.google.android.material.navigation.NavigationView;
 
-import com.example.mobileapp.core.auth.AuthActivity;
+import java.time.LocalDateTime;
 
 public class AdminMainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -84,6 +92,21 @@ public class AdminMainActivity extends AppCompatActivity
             // Mark ride history as selected in the drawer
             navigationView.setCheckedItem(R.id.nav_dashboard);
         }
+
+        // Set pfp
+        ImageButton profileImage = toolbar.findViewById(R.id.btn_profile);
+        UserRepository.getInstance().getCurrentUser().observe(this, user -> {
+            if (user != null && user.getProfilePicture() != null && !user.getProfilePicture().isEmpty()) {
+                Glide.with(this)
+                        .load(user.getProfilePicture() + "?cb=" + LocalDateTime.now().toString())
+                        .placeholder(R.drawable.img_defaultprofile)
+                        .error(R.drawable.img_defaultprofile)
+                        .circleCrop()
+                        .into(profileImage);
+            } else {
+                profileImage.setImageResource(R.drawable.img_defaultprofile);
+            }
+        });
     }
 
     @Override
@@ -107,13 +130,26 @@ public class AdminMainActivity extends AppCompatActivity
                     .addToBackStack(null)
                     .commit();
 
+        }
+        if (id == R.id.nav_pricing) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new PricingManagementFragment())
+                    .addToBackStack(null)
+                    .commit();
+
         } else if (id == R.id.nav_register_driver) {
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.fragment_container, new DriverRegisterFragment())
                     .addToBackStack(null)
                     .commit();
-
+        } else if (id == R.id.nav_ride_history) {
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, new AdminRideHistoryFragment())
+                        .addToBackStack(null)
+                        .commit();
         } else if (id == R.id.nav_review_profile_changes) {
             getSupportFragmentManager()
                     .beginTransaction()
@@ -122,12 +158,37 @@ public class AdminMainActivity extends AppCompatActivity
                     .commit();
 
         } else if (id == R.id.nav_panic_notifications) {
-            // TODO: open ReportsFragment
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new AdminPanicsFragment())
+                    .addToBackStack(null)
+                    .commit();
 
-        } else if (id == R.id.nav_profile) {
+        } else if (id==R.id.nav_reports) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new AdminHistoryReportFragment())
+                    .addToBackStack(null)
+                    .commit();
+
+        } else if (id==R.id.nav_block_users) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new BlockUsersFragment())
+                    .addToBackStack(null)
+                    .commit();
+
+        }  else if (id == R.id.nav_profile) {
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.fragment_container, new ProfileFragment())
+                    .addToBackStack(null)
+                    .commit();
+
+        } else if (id == R.id.nav_support) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new AdminSupportChatFragment())
                     .addToBackStack(null)
                     .commit();
 

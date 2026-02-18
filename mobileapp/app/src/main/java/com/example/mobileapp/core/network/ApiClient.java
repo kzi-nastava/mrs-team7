@@ -7,6 +7,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonSerializer;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -16,8 +17,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public final class ApiClient {
 
-//    private static final String BASE_URL = "http://192.168.50.211:8080/";
-     private static final String BASE_URL = "http://10.0.2.2:8080/";
+    private static final String BASE_URL = "http://192.168.50.211:8080/";
+//    private static final String BASE_URL = "http://10.0.2.2:8080/";
 
     private static final String OSRM_BASE_URL = "https://router.project-osrm.org/";
 
@@ -42,6 +43,14 @@ public final class ApiClient {
                             (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
                                     new com.google.gson.JsonPrimitive(src.format(
                                             DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
+                    .registerTypeAdapter(LocalDate.class,
+                            (JsonDeserializer<LocalDate>) (json, typeOfT, context) ->
+                                    LocalDate.parse(json.getAsString(),
+                                            DateTimeFormatter.ISO_LOCAL_DATE))
+                    .registerTypeAdapter(LocalDate.class,
+                            (JsonSerializer<LocalDate>) (src, typeOfSrc, context) ->
+                                    new com.google.gson.JsonPrimitive(src.format(
+                                            DateTimeFormatter.ISO_LOCAL_DATE)))
                     .create();
 
             OkHttpClient client = new OkHttpClient.Builder()

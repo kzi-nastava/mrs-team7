@@ -7,24 +7,47 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mobileapp.R;
+import com.example.mobileapp.core.network.ApiClient;
+import com.example.mobileapp.features.shared.api.DriversApi;
+import com.example.mobileapp.features.shared.api.GeocodingApi;
 import com.example.mobileapp.features.shared.api.dto.DriverRideDto;
+import com.example.mobileapp.features.shared.api.dto.GeocodeResult;
 import com.example.mobileapp.features.shared.api.dto.LocationDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerDto;
+import com.example.mobileapp.features.shared.api.dto.RideCancellationDto;
+import com.example.mobileapp.features.shared.api.dto.RideDetailDto;
+import com.example.mobileapp.features.shared.api.dto.RideDto;
+import com.example.mobileapp.features.shared.api.dto.RideHistoryDto;
+import com.example.mobileapp.features.shared.api.dto.RideHistoryResponseDto;
+import com.example.mobileapp.features.shared.api.dto.RidePanicDto;
 import com.example.mobileapp.features.shared.map.MapFragment;
 import com.example.mobileapp.features.shared.services.RideSimulationService;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class DriverDashboardFragment extends Fragment {
     private Integer lastRouteRideId = null;
@@ -37,11 +60,16 @@ public class DriverDashboardFragment extends Fragment {
     private RecyclerView rvPassengers;
     private RecyclerView rvBookedRides;
 
-    private ProgressBar pbWork;
     private TextView tvWaypointsLabel;
     private View cardWaypoints;
     private TextView tvWorkActive;
     private TextView tvWorkLimit;
+    private ProgressBar pbWork;
+    private TextView btnChangeStatus;
+    private View statusDot;
+    private TextView statusText;
+
+    private DriversApi driversApi;
 
     private TextView tvCurrentStatus;
     private TextView tvCurrentRoute;
@@ -54,6 +82,9 @@ public class DriverDashboardFragment extends Fragment {
 
     private TextView btnStartRide;
 
+    private TextView btnPanic;
+    private TextView btnStopRide;
+
     private com.example.mobileapp.features.shared.services.RideSimulationService sim;
     private com.example.mobileapp.features.shared.api.RidesApi ridesApi;
     private android.content.SharedPreferences prefs;
@@ -61,13 +92,14 @@ public class DriverDashboardFragment extends Fragment {
     private Runnable arrivalRunnable;
     private Integer watchingRideId = null;
 
-    private final int workMinutes = 265;
+    private final int workMinutes = 0;
     private final int workLimitMinutes = 480;
 
     private TextView tvCurrentRideEta;
     private final android.os.Handler etaH = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable etaRunnable;
     private Integer watchingEtaRideId = null;
+    private boolean isOnline = true;
 
 
     @Nullable
@@ -82,11 +114,14 @@ public class DriverDashboardFragment extends Fragment {
         tvPassengersTitle = v.findViewById(R.id.passengersTitle);
         currentRideContent = v.findViewById(R.id.currentRideSection);
 
-        pbWork = v.findViewById(R.id.pbWork);
         tvWaypointsLabel = v.findViewById(R.id.tvWaypointsLabel);
         cardWaypoints = v.findViewById(R.id.cardWaypoints);
         tvWorkActive = v.findViewById(R.id.tvWorkActive);
         tvWorkLimit = v.findViewById(R.id.tvWorkLimit);
+        pbWork = v.findViewById(R.id.pbWork);
+        btnChangeStatus = v.findViewById(R.id.btn_status);
+        statusDot = v.findViewById(R.id.statusDot);
+        statusText = v.findViewById(R.id.statusText);
 
         rvWayPoints = v.findViewById(R.id.rvWaypoints);
         rvPassengers = v.findViewById(R.id.rvPassengers);
@@ -96,11 +131,14 @@ public class DriverDashboardFragment extends Fragment {
         tvCurrentRoute = v.findViewById(R.id.tvCurrentRideRoute);
 
         btnStartRide = v.findViewById(R.id.btnStartRide);
-
+        btnPanic = v.findViewById(R.id.btnPanic);
+        btnStopRide = v.findViewById(R.id.btnStop);
+        btnChangeStatus.setOnClickListener(view -> toggleDriverStatus());
         tvCurrentRideEta = v.findViewById(R.id.tvCurrentRideEta);
 
         prefs = requireContext().getSharedPreferences("auth", android.content.Context.MODE_PRIVATE);
         ridesApi = com.example.mobileapp.core.network.ApiClient.get().create(com.example.mobileapp.features.shared.api.RidesApi.class);
+        driversApi = ApiClient.get().create(DriversApi.class);
         sim = new com.example.mobileapp.features.shared.services.RideSimulationService();
 
         setupWorkingHours();
@@ -108,6 +146,7 @@ public class DriverDashboardFragment extends Fragment {
         setupPassengers();
         setupBookedRides();
         setupMapChild();
+        loadStatus();
 
         ridesService = new DriverRidesService(requireContext());
 
@@ -123,12 +162,119 @@ public class DriverDashboardFragment extends Fragment {
     }
 
     private void setupWorkingHours() {
+        updateWorkingHours(0);
+        fetchAndCalculateWorkingHours();
+    }
+
+    private void fetchAndCalculateWorkingHours() {
+        String token = bearer();
+        if (token == null) return;
+
+        int driverId = prefs.getInt("userId", -1);
+        if (driverId == -1) return;
+
+        Calendar cal = Calendar.getInstance();
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
+
+        ridesApi.getRideHistory(token, driverId, today, today, 0, 100)
+                .enqueue(new Callback<RideHistoryResponseDto>() {
+                    @Override
+                    public void onResponse(@NonNull Call<RideHistoryResponseDto> call,
+                                           @NonNull Response<RideHistoryResponseDto> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            calculateTotalWorkMinutes(response.body().rides);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<RideHistoryResponseDto> call,
+                                          @NonNull Throwable t) {
+                    }
+                });
+    }
+
+    private void calculateTotalWorkMinutes(List<RideHistoryDto> rides) {
+        List<Integer> completedRideIds = new ArrayList<>();
+        for (RideHistoryDto ride : rides) {
+            if ("COMPLETED".equals(ride.status) || "IN_PROGRESS".equals(ride.status) ) {
+                completedRideIds.add(ride.id);
+            }
+        }
+        if (completedRideIds.isEmpty()) {
+            return;
+        }
+        final int[] totalMinutes = {0};
+        final int[] completedFetches = {0};
+        final int totalToFetch = completedRideIds.size();
+        for (Integer rideId : completedRideIds) {
+            ridesApi.getRideDetails(bearer(), rideId)
+                    .enqueue(new Callback<RideDetailDto>() {
+                        @Override
+                        public void onResponse(@NonNull Call<RideDetailDto> call,
+                                               @NonNull Response<RideDetailDto> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                int duration = calculateRideDuration(response.body());
+                                totalMinutes[0] += duration;
+                            }
+
+                            completedFetches[0]++;
+
+                            if (completedFetches[0] == totalToFetch) {
+                                updateWorkingHours(totalMinutes[0]);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call <RideDetailDto> call,
+                                              @NonNull Throwable t) {
+                            completedFetches[0]++;
+
+                            if (completedFetches[0] == totalToFetch) {
+                                updateWorkingHours(totalMinutes[0]);
+                            }
+                        }
+                    });
+        }
+    }
+
+    private int calculateRideDuration(RideDetailDto rideDetail) {
+        if (rideDetail.actualStartTime == null || rideDetail.actualEndTime == null) {
+            return 0;
+        }
+
+        try {
+            SimpleDateFormat iso8601Format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+
+            String startTimeStr = rideDetail.actualStartTime;
+            String endTimeStr = rideDetail.actualEndTime;
+
+            if (startTimeStr.contains(".")) {
+                startTimeStr = startTimeStr.substring(0, startTimeStr.indexOf('.'));
+            }
+            if (endTimeStr.contains(".")) {
+                endTimeStr = endTimeStr.substring(0, endTimeStr.indexOf('.'));
+            }
+
+            java.util.Date start = iso8601Format.parse(startTimeStr);
+            java.util.Date end = iso8601Format.parse(endTimeStr);
+
+            if (start != null && end != null) {
+                long durationMillis = end.getTime() - start.getTime();
+                return (int) (durationMillis / 60000);
+            }
+        } catch (Exception ignored) {
+        }
+
+        return 0;
+    }
+
+    private void updateWorkingHours(int workMinutes) {
         tvWorkActive.setText(formatMinutes(workMinutes));
         tvWorkLimit.setText(String.format(Locale.getDefault(), "%s / %s",
                 formatMinutes(workMinutes),
                 formatMinutes(workLimitMinutes)));
 
-        int percent = (int) Math.round((workMinutes * 100.0) / workLimitMinutes);
+        int percent = (int) Math.round(workMinutes * 100.0 / workLimitMinutes);
         percent = Math.max(0, Math.min(100, percent));
         pbWork.setProgress(percent);
     }
@@ -164,6 +310,74 @@ public class DriverDashboardFragment extends Fragment {
         }
     }
 
+    private void loadStatus(){
+        String token = bearer();
+        if (token == null) return;
+
+        int driverId = prefs.getInt("userId", -1);
+        if (driverId == -1) return;
+        driversApi.getStatus(token, driverId).enqueue(new Callback<Boolean>() {
+            @Override
+            public void onResponse(@NonNull Call<Boolean> call, @NonNull Response<Boolean> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    isOnline = response.body();
+                    updateStatusUI(isOnline);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Boolean> call, @NonNull Throwable t) {
+                Toast.makeText(requireContext(), "Failed to get status", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void toggleDriverStatus() {
+        String token = bearer();
+        if (token == null) return;
+
+        int driverId = prefs.getInt("userId", -1);
+        if (driverId == -1) return;
+
+        btnChangeStatus.setEnabled(false);
+        btnChangeStatus.setAlpha(0.6f);
+
+        driversApi.updateStatus(token, driverId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                btnChangeStatus.setEnabled(true);
+                btnChangeStatus.setAlpha(1f);
+
+                if (response.isSuccessful()) {
+                    isOnline = !isOnline;
+                    updateStatusUI(isOnline);
+                    Toast.makeText(requireContext(), "Status updated", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "Failed to update status", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                btnChangeStatus.setEnabled(true);
+                btnChangeStatus.setAlpha(1f);
+                Toast.makeText(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void updateStatusUI(boolean isOnline) {
+        if (isOnline) {
+            statusDot.setBackgroundResource(R.drawable.bg_dot_green);
+            statusText.setText("Active");
+            btnChangeStatus.setText("Go offline");
+            btnChangeStatus.setBackgroundResource(R.drawable.bg_btn_dark);
+        } else {
+            statusDot.setBackgroundResource(R.drawable.bg_dot_red);
+            statusText.setText("Offline");
+            btnChangeStatus.setText("Go online");
+            btnChangeStatus.setBackgroundResource(R.drawable.bg_dot_green);
+        }
+    }
+
     private void renderCurrentRide(@Nullable DriverRideDto r) {
         if (!isAdded()) return;
         if (waypointAdapter == null || passengerAdapter == null) return;
@@ -178,7 +392,9 @@ public class DriverDashboardFragment extends Fragment {
             passengerAdapter.setItems(new ArrayList<>());
             tvCurrentStatus.setVisibility(View.GONE);
             tvCurrentRoute.setVisibility(View.GONE);
-
+            if (tvWaypointsLabel != null) tvWaypointsLabel.setVisibility(View.GONE);
+            if (cardWaypoints != null) cardWaypoints.setVisibility(View.GONE);
+            if (tvCurrentRideEta != null) tvCurrentRideEta.setVisibility(View.GONE);
             lastMapVehicleId = null;
 
             if (getChildFragmentManager().findFragmentById(R.id.mapContainer) != null) {
@@ -203,17 +419,30 @@ public class DriverDashboardFragment extends Fragment {
 
         tvCurrentStatus.setVisibility(View.VISIBLE);
         tvCurrentRoute.setVisibility(View.VISIBLE);
-
+        if (Boolean.TRUE.equals(r.getPanicTriggered())){
+            btnPanic.setText("Panic Sent");
+            btnPanic.setEnabled(false);
+            btnPanic.setAlpha(0.6f);
+        }
+        else {
+            btnPanic.setText("Panic");
+            btnPanic.setEnabled(true);
+            btnPanic.setAlpha(1f);
+        }
         if ("IN_PROGRESS".equals(r.status)) {
             startArrivalWatch(r);
             startEtaPolling(r.id);
             tvCurrentStatus.setText("Started");
             tvCurrentStatus.setBackgroundResource(R.drawable.bg_started);
+            btnPanic.setVisibility(View.VISIBLE);
+            btnStopRide.setVisibility(View.VISIBLE);
             setBtnWaiting();
         } else if ("ACCEPTED".equals(r.status)) {
             stopArrivalWatch();
             tvCurrentStatus.setText("Accepted");
             tvCurrentStatus.setBackgroundResource(R.drawable.bg_assigned);
+            btnPanic.setVisibility(View.INVISIBLE);
+            btnStopRide.setVisibility(View.INVISIBLE);
             setBtnStartIdle();
         } else {
             stopEtaPolling();
@@ -223,6 +452,8 @@ public class DriverDashboardFragment extends Fragment {
             setBtnStartIdle();
             btnStartRide.setEnabled(false);
             btnStartRide.setAlpha(0.6f);
+            btnPanic.setVisibility(View.INVISIBLE);
+            btnStopRide.setVisibility(View.INVISIBLE);
         }
 
         String from = (r.startLocation != null) ? safe(r.startLocation.getAddress()) : "";
@@ -434,7 +665,215 @@ public class DriverDashboardFragment extends Fragment {
                 }
             }
         }
+        btnPanic.setOnClickListener(view -> {
 
+            btnPanic.setEnabled(false);
+            btnPanic.setAlpha(0.6f);
+            btnPanic.setText("Sending...");
+            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Panic")
+                    .setMessage("Are you sure you want to trigger panic for this ride?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        String token = prefs.getString("jwt", null);
+                        if (token == null || token.isEmpty()) {
+                            btnPanic.setEnabled(true);
+                            btnPanic.setAlpha(1f);
+                            btnPanic.setText("Panic");
+                            return;
+                        }
+                        int userId = prefs.getInt("userId", -1);
+                        if (userId == -1) {
+                            btnPanic.setEnabled(true);
+                            btnPanic.setAlpha(1f);
+                            btnPanic.setText("Panic");
+                            return;
+                        }
+                        btnPanic.setEnabled(false);
+                        btnPanic.setAlpha(0.6f);
+                        RidePanicDto panicDto = new RidePanicDto(userId);
+                        ridesApi.panic("Bearer " + token, r.id, panicDto)
+                                .enqueue(new retrofit2.Callback<Void>() {
+                                    @Override
+                                    public void onResponse(@NonNull retrofit2.Call<Void> call, @NonNull retrofit2.Response<Void> response) {
+                                        if (!isAdded()) return;
+                                        btnPanic.setEnabled(true);
+                                        btnPanic.setAlpha(1f);
+
+                                        if (response.isSuccessful()) {
+                                            android.widget.Toast.makeText(requireContext(),
+                                                            "Panic sent to dispatcher.",
+                                                            android.widget.Toast.LENGTH_LONG).show();
+                                            btnPanic.setText("Panic Sent");
+                                            btnPanic.setEnabled(false);
+                                            btnPanic.setAlpha(0.6f);
+                                            if (ridesService != null) ridesService.fetchRides();
+                                        } else {
+                                            btnPanic.setEnabled(true);
+                                            btnPanic.setAlpha(1f);
+                                            btnPanic.setText("Panic");
+                                            android.widget.Toast.makeText(requireContext(),
+                                                            "Failed to send panic. Try again.",
+                                                            android.widget.Toast.LENGTH_LONG).show();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(@NonNull retrofit2.Call<Void> call, @NonNull Throwable t) {
+                                        if (!isAdded()) return;
+                                        btnPanic.setEnabled(true);
+                                        btnPanic.setAlpha(1f);
+                                        btnPanic.setText("Panic");
+
+                                        android.widget.Toast.makeText(requireContext(),
+                                                        "Network error. Panic not sent.",
+                                                        android.widget.Toast.LENGTH_LONG) .show();
+                                    }
+                                });
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        btnPanic.setEnabled(true);
+                        btnPanic.setAlpha(1f);
+                        btnPanic.setText("Panic");
+                    })
+                    .setOnCancelListener(dialog -> {
+                        btnPanic.setEnabled(true);
+                        btnPanic.setAlpha(1f);
+                        btnPanic.setText("Panic");
+                    })
+                    .show();
+        });
+        btnStopRide.setOnClickListener(view -> {
+            btnStopRide.setEnabled(false);
+            btnStopRide.setAlpha(0.6f);
+            btnStopRide.setText("Stopping...");
+
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Stop Ride")
+                    .setMessage("Are you sure you want to stop the ride here?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        String token = prefs.getString("jwt", null);
+                        if (token == null || token.isEmpty()) {
+                            btnStopRide.setEnabled(true);
+                            btnStopRide.setAlpha(1f);
+                            btnStopRide.setText("Stop ride here");
+                            return;
+                        }
+
+                        int userId = prefs.getInt("userId", -1);
+                        if (userId == -1) {
+                            btnStopRide.setEnabled(true);
+                            btnStopRide.setAlpha(1f);
+                            btnStopRide.setText("Stop ride here");
+                            return;
+                        }
+
+                        btnStopRide.setEnabled(false);
+                        btnStopRide.setAlpha(0.6f);
+
+                        LocationDto locationDto = new LocationDto();
+                        Fragment mf = getChildFragmentManager().findFragmentById(R.id.mapContainer);
+                        if (mf instanceof MapFragment) {
+                            double[] pos = ((MapFragment) mf).getLastOnlyVehicleLatLon();
+                            if (pos != null) {
+                                locationDto.setLatitude(pos[0]);
+                                locationDto.setLongitude(pos[1]);
+                                OkHttpClient client = new OkHttpClient.Builder()
+                                        .addInterceptor(chain -> {
+                                            Request original = chain.request();
+                                            Request request = original.newBuilder()
+                                                    .header("User-Agent", "UberPlusAndroid")
+                                                    .build();
+                                            return chain.proceed(request);
+                                        })
+                                        .connectTimeout(10, TimeUnit.SECONDS)
+                                        .readTimeout(10, TimeUnit.SECONDS)
+                                        .build();
+
+                                Retrofit retrofit = new Retrofit.Builder()
+                                        .baseUrl("https://nominatim.openstreetmap.org/")
+                                        .client(client)
+                                        .addConverterFactory(GsonConverterFactory.create())
+                                        .build();
+                                GeocodingApi geocodeApi = retrofit.create(GeocodingApi.class);
+                                geocodeApi.reverseGeocode(pos[0],pos[1]).enqueue(new Callback<GeocodeResult>() {
+                                    @Override
+                                    public void onResponse(Call<GeocodeResult> call, Response<GeocodeResult> response) {
+                                        if (response.isSuccessful() && response.body() != null) {
+                                            response.body().formatAddress();
+                                            locationDto.setAddress(response.body().getFormattedResult());
+                                        } else {
+                                            locationDto.setAddress("Unknown address");
+                                        }
+                                        ridesApi.stopEarly("Bearer " + token, r.id, locationDto)
+                                                .enqueue(new Callback<RideDto>() {
+                                                    @Override
+                                                    public void onResponse(@NonNull Call<RideDto> call,
+                                                                           @NonNull Response<RideDto> response) {
+                                                        if (!isAdded()) return;
+
+                                                        btnStopRide.setEnabled(true);
+                                                        btnStopRide.setAlpha(1f);
+
+                                                        if (response.isSuccessful()) {
+                                                            Toast.makeText(requireContext(),
+                                                                    "Ride stopped successfully.",
+                                                                    Toast.LENGTH_LONG).show();
+                                                            btnStopRide.setText("Ride Stopped");
+                                                            btnStopRide.setEnabled(false);
+                                                            btnStopRide.setAlpha(0.6f);
+                                                            if (sim != null) {
+                                                                sim.stop();
+                                                            }
+                                                            stopArrivalWatch();
+                                                            stopEtaPolling();
+                                                            if (ridesService != null) {
+                                                                ridesService.fetchRides();
+                                                            }
+                                                        } else {
+                                                            btnStopRide.setEnabled(true);
+                                                            btnStopRide.setAlpha(1f);
+                                                            btnStopRide.setText("Stop ride here");
+                                                            Toast.makeText(requireContext(),
+                                                                    "Failed to stop ride. Try again.",
+                                                                    Toast.LENGTH_LONG).show();
+                                                        }
+                                                    }
+
+                                                    @Override
+                                                    public void onFailure(@NonNull Call<RideDto> call,
+                                                                          @NonNull Throwable t) {
+                                                        if (!isAdded()) return;
+
+                                                        btnStopRide.setEnabled(true);
+                                                        btnStopRide.setAlpha(1f);
+                                                        btnStopRide.setText("Stop ride here");
+                                                        Toast.makeText(requireContext(),
+                                                                "Network error. Ride not stopped.",
+                                                                Toast.LENGTH_LONG).show();
+                                                    }
+                                                });
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<GeocodeResult> call, Throwable t) {
+
+                                    }
+                                });
+                            }
+                        }
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        btnStopRide.setEnabled(true);
+                        btnStopRide.setAlpha(1f);
+                        btnStopRide.setText("Stop ride here");
+                    })
+                    .setOnCancelListener(dialog -> {
+                        btnStopRide.setEnabled(true);
+                        btnStopRide.setAlpha(1f);
+                        btnStopRide.setText("Stop ride here");
+                    })
+                    .show();
+        });
     }
 
     private void renderBookedRides(@Nullable List<DriverRideDto> list) {
@@ -457,7 +896,7 @@ public class DriverDashboardFragment extends Fragment {
                 if (r.vehicleType != null) {
                     if ("VAN".equals(r.vehicleType)) reqs.add(DriverDashboardAdapter.Requirement.VAN);
                     else if ("STANDARD".equals(r.vehicleType)) reqs.add(DriverDashboardAdapter.Requirement.SEDAN);
-                    else reqs.add(DriverDashboardAdapter.Requirement.SUV);
+                    else reqs.add(DriverDashboardAdapter.Requirement.LUXURY);
                 }
 
                 if (r.babyFriendly) reqs.add(DriverDashboardAdapter.Requirement.BABY);
@@ -468,6 +907,7 @@ public class DriverDashboardFragment extends Fragment {
                 else if ("ACCEPTED".equals(r.status)) st = DriverDashboardAdapter.RideStatus.ASSIGNED;
 
                 mapped.add(new DriverDashboardAdapter.BookedRide(
+                        r.id,
                         date, time,
                         from, to,
                         passengerCount,
@@ -476,10 +916,81 @@ public class DriverDashboardFragment extends Fragment {
                 ));
             }
         }
-
+        bookedAdapter.setOnCancelClickListener(rideId -> {
+            cancelRide(rideId);
+        });
         bookedAdapter.setItems(mapped);
     }
+    private void cancelRide(int rideId) {
+        String token = prefs.getString("jwt", null);
+        if (token == null || token.isEmpty()) {
+            android.widget.Toast.makeText(requireContext(),
+                    "Authentication required",
+                    android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+        int userId = prefs.getInt("userId", -1);
+        if (userId == -1) {
+            android.widget.Toast.makeText(requireContext(),
+                    "User not found",
+                    android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final android.widget.EditText input = new android.widget.EditText(requireContext());
+        input.setHint("Enter cancellation reason");
+        input.setMinLines(3);
+        input.setMaxLines(5);
+        input.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
+        input.setPadding(50, 40, 50, 40);
 
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Cancel Ride")
+                .setMessage("Please provide a reason for cancelling this ride:")
+                .setView(input)
+                .setPositiveButton("Cancel Ride", (dialog, which) -> {
+                    String reason = input.getText().toString().trim();
+
+                    if (reason.isEmpty()) {
+                        android.widget.Toast.makeText(requireContext(),
+                                "Please provide a cancellation reason",
+                                android.widget.Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    RideCancellationDto dto = new RideCancellationDto(userId, reason);
+        ridesApi.cancelRide("Bearer " + token, rideId, dto).enqueue(new Callback<RideDto>() {
+            @Override
+            public void onResponse(@NonNull Call<RideDto> call,
+                                   @NonNull Response<RideDto> response) {
+                if (!isAdded()) return;
+
+                if (response.isSuccessful()) {
+                    android.widget.Toast.makeText(requireContext(),
+                            "Ride cancelled successfully",
+                            android.widget.Toast.LENGTH_LONG).show();
+
+                    if (ridesService != null) {
+                        ridesService.fetchRides();
+                    }
+                } else {
+                    android.widget.Toast.makeText(requireContext(),
+                            "Failed to cancel ride",
+                            android.widget.Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<RideDto> call,
+                                  @NonNull Throwable t) {
+                if (!isAdded()) return;
+
+                android.widget.Toast.makeText(requireContext(),
+                        "Network error. Please try again.",
+                        android.widget.Toast.LENGTH_LONG).show();
+            }
+        });
+    })          .setNegativeButton("Keep Ride", null)
+                .show();
+    }
     private String safe(String s) {
         return s == null ? "" : s;
     }
@@ -839,5 +1350,11 @@ public class DriverDashboardFragment extends Fragment {
         stopEtaPolling();
         stopArrivalWatch();
         super.onDestroyView();
+    }
+    @Nullable
+    private String bearer() {
+        String token = prefs.getString("jwt", null);
+        if (token == null || token.trim().isEmpty()) return null;
+        return "Bearer " + token;
     }
 }

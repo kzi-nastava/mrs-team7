@@ -3,10 +3,12 @@ package com.uberplus.backend.controller;
 import com.uberplus.backend.dto.common.MessageDTO;
 import com.uberplus.backend.dto.pricing.PriceEstimateResponseDTO;
 import com.uberplus.backend.dto.ride.*;
+import com.uberplus.backend.model.enums.RideStatus;
 import com.uberplus.backend.service.PricingService;
 import com.uberplus.backend.service.RideService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -83,6 +86,14 @@ public class RideController {
     ) {
         return ResponseEntity.ok(rideHistoryService.getDriverHistory(driverId, filter));
     }
+    @GetMapping("/history/passenger")
+    @PreAuthorize("hasRole('PASSENGER')")
+    public ResponseEntity<RideHistoryResponseDTO> getPassengerRideHistory(
+            @RequestParam Integer userId,
+            @Valid RideHistoryFilterDTO filter
+    ) {
+        return ResponseEntity.ok(rideHistoryService.getPassengerHistory(userId, filter));
+    }
 
     // POST /api/rides/{rideId}/cancel
     @PostMapping("/{rideId}/cancel")
@@ -100,7 +111,7 @@ public class RideController {
 
     // PUT /api/rides/{rideId}/complete
     @PutMapping("/{rideId}/complete")
-    @PreAuthorize("hasRole('DRIVER')")
+    @PreAuthorize("hasRole('DRIVER') && !hasRole('ADMIN')")
     public ResponseEntity<RideDTO> completeRide(
             Authentication auth,
             @PathVariable Integer rideId
@@ -120,6 +131,9 @@ public class RideController {
     @PostMapping("/{rideId}/stop-early")
     public ResponseEntity<RideDTO> stopEarly(@PathVariable Integer rideId, @RequestBody LocationDTO request) {
         RideDTO stopped = rideService.stopEarly(rideId,request);
+        if (stopped.getStatus().equals(RideStatus.ERROR)){
+            return ResponseEntity.badRequest().body(stopped);
+        }
         return ResponseEntity.ok(stopped);
     }
 
@@ -155,5 +169,22 @@ public class RideController {
     ) {
         rideService.reportInconsistency(rideId, auth.getName(), request.getDescription());
         return ResponseEntity.ok(new MessageDTO());
+    }
+
+    // GET /api/rides/history-report?from={yyyy-mm-dd}&to={yyyy-mm-dd}&uuid={uuid}
+    @GetMapping("/history-report")
+    public ResponseEntity<HistoryReportDTO> getHistoryReport(
+            Authentication auth,
+            @RequestParam("from")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate from,
+            @RequestParam("to")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate to,
+            @RequestParam(value = "uuid", required = false)
+            Integer uuid
+    ) {
+        HistoryReportDTO dto = rideHistoryService.getRideHistoryReport(auth.getName(), from, to, uuid);
+        return ResponseEntity.ok(dto);
     }
 }

@@ -6,10 +6,7 @@ import com.uberplus.backend.model.*;
 import com.uberplus.backend.model.enums.RideStatus;
 import com.uberplus.backend.model.enums.VehicleStatus;
 import com.uberplus.backend.repository.*;
-import com.uberplus.backend.service.EmailService;
-import com.uberplus.backend.service.OSRMService;
-import com.uberplus.backend.service.PricingService;
-import com.uberplus.backend.service.RideService;
+import com.uberplus.backend.service.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,15 +32,28 @@ public class RideServiceImpl implements RideService {
     private RideInconsistencyRepository rideInconsistencyRepository;
     private final EmailService emailService;
     private PricingService pricingService;
+    private NotificationService notificationService;
 
     @Override
     @Transactional
     public RideDTO requestRide(String email, CreateRideRequestDTO request) {
+        if (request.getLinkedPassengerEmails() == null) {
+            request.setLinkedPassengerEmails(new ArrayList<>());
+        }
+
+        if(request.getWaypoints() == null) {
+            request.setWaypoints(new ArrayList<>());
+        }
+
         Passenger creator = (Passenger) userRepository.findByEmail(email).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")
         );
 
-        List<Driver> potentialDrivers = driverRepository.findByActiveTrue();
+        if (creator.isBlocked()) {
+            throw new ResponseStatusException(HttpStatus.LOCKED, creator.getBlockReason());
+        }
+
+        List<Driver> potentialDrivers = driverRepository.findByActiveTrueAndBlockedFalse();
 
         if (potentialDrivers.isEmpty()) throw new ResponseStatusException(HttpStatus.OK, "No drivers currently active.");
 
@@ -62,7 +73,7 @@ public class RideServiceImpl implements RideService {
         potentialDrivers =  potentialDrivers.stream().filter(driver -> {
             List<Ride> rides = driver.getRides();
             for(Ride ride : rides) {
-                if ((ride.getEstimatedStartTime().isBefore(scheduledEnd) && // TODO: Proveri
+                if ((ride.getEstimatedStartTime().isBefore(scheduledEnd) &&
                         ride.getEstimatedEndTime().isAfter(request.getScheduledTime()))) {
                     return false;
                 }
@@ -143,15 +154,18 @@ public class RideServiceImpl implements RideService {
         // Estimate arrival time
         Ride lastRide = getLastRideBefore(request.getScheduledTime(), selectedDriver);
         Location loc;
+        LocalDateTime vehicleStartTime; // Time at which vehicle starts moving to pickup
         if (lastRide != null) {
             loc = lastRide.getEndLocation();
+            vehicleStartTime = lastRide.getEstimatedEndTime();
         } else {
             loc = selectedDriver.getVehicle().getCurrentLocation();
+            vehicleStartTime = LocalDateTime.now();
         }
 
         LocalDateTime estArrival;
         try {
-            estArrival = LocalDateTime.now()
+            estArrival = vehicleStartTime
                     .plusSeconds((long) osrmService.getDuration(loc, requestStart));
         } catch (IOException | InterruptedException e) {
             // If error, assume ride will be on time
@@ -198,7 +212,7 @@ public class RideServiceImpl implements RideService {
         ride.setScheduledTime(request.getScheduledTime());
         ride.setCreatedAt(LocalDateTime.now());
         rideRepository.save(ride);
-
+        notificationService.notifyRideAccepted(ride);
         return new RideDTO(ride);
     }
 
@@ -409,8 +423,7 @@ public class RideServiceImpl implements RideService {
 
         rideRepository.save(ride);
         driverRepository.save(driver);
-        emailService.sendRideEndingEmail(ride);
-
+        notificationService.notifyRideCompleted(ride);
         return new RideDTO(ride);
     }
 
@@ -544,18 +557,27 @@ public class RideServiceImpl implements RideService {
         Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ride not found."));
 
+        double totalDistance = 0;
         Location endLocation = new Location();
         endLocation.setLongitude(dto.getLongitude());
         endLocation.setLatitude(dto.getLatitude());
         endLocation.setAddress(dto.getAddress());
-
+        try {
+            totalDistance = endLocation.distanceTo(ride.getStartLocation());
+        } catch (Exception e) {
+            ride.setStatus(RideStatus.ERROR);
+            return new RideDTO(ride);
+        }
+        if (endLocation.getAddress() == null){
+            ride.setStatus(RideStatus.ERROR);
+            return new RideDTO(ride);
+        }
+        double actualPrice = pricingService.calculatePrice((int)(totalDistance/1000),ride.getVehicleType());
         ride.setStoppedAt(LocalDateTime.now());
         ride.setActualEndTime(LocalDateTime.now());
         ride.setEndLocation(endLocation);
         ride.setStoppedLocation(endLocation);
         ride.setStatus(RideStatus.STOPPED);
-        double totalDistance = endLocation.distanceTo(ride.getStartLocation());
-        double actualPrice = pricingService.calculatePrice((int)(totalDistance/1000),ride.getVehicleType());
         ride.setTotalPrice(actualPrice);
 
         Driver driver = ride.getDriver();

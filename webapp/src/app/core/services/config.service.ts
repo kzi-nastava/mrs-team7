@@ -25,11 +25,28 @@ export class ConfigService {
   public getPanicsUrl = this.baseUrl + '/admin/panic-notifications';
 
   public favouriteRoutesUrl = this.baseUrl + '/favorite-routes'
-  
+
+  public historyReportUrl = this.ridesUrl + '/history-report';
+
+  searchUsersUrl(searchString:string, pageSize:number, pageNumber:number) : string {
+    return `${this.baseUrl}/users?search=${searchString}&pageSize=${pageSize}&pageNumber=${pageNumber}`;
+  }
+
+  blockUserUrl(userId:number) {
+    return `${this.baseUrl}/users/block?uuid=${userId}`
+  }
+
+  unblockUserUrl(userId:number) {
+    return `${this.baseUrl}/users/unblock?uuid=${userId}`
+  }
+
   startRideUrl(rideId: number): string {
       return this.ridesUrl + '/' + rideId.toString() + '/start';
   }
   completeRideUrl(rideId: number): string {
     return `${this.baseUrl}/rides/${rideId}/complete`;
   }
+
+  readonly chatUrl = `${this.baseUrl}/chat`;
+  readonly notificationUrl = `${this.baseUrl}/notifications`;
 }

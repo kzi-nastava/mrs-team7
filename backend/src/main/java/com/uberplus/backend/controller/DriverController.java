@@ -1,5 +1,6 @@
 package com.uberplus.backend.controller;
 
+import com.uberplus.backend.dto.common.MessageDTO;
 import com.uberplus.backend.dto.driver.*;
 import com.uberplus.backend.dto.ride.RideDetailDTO;
 import com.uberplus.backend.dto.user.UserUpdateRequestDTO;
@@ -142,17 +143,24 @@ public class DriverController {
         return new ResponseEntity<>(avatar, headers, HttpStatus.OK);
     }
 
-    // PUT /api/drivers/{driverId}/status
-    @PutMapping("/{driverId}/status")
-    public ResponseEntity<DriverDTO> updateStatus(@PathVariable Integer driverId, @Valid @RequestBody DriverStatusUpdateDTO request) {
-        return ResponseEntity.ok(new DriverDTO());
+    // POST /api/drivers/{driverId}/status
+    @PostMapping("/{driverId}/status")
+    public ResponseEntity<Void> updateStatus(@PathVariable Integer driverId) {
+        driverService.changeStatus(driverId);
+        return ResponseEntity.noContent().build();
+    }
+    // GET /api/drivers/{driverId}/status
+    @GetMapping("/{driverId}/status")
+    public ResponseEntity<Boolean> getStatus(@PathVariable Integer driverId) {
+        boolean status = driverService.getStatus(driverId);
+        return ResponseEntity.ok(status);
     }
 
     // GET /api/drivers/rides/{rideId}/details
     @GetMapping("/rides/{rideId}/details")
-    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<RideDetailDTO> getRideDetails(@PathVariable Integer rideId) {
         RideDetailDTO details = rideHistoryService.getRideDetails(rideId);
         return ResponseEntity.ok(details);
     }
+
 }

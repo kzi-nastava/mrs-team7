@@ -17,9 +17,12 @@ import java.util.List;
 public class DriverDashboardAdapter extends RecyclerView.Adapter<DriverDashboardAdapter.BookedRideVH> {
 
     public enum RideStatus { SCHEDULED, ASSIGNED, STARTED }
-    public enum Requirement { SEDAN, SUV, BABY, PETS, VAN }
-
+    public enum Requirement { SEDAN, LUXURY, BABY, PETS, VAN }
+    public interface OnCancelClickListener {
+        void onCancelClick(int rideId);
+    }
     public static final class BookedRide {
+        public final int rideId;
         public final String date;
         public final String time;
         public final String from;
@@ -28,8 +31,9 @@ public class DriverDashboardAdapter extends RecyclerView.Adapter<DriverDashboard
         public final List<Requirement> requirements;
         public final RideStatus status;
 
-        public BookedRide(String date, String time, String from, String to, int passengers,
+        public BookedRide(int rideId, String date, String time, String from, String to, int passengers,
                           List<Requirement> requirements, RideStatus status) {
+            this.rideId = rideId;
             this.date = date;
             this.time = time;
             this.from = from;
@@ -41,11 +45,14 @@ public class DriverDashboardAdapter extends RecyclerView.Adapter<DriverDashboard
     }
 
     private final List<BookedRide> items;
+    private OnCancelClickListener cancelListener;
 
     public DriverDashboardAdapter(@NonNull List<BookedRide> items) {
         this.items = new ArrayList<>(items);
     }
-
+    public void setOnCancelClickListener(OnCancelClickListener listener) {
+        this.cancelListener = listener;
+    }
     public void setItems(@NonNull List<BookedRide> newItems) {
         items.clear();
         items.addAll(newItems);
@@ -85,6 +92,11 @@ public class DriverDashboardAdapter extends RecyclerView.Adapter<DriverDashboard
 
             h.reqContainer.addView(pill);
         }
+        h.btnCancelRide.setOnClickListener(v -> {
+            if (cancelListener != null) {
+                cancelListener.onCancelClick(r.rideId);
+            }
+        });
     }
 
     @Override
@@ -107,7 +119,7 @@ public class DriverDashboardAdapter extends RecyclerView.Adapter<DriverDashboard
     private static String reqIcon(Requirement r) {
         switch (r) {
             case BABY: return "🍼";
-            case SUV: return "🧭";
+            case LUXURY: return "🧭";
             case PETS: return "🐾";
             case VAN: return "🚐";
             default: return "🚘";
@@ -117,7 +129,7 @@ public class DriverDashboardAdapter extends RecyclerView.Adapter<DriverDashboard
     private static int reqBg(Requirement r) {
         switch (r) {
             case BABY: return R.drawable.bg_req_baby;
-            case SUV: return R.drawable.bg_req_suv;
+            case LUXURY: return R.drawable.bg_req_suv;
             case PETS: return R.drawable.bg_req_pets;
             case VAN: return R.drawable.bg_req_van;
             default: return R.drawable.bg_req_sedan;
@@ -131,6 +143,7 @@ public class DriverDashboardAdapter extends RecyclerView.Adapter<DriverDashboard
         final TextView tvPassengers;
         final TextView pillStatus;
         final ViewGroup reqContainer;
+        final TextView btnCancelRide;
 
         public BookedRideVH(@NonNull View itemView) {
             super(itemView);
@@ -140,6 +153,7 @@ public class DriverDashboardAdapter extends RecyclerView.Adapter<DriverDashboard
             tvPassengers = itemView.findViewById(R.id.tvBookedPassengers);
             pillStatus = itemView.findViewById(R.id.pillBookedStatus);
             reqContainer = itemView.findViewById(R.id.requirementsContainer);
+            btnCancelRide = itemView.findViewById(R.id.btnCancelRide);
         }
     }
 }

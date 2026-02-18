@@ -13,7 +13,7 @@ import { MapComponent } from '../../../../shared/map/map';
 
 import { DriverRidesService } from '../../../services/driver-rides.service';
 import { RideDTO, RideStatus } from '../../../../shared/models/ride';
-import { UserService } from '../../../../../core/services/user.service';
+import { CurrentUserService } from '../../../../../core/services/current-user.service';
 import { Driver } from '../../../../shared/models/driver';
 import { CurrentRideStateService } from '../../../../registered/services/current-ride-state.service';
 
@@ -29,6 +29,7 @@ import { BookedRidesComponent } from "../../booked-rides/booked-rides";
 import { LocationDTO } from '../../../../shared/models/location';
 import { SuccessAlert } from '../../../../shared/components/success-alert';
 import { NominatimService } from '../../../../shared/services/nominatim.service';
+import {DriverService} from '../../../../shared/services/driver.service';
 
 type Passenger = { name: string; email: string };
 
@@ -42,14 +43,17 @@ export class DriverDashboard implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
 
   private workMinutes = signal<number>(24);
+  public status = signal<boolean>(true);
   private readonly workLimitMinutes = 8 * 60;
+  driverId: number | null = null;
 
   protected simulationCompleted = signal<boolean>(false);
   protected currentETA = signal<RideETADTO | null>(null);
   protected ridePhase = signal<'TO_PICKUP' | 'IN_PROGRESS' | 'IDLE'>('IDLE');
 
+  driverService = inject(DriverService);
   ridesService = inject(DriverRidesService);
-  userService = inject(UserService);
+  userService = inject(CurrentUserService);
   rideState = inject(CurrentRideStateService);
   rideApi = inject(RideApiService);
   nominatim = inject(NominatimService);
@@ -180,10 +184,13 @@ export class DriverDashboard implements OnInit, OnDestroy {
     this.userService.currentUser$.subscribe(current => {
       if (current) {
         this.workMinutes.set((current as Driver).workedMinutesLast24h);
+        this.status.set((current as Driver).active);
+        this.driverId = current.id;
       }
     });
     // ucita podatke o vozacu
     this.userService.fetchMe().subscribe();
+    this.loadDriverStatus();
 
     // osluskuj kad vozilo stane na pickup
     this.subs.push(
@@ -431,6 +438,28 @@ export class DriverDashboard implements OnInit, OnDestroy {
           });
         }
       });
-}
-}
+  }
+ }
+  loadDriverStatus() {
+    if (!this.driverId) return;
+
+    this.driverService.getStatus(this.driverId).subscribe({
+      next: (status) => {
+        this.status.set(status);
+      }
+    });
+  }
+  toggleOnlineStatus() {
+    const newStatus = !this.status();
+
+    this.driverService.setStatus(this.driverId).subscribe({
+      next: () => {
+        this.status.set(newStatus);
+      },
+      error: (err) => {
+        console.error('Failed to update status', err);
+      }
+    });
+    this.cdr.detectChanges();
+  }
 }

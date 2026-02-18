@@ -5,7 +5,7 @@ import { ProfileInfoCard } from "../../shared/components/profile-info-card";
 import { ChangePasswordModal } from "../../shared/components/profile-change-pswd-modal";
 import { User } from '../../../core/models/user';
 import { Subscription, tap } from 'rxjs';
-import { UserService } from '../../../core/services/user.service';
+import { CurrentUserService } from '../../../core/services/current-user.service';
 import { error, log } from 'console';
 import { SuccessAlert } from "../../shared/components/success-alert";
 
@@ -21,6 +21,12 @@ import { SuccessAlert } from "../../shared/components/success-alert";
           <!-- Main Content -->
           <main class="flex flex-1 p-8">
             <div class="flex flex-col gap-6 w-full">
+              @if (user.blocked) {
+              <div class="border-[1.5px] bg-red-50 border-red-200 rounded-3xl shadow-lg p-8 flex flex-col gap-6">
+                <h3 class="text-[22px] font-normal font-poppins text-red-500 leading-8.25"> Your account has been blocked. </h3>
+                <div class="text-[20px] text-red-400"> {{user.blockReason}} </div>
+              </div>
+             }
 
               <!-- Info Card -->
               <profile-info-card
@@ -54,7 +60,9 @@ export class RegisteredProfileComponent {
     address: '',
     phoneNumber: '',
     role: 'PASSENGER',
-    profilePicture: 'defaultprofile.png'
+    profilePicture: 'defaultprofile.png',
+    blocked: false,
+    blockReason: ''
   };
 
   private sub?: Subscription;
@@ -63,7 +71,7 @@ export class RegisteredProfileComponent {
   successTitle: string = "Success";
   successMessage: string = "Profile successfully updated!";
 
-  constructor(private userService: UserService, private cdr: ChangeDetectorRef) {}
+  constructor(private userService: CurrentUserService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.sub = this.userService.currentUser$.subscribe(current => {

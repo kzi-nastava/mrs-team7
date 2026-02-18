@@ -23,6 +23,7 @@ import com.example.mobileapp.R;
 import com.example.mobileapp.features.shared.api.dto.LocationDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerRideDto;
+import com.example.mobileapp.features.shared.api.dto.RidePanicDto;
 import com.example.mobileapp.features.shared.map.MapFragment;
 import com.example.mobileapp.features.shared.models.PassengerItem;
 
@@ -45,6 +46,7 @@ public class CurrentRideFragment extends Fragment {
     private android.widget.TextView tvCharCount;
     private android.widget.TextView tvGuard;
     private android.widget.TextView btnSubmit;
+    private android.widget.TextView btnPanic;
     private android.widget.EditText etReportNote;
 
     private RecyclerView rvPassengers;
@@ -64,6 +66,13 @@ public class CurrentRideFragment extends Fragment {
     private com.example.mobileapp.features.shared.api.RidesApi ridesApi;
     private SharedPreferences prefs;
     private Integer watchingEtaRideId = null;
+
+    private boolean arrivedAtDestination = false;
+
+    private RecyclerView rvWaypoints;
+    private TextView tvWaypointsLabel;
+    private View cardWaypoints;
+    private WaypointAdapter waypointAdapter;
 
 
     public CurrentRideFragment() {}
@@ -88,6 +97,8 @@ public class CurrentRideFragment extends Fragment {
         setupPassengers();
         setupReport();
         setupMapChild();
+        setupWaypoints();
+        setupPanicButton();
 
         rideService = new PassengerCurrentRideService(requireContext());
         rideService.currentRide().observe(getViewLifecycleOwner(), this::renderRide);
@@ -113,8 +124,13 @@ public class CurrentRideFragment extends Fragment {
 
         rvPassengers = view.findViewById(R.id.rvPassengers);
         btnOpenRating = view.findViewById(R.id.btnOpenRating);
+        btnPanic = view.findViewById(R.id.btnPanic);
 
         tvEta = view.findViewById(R.id.tvEta);
+
+        rvWaypoints = view.findViewById(R.id.rvWaypoints);
+        tvWaypointsLabel = view.findViewById(R.id.tvWaypointsLabel);
+        cardWaypoints = view.findViewById(R.id.cardWaypoints);
     }
 
     private void setupPassengers() {
@@ -161,6 +177,7 @@ public class CurrentRideFragment extends Fragment {
             clearMapState();
             return;
         }
+        updatePanicButtonState(r);
 
         showRideContent();
 
@@ -190,6 +207,26 @@ public class CurrentRideFragment extends Fragment {
             }
         }
         setPassengers(items);
+
+        boolean hasWaypoints = r.waypoints != null && !r.waypoints.isEmpty();
+
+        if (tvWaypointsLabel != null) {
+            tvWaypointsLabel.setVisibility(hasWaypoints ? View.VISIBLE : View.GONE);
+        }
+        if (cardWaypoints != null) {
+            cardWaypoints.setVisibility(hasWaypoints ? View.VISIBLE : View.GONE);
+        }
+
+        if (!hasWaypoints) {
+            waypointAdapter.setItems(new ArrayList<>());
+        } else {
+            List<Waypoint> wp = new ArrayList<>();
+            for (LocationDto w : r.waypoints) {
+                if (w == null) continue;
+                wp.add(new Waypoint(safe(w.getAddress())));
+            }
+            waypointAdapter.setItems(wp);
+        }
 
         refreshActiveGuard(true);
 
@@ -252,10 +289,12 @@ public class CurrentRideFragment extends Fragment {
         }
 
         currentRideId = r.id;
+        arrivedAtDestination = false;
         startEtaPolling(r.id);
+
         if (btnOpenRating != null) {
-            btnOpenRating.setEnabled(true);
-            btnOpenRating.setAlpha(1f);
+            btnOpenRating.setEnabled(false);
+            btnOpenRating.setAlpha(0.6f);
         }
     }
 
@@ -272,12 +311,14 @@ public class CurrentRideFragment extends Fragment {
         if (noCurrentRideRoot != null) noCurrentRideRoot.setVisibility(View.VISIBLE);
         if (currentRideContentRoot != null) currentRideContentRoot.setVisibility(View.GONE);
         currentRideId = null;
+        arrivedAtDestination = false;
         if (btnOpenRating != null) {
             btnOpenRating.setEnabled(false);
             btnOpenRating.setAlpha(0.6f);
         }
         stopEtaPolling();
         refreshActiveGuard(false);
+        updatePanicButtonState(null);
     }
 
     private void showRideContent() {
@@ -441,8 +482,21 @@ public class CurrentRideFragment extends Fragment {
                         var eta = resp.body();
                         String label = "ETA: " + formatEta(eta.etaToNextPointSeconds);
 
-                        if ("TO_PICKUP".equals(eta.phase)) label = "ETA to pickup: " + formatEta(eta.etaToNextPointSeconds);
-                        else if ("IN_PROGRESS".equals(eta.phase)) label = "ETA to destination: " + formatEta(eta.etaToNextPointSeconds);
+                        if ("TO_PICKUP".equals(eta.phase)) {
+                            label = "ETA to pickup: " + formatEta(eta.etaToNextPointSeconds);
+                        } else if ("IN_PROGRESS".equals(eta.phase)) {
+                            label = "ETA to destination: " + formatEta(eta.etaToNextPointSeconds);
+
+                            // omoguci rating kada je blizu destinacije
+                            if (eta.etaToNextPointSeconds != null && eta.etaToNextPointSeconds <= 30 && !arrivedAtDestination) {
+                                arrivedAtDestination = true;
+                                if (btnOpenRating != null) {
+                                    btnOpenRating.setEnabled(true);
+                                    btnOpenRating.setAlpha(1f);
+                                    Toast.makeText(requireContext(), "You can now rate this ride!", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        }
 
                         tvEta.setText(label);
 
@@ -461,5 +515,163 @@ public class CurrentRideFragment extends Fragment {
         };
 
         etaH.post(etaRunnable);
+    }
+    private void updatePanicButtonState(@Nullable PassengerRideDto r) {
+        if (btnPanic == null) return;
+
+        if (r == null || r.id == null || Boolean.TRUE.equals(r.getPanicTriggered())) {
+            btnPanic.setText("Panic Sent");
+            btnPanic.setEnabled(false);
+            btnPanic.setAlpha(0.6f);
+        } else {
+            btnPanic.setText("Panic");
+            btnPanic.setEnabled(true);
+            btnPanic.setAlpha(1f);
+        }
+    }
+    private void setupPanicButton() {
+        if (btnPanic == null) return;
+
+        btnPanic.setOnClickListener(v -> triggerPanic());
+    }
+    private void triggerPanic() {
+        if (currentRideId == null) {
+            Toast.makeText(requireContext(), "No active ride.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!btnPanic.isEnabled()) return; // already panicked
+
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Panic")
+                .setMessage("Are you sure you want to trigger panic for this ride?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    btnPanic.setEnabled(false);
+                    btnPanic.setAlpha(0.6f);
+                    btnPanic.setText("Sending...");
+
+                    String token = prefs.getString("jwt", null);
+                    if (token == null || token.isEmpty()) {
+                        btnPanic.setEnabled(true);
+                        btnPanic.setAlpha(1f);
+                        btnPanic.setText("Panic");
+                        return;
+                    }
+
+                    int userId = prefs.getInt("userId", -1);
+                    if (userId == -1) {
+                        btnPanic.setEnabled(true);
+                        btnPanic.setAlpha(1f);
+                        btnPanic.setText("Panic");
+                        return;
+                    }
+
+                    RidePanicDto panicDto = new RidePanicDto(userId);
+
+                    ridesApi.panic("Bearer " + token, currentRideId, panicDto)
+                            .enqueue(new retrofit2.Callback<Void>() {
+                                @Override
+                                public void onResponse(@NonNull retrofit2.Call<Void> call,
+                                                       @NonNull retrofit2.Response<Void> response) {
+                                    if (!isAdded()) return;
+
+                                    if (response.isSuccessful()) {
+                                        Toast.makeText(requireContext(),
+                                                "Panic sent to dispatcher.",
+                                                Toast.LENGTH_LONG).show();
+                                        btnPanic.setText("Panic Sent");
+                                        btnPanic.setEnabled(false);
+                                        btnPanic.setAlpha(0.6f);
+                                    } else {
+                                        btnPanic.setEnabled(true);
+                                        btnPanic.setAlpha(1f);
+                                        btnPanic.setText("Panic");
+                                        Toast.makeText(requireContext(),
+                                                "Failed to send panic. Try again.",
+                                                Toast.LENGTH_LONG).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(@NonNull retrofit2.Call<Void> call,
+                                                      @NonNull Throwable t) {
+                                    if (!isAdded()) return;
+                                    btnPanic.setEnabled(true);
+                                    btnPanic.setAlpha(1f);
+                                    btnPanic.setText("Panic");
+                                    Toast.makeText(requireContext(),
+                                            "Network error. Panic not sent.",
+                                            Toast.LENGTH_LONG).show();
+                                }
+                            });
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    btnPanic.setEnabled(true);
+                    btnPanic.setAlpha(1f);
+                    btnPanic.setText("Panic");
+                })
+                .setOnCancelListener(dialog -> {
+                    btnPanic.setEnabled(true);
+                    btnPanic.setAlpha(1f);
+                    btnPanic.setText("Panic");
+                })
+                .show();
+    }
+
+    private void setupWaypoints() {
+        rvWaypoints.setLayoutManager(new LinearLayoutManager(requireContext()));
+        waypointAdapter = new WaypointAdapter(new ArrayList<>());
+        rvWaypoints.setAdapter(waypointAdapter);
+    }
+
+    private static final class Waypoint {
+        final String address;
+
+        Waypoint(String address) {
+            this.address = address;
+        }
+    }
+
+    private static final class WaypointAdapter extends RecyclerView.Adapter<WaypointAdapter.WaypointVH> {
+
+        private final List<Waypoint> items;
+
+        WaypointAdapter(List<Waypoint> items) {
+            this.items = items;
+        }
+
+        void setItems(List<Waypoint> newItems) {
+            items.clear();
+            if (newItems != null) items.addAll(newItems);
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public WaypointVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_waypoint, parent, false);
+            return new WaypointVH(v);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull WaypointVH h, int position) {
+            Waypoint w = items.get(position);
+            h.tvAddress.setText(w.address);
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+
+        static final class WaypointVH extends RecyclerView.ViewHolder {
+            final TextView tvAddress;
+
+            WaypointVH(@NonNull View itemView) {
+                super(itemView);
+                tvAddress = itemView.findViewById(R.id.tvWaypointAddress);
+            }
+        }
     }
 }

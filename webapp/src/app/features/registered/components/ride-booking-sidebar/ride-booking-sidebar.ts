@@ -3,7 +3,7 @@ import { LocationSearchInput } from "../../../shared/components/location-search-
 import { NominatimResult } from '../../../shared/services/nominatim.service';
 import { RideBookingStateService } from '../../../../core/services/ride-booking-state.service';
 import { NgOptimizedImage, Location, CommonModule } from '@angular/common';
-import { UserService } from '../../../../core/services/user.service';
+import { CurrentUserService } from '../../../../core/services/current-user.service';
 import { User } from '../../../../core/models/user';
 import { FormsModule } from '@angular/forms';
 import { VehicleType } from '../../../shared/models/vehicle';
@@ -22,7 +22,7 @@ import { FavoriteRouteDTO, FavouriteRoutesService } from '../../services/favouri
 export class RideBookingSidebar {
   bookingState = inject(RideBookingStateService);
   rideOrderService = inject(RideOrderService);
-  userService = inject(UserService);
+  userService = inject(CurrentUserService);
   favRoutesService = inject(FavouriteRoutesService);
 
   location = inject(Location);
@@ -67,7 +67,9 @@ export class RideBookingSidebar {
     address: '',
     phoneNumber: '',
     role: 'PASSENGER',
-    profilePicture: 'defaultprofile.png'
+    profilePicture: 'defaultprofile.png',
+    blocked: false,
+    blockReason: ''
   });
 
   // ---- Favorite routes ----
@@ -237,8 +239,8 @@ export class RideBookingSidebar {
       this.infants, this.pets,
       this.passengerEmails(),
       this.scheduledDate(),
-      (this.bookingState.routeInfo()?.totalDistance!/1000.0),
-      (this.bookingState.routeInfo()?.totalDuration!/60),
+      (this.bookingState.routeInfo()?.totalDistance ?? 0) / 1000.0,
+      (this.bookingState.routeInfo()?.totalDuration ?? 0) / 60,
     ).subscribe({
       next: (ride => {
         this.successMessage = `Ride successfully assigned to driver: ${ride.driverEmail}!
@@ -249,6 +251,12 @@ export class RideBookingSidebar {
         this.isSuccessOpen.set(true);
       }),
       error: (err => {
+        if (err.status == 423) {
+          this.errorTitle = "You have been blocked."
+        } else {
+          this.errorTitle = "Error"
+        }
+
         this.errorMessage = err.error?.message || 'Booking failed. Please try again.';
         this.isErrorOpen.set(true);
       })
@@ -279,7 +287,17 @@ export class RideBookingSidebar {
 
     this.infants = route.babyFriendly;
     this.pets = route.petsFriendly;
-    this.vehicleType = route.vehicleType ?? 'any';
+
+    const raw = String(route.vehicleType || '');
+    if (raw.toLowerCase() === VehicleType.STANDARD.toLowerCase()) {
+      this.vehicleType = VehicleType.STANDARD;
+    } else if (raw.toLowerCase() === VehicleType.LUXURY.toLowerCase()) {
+      this.vehicleType = VehicleType.LUXURY;
+    } else if (raw.toLowerCase() === VehicleType.VAN.toLowerCase()) {
+      this.vehicleType = VehicleType.VAN;
+    } else {
+      this.vehicleType = 'any';
+    }    
 
     this.cdr.detectChanges();
   }

@@ -1,13 +1,20 @@
 package com.example.mobileapp.features.shared.api;
 
+import com.example.mobileapp.features.shared.api.dto.CreateRideRequestDto;
 import com.example.mobileapp.features.shared.api.dto.DriverRideDto;
+import com.example.mobileapp.features.shared.api.dto.HistoryReportDto;
+import com.example.mobileapp.features.shared.api.dto.LocationDto;
 import com.example.mobileapp.features.shared.api.dto.PassengerRideDto;
 import com.example.mobileapp.features.shared.api.dto.PriceEstimateResponse;
+import com.example.mobileapp.features.shared.api.dto.RideCancellationDto;
 import com.example.mobileapp.features.shared.api.dto.RideDetailDto;
+import com.example.mobileapp.features.shared.api.dto.RideDto;
 import com.example.mobileapp.features.shared.api.dto.RideEstimateRequest;
 import com.example.mobileapp.features.shared.api.dto.RideHistoryResponseDto;
 import com.example.mobileapp.features.shared.api.dto.RideInconsistencyRequestDto;
+import com.example.mobileapp.features.shared.api.dto.RidePanicDto;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import retrofit2.Call;
@@ -20,6 +27,10 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface RidesApi {
+    @POST("api/rides")
+    Call<RideDto> requestRide(
+            @Body CreateRideRequestDto request
+            );
 
     @GET("api/rides/history")
     Call<RideHistoryResponseDto> getRideHistory(
@@ -29,6 +40,13 @@ public interface RidesApi {
             @Query("endDate") String endDate,
             @Query("page") Integer page,
             @Query("size") Integer size
+    );
+
+    @GET("api/rides/history-report")
+    Call<HistoryReportDto> getHistoryReport(
+            @Query("from") LocalDate from,
+            @Query("to") LocalDate to,
+            @Query("uuid") Integer uuid
     );
 
     @GET("api/drivers/rides/{rideId}/details")
@@ -77,4 +95,39 @@ public interface RidesApi {
             @Header("Authorization") String bearerToken,
             @Path("id") int rideId
     );
+
+    @POST("api/rides/{id}/panic")
+    Call<Void> panic(
+            @Header("Authorization") String bearerToken,
+            @Path("id") int rideId,
+            @Body RidePanicDto request
+    );
+
+    @POST("api/rides/{rideId}/stop-early")
+    Call<RideDto> stopEarly(
+            @Header("Authorization") String bearerToken,
+            @Path("rideId") int rideId,
+            @Body LocationDto body
+            );
+
+    @POST("api/rides/{rideId}/cancel")
+    Call<RideDto> cancelRide(
+            @Header("Authorization") String authHeader,
+            @Path("rideId") int rideId,
+            @Body RideCancellationDto body
+    );
+    @GET("api/rides/passenger")
+    Call<List<RideDto>> getPassengerBookedRides(
+            @Header("Authorization") String authHeader
+    );
+    @GET("api/rides/history/passenger")
+    Call<RideHistoryResponseDto> getPassengerRideHistory(
+            @Header("Authorization") String authHeader,
+            @Query("userId") int passengerId,
+            @Query("startDate") String startDate,
+            @Query("endDate") String endDate,
+            @Query("page") Integer page,
+            @Query("size") Integer size
+    );
+
 }

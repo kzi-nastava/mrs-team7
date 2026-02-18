@@ -1,15 +1,17 @@
-import { Component } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HeaderComponent } from '../../shared/components/header.component';
-import { RegisteredSidebar } from '../components/registered-sidebar';
+import {PassengerHeaderComponent} from '../components/passenger-header.component';
+import {WebSocketService} from '../../../core/services/websocket.service';
+import {CurrentUserService} from '../../../core/services/current-user.service';
+import {Subscription} from 'rxjs';
 
 
 @Component({
   selector: 'app-registered-layout',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent],
+  imports: [RouterOutlet, PassengerHeaderComponent],
   template: `<div class="min-h-screen bg-app-dark">
-        <app-header></app-header>
+        <app-passenger-header></app-passenger-header>
 
         <div class="flex h-[calc(100vh-94px)]">
             <aside class="w-106 bg-app-dark text-white">
@@ -24,7 +26,26 @@ import { RegisteredSidebar } from '../components/registered-sidebar';
         </div>
         `,
 })
-export class RegisteredLayout {
-  firstName = 'Andrew'
-  lastName = 'Wilson'
+export class RegisteredLayout implements OnInit, OnDestroy {
+  private userSubscription?: Subscription;
+
+  constructor(
+    private currentUserService: CurrentUserService,
+    private websocketService: WebSocketService
+  ) {}
+
+  ngOnInit(): void {
+    this.userSubscription = this.currentUserService.currentUser$.subscribe({
+      next: (user) => {
+        if (user?.id && user.role === 'PASSENGER' && !this.websocketService.isConnected()) {
+          this.websocketService.connect(user.id);
+        }
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.userSubscription?.unsubscribe();
+    this.websocketService.disconnect();
+  }
 }

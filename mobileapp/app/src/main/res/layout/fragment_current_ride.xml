@@ -127,6 +127,37 @@
                     android:textSize="13sp"
                     android:layout_marginBottom="14dp"/>
 
+                <!-- WayPoints -->
+                <TextView
+                    android:id="@+id/tvWaypointsLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/stops_dots"
+                    android:textColor="#374151"
+                    android:textStyle="bold"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="8dp"
+                    android:visibility="gone"/>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardWaypoints"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="0dp"
+                    android:backgroundTint="#FFFFFF"
+                    android:visibility="gone"
+                    android:layout_marginBottom="12dp">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvWaypoints"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none"
+                        android:overScrollMode="never"
+                        android:nestedScrollingEnabled="false" />
+                </androidx.cardview.widget.CardView>
+
                 <!-- Passengers -->
                 <TextView
                     android:id="@+id/tvPassengersLabel"
@@ -195,6 +226,20 @@
                     android:textSize="13sp"
                     android:textColor="#FFFFFF"
                     android:background="@drawable/bg_btn_dark"
+                    android:layout_marginBottom="12dp"/>
+
+                <TextView
+                    android:id="@+id/btnPanic"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="@string/panic"
+                    android:textStyle="bold"
+                    android:textSize="13sp"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/bg_btn_red"
                     android:layout_marginBottom="12dp"/>
 
                 <!-- Report driver inconsistency -->

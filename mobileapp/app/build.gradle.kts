@@ -40,6 +40,8 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.cardview)
     implementation(libs.glide)
+    implementation(libs.google.material)
+    implementation(libs.swiperefreshlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -52,4 +54,9 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("androidx.recyclerview:recyclerview:1.4.0")
     implementation(libs.core.splashscreen)
+    // WebSocket - STOMP
+    implementation("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
+    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
+    implementation("io.reactivex.rxjava2:rxandroid:2.1.1")
+    implementation(libs.mpandroidchart)
 }

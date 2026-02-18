@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide;
 import com.example.mobileapp.R;
 import com.example.mobileapp.features.shared.api.dto.DriverUpdateDto;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,7 +73,7 @@ public class ProfileChangesAdapter extends RecyclerView.Adapter<ProfileChangesAd
 
         if (update.getOldProfilePicture() != null && !update.getOldProfilePicture().isEmpty()) {
             Glide.with(holder.itemView)
-                    .load(update.getOldProfilePicture())
+                    .load(update.getOldProfilePicture() + "?cb=" + LocalDateTime.now().toString())
                     .placeholder(R.drawable.img_defaultprofile)
                     .error(R.drawable.img_defaultprofile)
                     .circleCrop()
@@ -83,7 +84,7 @@ public class ProfileChangesAdapter extends RecyclerView.Adapter<ProfileChangesAd
 
         if (update.getNewProfilePicture() != null && !update.getNewProfilePicture().isEmpty()) {
             Glide.with(holder.itemView)
-                    .load(update.getNewProfilePicture())
+                    .load(update.getNewProfilePicture() + "?cb=" + LocalDateTime.now().toString())
                     .placeholder(R.drawable.img_defaultprofile)
                     .error(R.drawable.img_defaultprofile)
                     .circleCrop()

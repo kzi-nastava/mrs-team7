@@ -7,9 +7,11 @@ import com.example.mobileapp.core.api.dto.RegisterRequest;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
+import retrofit2.http.Query;
 
 public interface AuthApi {
 
@@ -20,4 +22,9 @@ public interface AuthApi {
     @POST("api/auth/register")
     Call<Void> register(@Part("user") RegisterRequest user,
                         @Part MultipartBody.Part profileImage);
+
+    @GET("api/auth/activate")
+    Call<LoginResponse> activate(
+            @Query("token") String activationToken
+    );
 }

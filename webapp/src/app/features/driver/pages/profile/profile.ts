@@ -5,7 +5,7 @@ import { ProfileInfoCard } from '../../../shared/components/profile-info-card';
 import { Vehicle } from '../../../shared/models/vehicle';
 import { ChangePasswordModal } from "../../../shared/components/profile-change-pswd-modal";
 import { Subscription } from 'rxjs';
-import { UserService } from '../../../../core/services/user.service';
+import { CurrentUserService } from '../../../../core/services/current-user.service';
 import { Driver } from '../../../shared/models/driver';
 import { DriverService } from '../../../shared/services/driver.service';
 import { SuccessAlert } from "../../../shared/components/success-alert";
@@ -22,6 +22,13 @@ import { User } from '../../../../core/models/user';
           <!-- Main Content -->
           <main class="flex flex-1 p-8">
             <div class="flex flex-col gap-6 w-full">
+
+            @if (user.blocked) {
+              <div class="border-[1.5px] bg-red-50 border-red-200 rounded-3xl shadow-lg p-8 flex flex-col gap-6">
+                <h3 class="text-[22px] font-normal font-poppins text-red-500 leading-8.25"> Your account has been blocked and you are no longer able to work with us. </h3>
+                <div class="text-[20px] text-red-400"> {{user.blockReason}} </div>
+              </div>
+            }
 
               <!-- Work Time Progress Card -->
               <div class="border-[1.5px] border-gray-200 rounded-3xl shadow-lg p-8 flex flex-col gap-6">
@@ -181,7 +188,9 @@ export class DriverProfileComponent {
     email: '',
     address: '',
     phoneNumber: '',
-    profilePicture: "defaultprofile.png"
+    profilePicture: "defaultprofile.png",
+    blocked: false,
+    blockReason: ''
   }
 
   private sub?: Subscription;
@@ -190,7 +199,7 @@ export class DriverProfileComponent {
   successTitle: string = "Success";
   successMessage: string = "Profile successfully updated!";
 
-  constructor(private userService: UserService,
+  constructor(private userService: CurrentUserService,
               private cdr: ChangeDetectorRef,
               private driverService: DriverService) {}
 

@@ -50,7 +50,6 @@ public class FavoriteRoutesFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_favorite_routes, container, false);
 
         RecyclerView rv = v.findViewById(R.id.rv_routes);
@@ -117,9 +116,7 @@ public class FavoriteRoutesFragment extends Fragment {
                     return;
                 }
 
-                routes = routes.stream().filter(route -> {
-                    return route.getId() != id;
-                }).collect(Collectors.toList());
+                routes.removeIf(route -> route.getId() == id);
 
                 if (adapter != null) adapter.notifyDataSetChanged();
             }
