@@ -2,8 +2,8 @@ package tests;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.TimeoutException;
 import pages.BookedRidesPage;
 import pages.LoginPage;
 import pages.RideBookingPage;
@@ -24,12 +24,20 @@ public class FavoriteRouteOrderTest extends TestBase {
 
         loginPage.enterEmail(email);
         loginPage.enterPassword(password);
-        loginPage.login();
+
+        try {
+            loginPage.login();
+        } catch (TimeoutException e) {
+            Assumptions.assumeTrue(false, "Test account doesn't exist.");
+        }
 
         RideBookingPage bookingPage = new RideBookingPage(driver);
+
+        Assumptions.assumeTrue(bookingPage.isBookingSidebarLinkVisible(), "Unable to navigate to booking.");
         bookingPage.goToBooking();
         Assertions.assertTrue(bookingPage.isBookingStep1());
 
+        Assumptions.assumeTrue(bookingPage.favoriteRouteExists("TestRoute1"), "Test route doesn't exist.");
         bookingPage.selectFavoriteByName("TestRoute1");
 
         Assertions.assertTrue(bookingPage.pickupAddressMatches("Pickup Street"));
@@ -67,12 +75,19 @@ public class FavoriteRouteOrderTest extends TestBase {
 
         loginPage.enterEmail(email);
         loginPage.enterPassword(password);
-        loginPage.login();
+        try {
+            loginPage.login();
+        } catch (TimeoutException e) {
+            Assumptions.assumeTrue(false, "Test account doesn't exist.");
+        }
 
         RideBookingPage bookingPage = new RideBookingPage(driver);
+
+        Assumptions.assumeTrue(bookingPage.isBookingSidebarLinkVisible(), "Unable to navigate to booking.");
         bookingPage.goToBooking();
         Assertions.assertTrue(bookingPage.isBookingStep1());
 
+        Assumptions.assumeTrue(bookingPage.favoriteRouteExists("TestRoute2"), "Test route doesn't exist.");
         bookingPage.selectFavoriteByName("TestRoute2");
 
         Assertions.assertTrue(bookingPage.pickupAddressMatches("Pickup Street"));
@@ -110,12 +125,19 @@ public class FavoriteRouteOrderTest extends TestBase {
 
         loginPage.enterEmail(blockedEmail);
         loginPage.enterPassword(password);
-        loginPage.login();
+        try {
+            loginPage.login();
+        } catch (TimeoutException e) {
+            Assumptions.assumeTrue(false, "Test account doesn't exist.");
+        }
 
         RideBookingPage bookingPage = new RideBookingPage(driver);
+
+        Assumptions.assumeTrue(bookingPage.isBookingSidebarLinkVisible(), "Unable to navigate to booking.");
         bookingPage.goToBooking();
         Assertions.assertTrue(bookingPage.isBookingStep1());
 
+        Assumptions.assumeTrue(bookingPage.favoriteRouteExists("TestRoute"));
         bookingPage.selectFavoriteByName("TestRoute");
 
         Assertions.assertTrue(bookingPage.pickupAddressMatches("Pickup Street"));

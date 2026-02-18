@@ -38,7 +38,13 @@ public class BookedRidesPage {
     }
 
     public boolean bookedRidesEmpty() {
-        return bookedRides.isEmpty();
+        try {
+            new WebDriverWait(driver, Duration.ofSeconds(10)).
+                    until(ExpectedConditions.numberOfElementsToBeMoreThan(new By.ByCssSelector("div[name='rideContainer']"), 0));
+        } catch (TimeoutException e) {
+            return true;
+        }
+        return false;
     }
 
     public boolean firstRidePickupMatches(String address) {

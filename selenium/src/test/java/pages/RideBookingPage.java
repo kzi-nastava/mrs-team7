@@ -45,6 +45,17 @@ public class RideBookingPage {
         PageFactory.initElements(driver, this);
     }
 
+    public boolean isBookingSidebarLinkVisible() {
+        try {
+           new WebDriverWait(driver, Duration.ofSeconds(10))
+                    .until(ExpectedConditions.elementToBeClickable(bookingSidebarLink));
+        } catch (TimeoutException e) {
+            return false;
+        }
+
+        return true;
+    }
+
     public void goToBooking() {
         WebElement element = new WebDriverWait(driver, Duration.ofSeconds(10))
                 .until(ExpectedConditions.elementToBeClickable(bookingSidebarLink));
@@ -79,6 +90,15 @@ public class RideBookingPage {
             return false;
         }
         return true;
+    }
+
+    public boolean favoriteRouteExists(String routeName) {
+        WebElement element = new WebDriverWait(driver, Duration.ofSeconds(10))
+                .until(ExpectedConditions.elementToBeClickable(favoriteRouteSelect));
+        Select select = new Select(element);
+        return select.getOptions().stream()
+                .map(WebElement::getText)
+                .anyMatch(text -> text.trim().equals(routeName));
     }
 
     public void selectFavoriteByName(String routeName) {
