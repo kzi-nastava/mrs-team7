@@ -16,7 +16,7 @@
         <item
             android:id="@+id/nav_register_driver"
             android:title="@string/register_a_driver"
-            android:icon="@drawable/img_history_white"/>
+            android:icon="@drawable/img_car_white"/>
         <item
             android:id="@+id/nav_ride_history"
             android:title="@string/rideHistory"
@@ -28,7 +28,7 @@
         <item
             android:id="@+id/nav_panic_notifications"
             android:title="@string/panic_notifications"
-            android:icon="@drawable/img_reports_white"/>
+            android:icon="@drawable/img_panic_white"/>
         <item
             android:id="@+id/nav_reports"
             android:title="@string/reports"
