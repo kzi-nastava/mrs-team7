@@ -25,6 +25,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
         <activity
             android:name=".core.auth.ActivationActivity"
             android:exported="true"
@@ -32,13 +34,38 @@
             android:launchMode="singleTask"
             android:theme="@style/Base.Theme.Mobileapp">
 
-            <intent-filter tools:ignore="AppLinkUrlError">
+            <intent-filter
+                android:autoVerify="true"
+                tools:ignore="AppLinkUrlError">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" />
-                <data android:host="localhost" />
-                <data android:port="4200" />
+                <data
+                    android:scheme="http"
+                    android:host="localhost"
+                    android:port="4200"
+                    android:pathPrefix="/activate" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".core.auth.DriverActivationActivity"
+            android:exported="true"
+            android:autoVerify="false"
+            android:launchMode="singleTask"
+            android:theme="@style/Base.Theme.Mobileapp">
+
+            <intent-filter
+                android:autoVerify="true"
+                tools:ignore="AppLinkUrlError">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="http"
+                    android:host="localhost"
+                    android:port="4200"
+                    android:pathPrefix="/activate-driver"/>
             </intent-filter>
         </activity>
 
